@@ -1,0 +1,143 @@
+.career-resources-wrapper {
+  max-width: 900px;
+  margin: 3rem auto;
+  padding: 1rem 2rem;
+  background-color: #e0f7fa;
+  border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  color: #f0f0f0;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.career-resources-title {
+  text-align: center;
+  font-size: 2.4rem;
+  margin-bottom: 0.5rem;
+  background: rgba(0, 0, 0, 0.801);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.career-resources-intro {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #1213139f;
+}
+
+.career-resources-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.8rem;
+}
+
+.career-resource-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem 1.8rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  align-items: center; 
+  text-align: center;
+  justify-content: space-between;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.career-resource-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(96, 177, 180, 0.7);
+}
+
+.resource-icon {
+  font-size: 3rem;
+  color: #3b8efc;
+}
+
+.resource-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  color: rgba(0, 0, 0, 0.658);
+}
+
+.resource-description {
+  font-size: 1rem;
+  margin-bottom: 1.2rem;
+  color: rgba(0, 0, 0, 0.692);
+}
+
+.resource-link {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(to right, #d7d8cf, #a5dfbb, #3b8efc);
+  border-radius: 8px;
+  color: #121212;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.3s ease;
+  display: inline-block; 
+}
+
+.resource-link:hover {
+  background: linear-gradient(to right, #729ace, #91dbad, #bfc973);
+  color: #121212;
+}
+.resource-icon-wrapper {
+  margin-bottom: 1rem;
+}
+
+.motivational-figures-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.motivational-figures-title {
+  font-size: 2rem;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  background: rgba(0, 0, 0, 0.726);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.motivational-figures-intro {
+  text-align: center;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #070707d5;
+}
+
+.motivational-figures-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.8rem;
+}
+
+.figure-card {
+  background-color: rgba(255, 255, 255, 0.05);
+  padding: 1.5rem 1.8rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  color: #f0f0f0;
+}
+
+.figure-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(102, 156, 170, 0.7);
+}
+
+.figure-card h3 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+  color: rgba(0, 0, 0, 0.726);
+}
+
+.figure-card p {
+  font-size: 1rem;
+  color: rgba(0, 0, 0, 0.473);
+}
