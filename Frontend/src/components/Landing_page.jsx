@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import Header from "./Header";
 import "../styles/landing_page.css";
 import { 
@@ -137,9 +138,34 @@ const LandingPage = () => {
         </div>
       </div>
 
+=======
+import React from 'react';
+import Header from "./Header";
+import "../styles/landing_page.css";
+import Services from './landing-page/Services';
+import EduResources from './landing-page/EduResources';
+import Committment from './landing-page/Committment';
+import Footer from "./Footer";
+import HeroSection from './landing-page/HeroSection';
+
+const LandingPage = () => {
+  return (
+    <div className="LandingPageWrapper">
+      <Header />
+      
+      <HeroSection />
+      <EduResources />
+      <Services />
+      <Committment />
+      
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
       <Footer />
     </div>
   );
 };
 
+<<<<<<< HEAD
 export default LandingPage;
+=======
+export default LandingPage;
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a

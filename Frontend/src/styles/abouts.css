@@ -1,4 +1,5 @@
 .about-wrapper {
+<<<<<<< HEAD
   padding: 4rem 2rem;
   background:#e0f7fa;
   color: #3b3939e7;
@@ -178,10 +179,105 @@
   font-size: 2rem;
   color: #0c0c0cc0;
   margin-bottom: 2rem;
+=======
+  background: #ffffff;
+  width: 100%;
+}
+
+/* ===== STORY SECTION ===== */
+
+.story-section {
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.story-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 4rem;
+  align-items: center;
+}
+
+.story-left h2 {
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.5rem;
+  color: #1a3f7a;
+  margin-bottom: 1.5rem;
+}
+
+.story-left p {
+  line-height: 1.8;
+  margin-bottom: 1.2rem;
+  color: #2f5fa8;
+}
+
+.story-highlight {
+  background: #1a3f7a;
+  color: #ffffff;
+  padding: 3rem;
+  border-radius: 10px;
+}
+
+.story-highlight h3 {
+  font-family: 'Oswald', sans-serif;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+/* ===== MISSION & VISION ===== */
+
+.mv-section {
+  padding: 6rem 2rem;
+  background: #f4f6f8;
+}
+
+.mv-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 3rem;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.mv-block {
+  background: #ffffff;
+  padding: 2.5rem 2rem;
+  border-left: 4px solid #2e9f3a;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+}
+
+.mv-block:hover {
+  transform: translateY(-5px);
+}
+
+.mv-icon {
+  font-size: 2rem;
+  color: #2e9f3a;
+  margin-bottom: 1rem;
+}
+
+/* ===== VALUES ===== */
+
+.values-section {
+  padding: 6rem 2rem;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.center-title {
+  text-align: center;
+  font-family: 'Oswald', sans-serif;
+  font-size: 2.3rem;
+  color: #1a3f7a;
+  margin-bottom: 3rem;
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
 }
 
 .values-grid {
   display: grid;
+<<<<<<< HEAD
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
   gap: 1.8rem;
 }
@@ -267,3 +363,185 @@
 }
 
 
+=======
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+
+.value-box {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 8px;
+  transition: transform 0.3s ease;
+  background: #ffffff;
+}
+
+.value-box:hover {
+  transform: translateY(-5px);
+}
+
+.value-icon {
+  font-size: 2rem;
+  color: #2e9f3a;
+  margin-bottom: 1rem;
+}
+
+/* ===== PHILOSOPHY ===== */
+
+.philosophy-section {
+  padding: 6rem 2rem;
+  background: #f4f6f8;
+}
+
+.philosophy-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+  max-width: 1100px;
+  margin: auto;
+}
+
+.philosophy-card {
+  text-align: center;
+  padding: 1.5rem;
+  border-radius: 8px;
+  background: #ffffff;
+  transition: transform 0.3s ease;
+}
+
+.philosophy-card:hover {
+  transform: translateY(-5px);
+}
+
+.philosophy-icon {
+  font-size: 2rem;
+  color: #2e9f3a;
+  margin-bottom: 1rem;
+}
+
+/* ===== TEAM ===== */
+
+.team-section {
+  padding: 6rem 2rem;
+  max-width: 1100px;
+  margin: auto;
+
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+}
+
+.team-card {
+  text-align: center;
+  padding: 1rem;
+}
+
+.team-card img {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin-bottom: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.team-card img:hover {
+  transform: scale(1.05);
+}
+
+.team-card h3 {
+  font-size: 1.2rem;
+  color: #1a3f7a;
+  margin-bottom: 0.5rem;
+}
+
+.team-card span {
+  display: block;
+  color: #2e9f3a;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.team-card p {
+  font-size: 0.9rem;
+  color: #2f5fa8;
+}
+
+/* ===== RESPONSIVE ===== */
+
+/* Large tablets */
+@media (max-width: 1100px) {
+  .mv-grid, .values-grid, .philosophy-grid, {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .story-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablets / small laptops */
+@media (max-width: 768px) {
+  .mv-grid, .values-grid, .philosophy-grid, .team-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .story-section,
+  .mv-section,
+  .values-section,
+  .philosophy-section,
+  .team-section {
+    padding: 4rem 1.5rem;
+  }
+
+  .story-left h2 {
+    font-size: 2rem;
+  }
+
+  .story-left p {
+    font-size: 0.95rem;
+  }
+
+  .center-title {
+    font-size: 2rem;
+  }
+}
+
+/* Mobile devices */
+@media (max-width: 480px) {
+  .story-section,
+  .mv-section,
+  .values-section,
+  .philosophy-section,
+  .team-section {
+    padding: 3rem 1rem;
+  }
+
+  .story-left h2 {
+    font-size: 1.7rem;
+  }
+
+  .story-left p {
+    font-size: 0.9rem;
+  }
+
+  .center-title {
+    font-size: 1.7rem;
+  }
+
+  .team-card img {
+    width: 120px;
+    height: 120px;
+  }
+
+  .value-icon, .philosophy-icon, .mv-icon {
+    font-size: 1.5rem;
+  }
+
+  .value-box, .philosophy-card, .mv-block {
+    padding: 1rem;
+  }
+}
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a

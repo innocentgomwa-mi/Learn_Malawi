@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 body {
   margin: 0;
   background: linear-gradient(
@@ -268,3 +269,181 @@ section h2 {
   border-radius: 10px;
   background-color: #1a1a1a;
 }
+=======
+/* ================= PAGE LAYOUT ================= */
+
+.past-papers-container {
+  background: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", "Roboto", sans-serif;
+}
+
+/* ================= LEVEL SWITCH ================= */
+
+.level-switch {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto 32px;
+  padding: 0 32px;
+  max-width: 1400px;
+  width: 100%;
+  gap: 12px;
+}
+
+.level-switch button {
+  padding: 12px 32px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #475569;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.level-switch button.active {
+  background: #2f5fa8;
+  color: #ffffff;
+  border-color: #2f5fa8;
+}
+
+/* ================= FILTERS (MATCHING STUDY NOTES) ================= */
+
+.pp-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin: 0 auto 40px;
+  padding: 0 32px;
+  max-width: 1400px;
+  width: 100%;
+}
+
+.pp-filters select {
+  padding: 14px 16px;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+  font-size: 15px;
+  background: #f9fafb;
+  width: 100%;
+}
+
+/* ================= MATERIALS GRID ================= */
+
+.materials {
+  max-width: 1400px;
+  margin: 0 auto 48px;
+  padding: 0 32px;
+  width: 100%;
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 28px;
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 64px 32px;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 14px;
+}
+
+.empty h3 {
+  margin-top: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.empty p {
+  margin-top: 8px;
+  font-size: 15px;
+}
+
+/* ================= STATE BOX ================= */
+
+.state-box {
+  max-width: 1400px;
+  margin: 0 auto 48px;
+  padding: 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 14px;
+}
+
+.state-box h3 {
+  font-size: 24px;
+  margin-bottom: 12px;
+}
+
+.state-box p {
+  color: #64748b;
+  margin-bottom: 24px;
+}
+
+.state-box button {
+  padding: 12px 28px;
+  background: #1e3a8a;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* ================= SPINNER ================= */
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2f5fa8;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================= STATUS ================= */
+
+.status {
+  text-align: center;
+  font-size: 12px;
+  color: #64748b;
+  padding: 20px;
+  border-top: 1px solid #e5e7eb;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .pp-filters {
+    grid-template-columns: 1fr;
+    padding: 0 20px;
+  }
+
+  .level-switch,
+  .materials,
+  .state-box {
+    padding: 0 20px;
+  }
+}
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a

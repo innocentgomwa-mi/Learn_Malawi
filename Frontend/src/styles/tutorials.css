@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 .tutorials-wrapper {
   max-width: 900px;
   margin: 3rem auto 5rem;
@@ -116,11 +117,122 @@
 }
 
 .video-wrapper iframe {
+=======
+/* ================= PAGE LAYOUT ================= */
+
+.tutorials-page {
+  background: #ffffff;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  font-family: "Inter", "Roboto", sans-serif;
+}
+
+/* ================= LEVEL SWITCH ================= */
+
+.level-switch {
+  display: flex;
+  justify-content: center;
+  margin: 24px auto 32px;
+  padding: 0 32px;
+  max-width: 1400px;
+  width: 100%;
+  gap: 12px;
+}
+
+.level-switch button {
+  padding: 12px 32px;
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  color: #475569;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+}
+
+.level-switch button:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.level-switch button.active {
+  background: #2f5fa8;
+  color: #ffffff;
+  border-color: #2f5fa8;
+}
+
+.level-switch button.active:hover {
+  background: #1e4a8a;
+}
+
+/* ================= FILTERS ================= */
+
+
+/* ================= MATERIALS GRID ================= */
+
+.materials {
+  max-width: 1400px;
+  margin: 0 auto 48px;
+  padding: 0 32px;
+  width: 100%;
+}
+
+.materials-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 28px;
+}
+
+/* ================= TUTORIAL CARD ================= */
+
+.tutorial-card {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.tutorial-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  border-color: #d1d5db;
+}
+
+/* Media Container */
+.card-media {
+  position: relative;
+  background: #0f172a;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+}
+
+.card-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.tutorial-card:hover .card-thumbnail {
+  transform: scale(1.05);
+}
+
+/* Video Iframe */
+.video-iframe {
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
+<<<<<<< HEAD
   border: none;
   border-radius: 14px;
 }
@@ -171,3 +283,345 @@
   color: #d0d0d0;
   line-height: 1.4;
 }
+=======
+  border: 0;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tutorial-card:hover .video-iframe {
+  opacity: 1;
+}
+
+/* Custom Video Player */
+.custom-video-player {
+  width: 100%;
+  height: 100%;
+}
+
+.video-player {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Play Button Overlay */
+.play-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0, 0, 0, 0.7) !;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  opacity: 0.9;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
+.tutorial-card:hover .play-button {
+  background: #2e9f3a;
+  transform: translate(-50%, -50%) scale(1.1);
+  opacity: 1;
+}
+
+/* Media Error State */
+.media-error {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: #64748b;
+  gap: 8px;
+}
+
+.error-icon {
+  color: #94a3b8;
+}
+
+.media-error span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Card Content */
+.card-content {
+  padding: 20px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #0f172a;
+  margin-bottom: 12px;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+}
+
+.badge.subject {
+  background: #e6f0fa;
+  color: #2f5fa8;
+}
+
+.badge.class {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.card-description {
+  font-size: 14px;
+  line-height: 1.6;
+  color: #475569;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Card Footer */
+.card-footer {
+  padding: 16px 20px 20px;
+  display: flex;
+  gap: 12px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.action-link {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.action-link.primary {
+  background: #f8fafc;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+}
+
+.action-link.primary:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.action-link.youtube {
+  background: #2e9f3a !important;
+  color: white;
+  border: 1px solid #2e9f3a;
+}
+
+.action-link.youtube:hover {
+  background: #2e9f3a;
+  border-color: #2e9f3a;
+}
+
+.action-link svg {
+  flex-shrink: 0;
+}
+
+/* ================= EMPTY STATE ================= */
+
+.empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 64px 32px;
+  color: #64748b;
+  background: #f8fafc;
+  border-radius: 14px;
+  gap: 16px;
+}
+
+.empty h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0;
+}
+
+.empty p {
+  font-size: 15px;
+  color: #64748b;
+  max-width: 400px;
+  margin: 0;
+}
+
+/* ================= STATE BOX ================= */
+
+.state-box {
+  max-width: 1400px;
+  margin: 0 auto 48px;
+  padding: 64px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: #f8fafc;
+  border-radius: 14px;
+}
+
+.state-box h3 {
+  font-size: 24px;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+.state-box p {
+  color: #64748b;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.state-box button {
+  padding: 12px 28px;
+  background: #1e3a8a;
+  color: #ffffff;
+  border: none;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.state-box button:hover {
+  background: #2f5fa8;
+}
+
+/* ================= SPINNER ================= */
+
+.spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid #e5e7eb;
+  border-top-color: #2f5fa8;
+  animation: spin 1s linear infinite;
+  margin-bottom: 24px;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ================= STATUS ================= */
+
+.status {
+  text-align: center;
+  font-size: 13px;
+  color: #64748b;
+  padding: 24px;
+  border-top: 1px solid #e5e7eb;
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* ================= RESPONSIVE ================= */
+
+@media (max-width: 768px) {
+  .level-switch {
+    padding: 0 20px;
+    margin: 20px auto 24px;
+  }
+
+  .level-switch button {
+    padding: 10px 20px;
+    font-size: 14px;
+  }
+
+
+
+  .materials {
+    padding: 0 20px;
+    margin-bottom: 32px;
+  }
+
+  .materials-grid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 20px;
+  }
+
+  .card-content {
+    padding: 16px;
+  }
+
+  .card-footer {
+    padding: 12px 16px 16px;
+    flex-direction: column;
+  }
+
+  .play-button {
+    width: 48px;
+    height: 48px;
+  }
+
+  .play-button svg {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 480px) {
+  .materials-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card-meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .badge {
+    width: fit-content;
+  }
+}
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a

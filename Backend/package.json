@@ -32,7 +32,10 @@
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.3",
     "cloudinary": "^2.9.0",
+<<<<<<< HEAD
     "groq-sdk": "^1.1.1",
+=======
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
     "joi": "^18.0.2",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
