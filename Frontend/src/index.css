@@ -1,7 +1,51 @@
+<<<<<<< HEAD
+=======
+@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+
+:root {
+/*   Color System - Institutional Blue + Neutral Gray-White + Progressive Green accent */
+  --color-navy: #1a3f7a;          /* Deepened institutional blue */
+  --color-navy-light: #2f5fa8;    /* Calm academic blue */
+ /* --color-yellow: #dffb00; */
+  
+  --color-sand: #f4f6f8;          /* Clean gray-white background */
+  --color-sand-dark: #d9dee4;     /* Soft institutional gray for borders/dividers */
+  
+  --color-red: #2e9f3a;           /* Institutional green accent */
+  
+  --color-white: #ffffff;
+  
+  /* Typography */
+  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Spacing System - Extremely generous */
+  --spacing-xs: 0.5rem;
+  --spacing-sm: 1rem;
+  --spacing-md: 2rem;
+  --spacing-lg: 4rem;
+  --spacing-xl: 6rem;
+  --spacing-xxl: 10rem;
+  
+  /* Transitions */
+  --transition-slow: 800ms ease;
+  --transition-normal: 400ms ease;
+  
+  /* Borders */
+  --border-thin: 1px solid var(--color-sand-dark);
+}
+
+
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+<<<<<<< HEAD
+=======
+    font-display: 'Roboto';
+>>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
 }
 
 
