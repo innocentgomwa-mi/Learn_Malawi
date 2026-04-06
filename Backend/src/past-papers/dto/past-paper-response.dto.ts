@@ -1,6 +1,6 @@
-import { Expose, Transform } from 'class-transformer';
-import { EducationLevel } from '../../books/entities/book.entity';
+import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
+import { EducationLevel } from '../entities/past-paper.entity';
 
 export class PastPaperResponseDto {
   @ApiProperty()
@@ -11,29 +11,13 @@ export class PastPaperResponseDto {
   @Expose()
   title: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @Expose()
-  description: string;
+  description?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @Expose()
-  thumbnailUrl: string;
-
-  @ApiProperty()
-  @Expose()
-  fileUrl: string;
-
-  @ApiProperty()
-  @Expose()
-  fileName: string;
-
-  @ApiProperty()
-  @Expose()
-  category: string;
-
-  @ApiProperty()
-  @Expose()
-  class: string;
+  subject?: string;
 
   @ApiProperty({ enum: EducationLevel })
   @Expose()
@@ -43,21 +27,17 @@ export class PastPaperResponseDto {
   @Expose()
   year: number;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @Expose()
-  subject: string;
+  paperUrl?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @Expose()
-  examinationBody: string;
+  markingSchemeUrl?: string;
 
-  @ApiProperty()
+  @ApiProperty({ required: false })
   @Expose()
-  paperNumber: string;
-
-  @ApiProperty()
-  @Expose()
-  paperType: string;
+  class?: string;
 
   @ApiProperty()
   @Expose()
@@ -69,24 +49,9 @@ export class PastPaperResponseDto {
 
   @ApiProperty()
   @Expose()
-  @Transform(({ obj }) => ({
-    id: obj.uploadedBy?.id,
-    firstName: obj.uploadedBy?.firstName,
-    lastName: obj.uploadedBy?.lastName,
-    email: obj.uploadedBy?.email,
-  }))
-  uploadedBy: any;
-
-  @ApiProperty()
-  @Expose()
   createdAt: Date;
 
   @ApiProperty()
   @Expose()
   updatedAt: Date;
-
-  @ApiProperty()
-  @Expose()
-  @Transform(({ obj }) => obj.downloadName || obj.fileName)
-  downloadName: string;
 }

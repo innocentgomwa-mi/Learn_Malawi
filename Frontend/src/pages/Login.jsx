@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Helmet } from 'react-helmet';
+
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import '../styles/login.css';
+import { useAuth } from '@/lib/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -25,12 +24,12 @@ const Login = () => {
       console.log('User role (lowercase):', userRole);
       
       if (userRole === 'admin' || userRole === 'teacher') {
-        console.log('Redirecting to admin dashboard...');
+        console.log('Redirecting to teachers dashboard...');
         // If user came from a protected route, redirect them back
         if (from !== '/') {
           navigate(from, { replace: true });
         } else {
-          navigate('/admin/dashboard', { replace: true });
+          navigate('/teacher', { replace: true });
         }
       } else {
         console.log('User is not admin/teacher, redirecting to homepage...');
@@ -40,6 +39,9 @@ const Login = () => {
     }
   }, [user, navigate, from]);
 
+  /**
+   * @param {React.FormEvent<HTMLFormElement>} e
+   */
   const handleSubmit = async (e) => {
     e.preventDefault();
     
@@ -57,6 +59,9 @@ const Login = () => {
     }
   };
 
+  /**
+   * @param {React.ChangeEvent<HTMLInputElement>} e
+   */
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'email') {
@@ -72,106 +77,115 @@ const Login = () => {
   };
 
   return (
-    <>
-      <Helmet>
-        <title>Admin Login - Learn Malawi</title>
-        <meta name="description" content="Login to the admin dashboard to manage and update educational resources on Learn Malawi." />
-      </Helmet>
-      
-      <div className="login-page">
-        <div className="login-container">
-          <div className="login-header">
-            <h1>Admin Portal Login</h1>
-            <p className="page-description">
-              Sign in to access the content management dashboard. 
-              <strong> This login is only for administrators and content managers.</strong>
-            </p>
-          </div>
-
-          <div className="login-card">
-            <div className="info-note">
-              <strong>Note for Students:</strong> All learning materials are freely available on the homepage. No login required!
+    <div className="min-h-screen bg-slate-50 text-slate-950 py-16">
+      <div className="relative overflow-hidden">
+        <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-secondary/15 blur-3xl" />
+        <div className="relative max-w-4xl mx-auto px-4">
+          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] items-stretch">
+            <div className="rounded-[2rem] bg-primary text-primary-foreground p-10 shadow-2xl overflow-hidden">
+              <span className="inline-flex items-center rounded-full bg-secondary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary-foreground mb-6">
+                Learn Malawi Portal
+              </span>
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Access your Learn Malawi experience.
+              </h1>
+              <p className="mt-6 max-w-xl text-lg leading-8 text-primary-foreground/85">
+                Sign in with your Learn Malawi account to continue learning, track progress, or manage content depending on your role.
+              </p>
+              <div className="mt-10 rounded-[1.75rem] border border-primary-foreground/10 bg-primary-foreground/5 p-6">
+                <p className="text-sm font-semibold text-primary-foreground">Account access</p>
+                <p className="mt-2 text-sm text-primary-foreground/80">
+                  Students and teachers may sign in here. Students will land on the main library, while teachers and admins will access management tools.
+                </p>
+              </div>
             </div>
 
-            {apiError && (
-              <div className="api-error-message">
-                <span className="error-icon">!</span>
-                <span className="error-text">{apiError}</span>
-                <button onClick={clearError} className="error-close">
-                  ×
-                </button>
+            <div className="rounded-[2rem] border border-border bg-card p-8 shadow-lg">
+              <div className="mb-8">
+                <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Secure sign in</p>
+                <h2 className="mt-4 text-3xl font-bold text-foreground">Sign in</h2>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                  Use your Learn Malawi credentials to access your student dashboard or content management tools.
+                </p>
               </div>
-            )}
 
-            <form onSubmit={handleSubmit} className="login-form">
-              <div className="form-group">
-                <label htmlFor="email">Email Address *</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={email}
-                  onChange={handleChange}
-                  placeholder="admin@learnmalawi.com"
-                  disabled={loading}
-                  required
-                />
-              </div>
-              
-              <div className="form-group">
-                <label htmlFor="password">Password *</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  disabled={loading}
-                  required
-                />
-              </div>
-              
-              <div className="form-options">
-                <div className="remember-me">
-                  <input type="checkbox" id="remember" disabled={loading} />
-                  <label htmlFor="remember">Remember me</label>
+              {apiError && (
+                <div className="mb-6 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold">Login failed</p>
+                      <p className="mt-1 text-rose-700/80">{apiError}</p>
+                    </div>
+                    <button onClick={clearError} className="text-rose-700 hover:text-rose-900 font-bold">
+                      ×
+                    </button>
+                  </div>
                 </div>
-                <Link to="/forgot-password" className="forgot-password">
-                  Forgot password?
-                </Link>
-              </div>
+              )}
 
-              <button 
-                type="submit" 
-                className="login-btn"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="loading-spinner"></span>
-                    Signing In...
-                  </>
-                ) : (
-                  'Sign In to Dashboard'
-                )}
-              </button>
-            </form>
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <label className="block text-sm font-medium text-foreground">
+                  Email address
+                  <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    value={email}
+                    onChange={handleChange}
+                    placeholder="admin@learnmalawi.com"
+                    disabled={loading}
+                    required
+                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                </label>
 
-            <div className="auth-links">
-              <div className="register-link">
-                Need an admin account? <Link to="/register">Request Access</Link>
-              </div>
-              <div className="back-link">
-                <Link to="/">
-                  ← Return to free resources
-                </Link>
+                <label className="block text-sm font-medium text-foreground">
+                  Password
+                  <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    value={password}
+                    onChange={handleChange}
+                    placeholder="Enter your password"
+                    disabled={loading}
+                    required
+                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                </label>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                    <input type="checkbox" id="remember" disabled={loading} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
+                    Remember me
+                  </label>
+                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">
+                    Forgot password?
+                  </Link>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="inline-flex w-full items-center justify-center rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  {loading ? 'Signing in…' : 'Sign in to Learn Malawi'}
+                </button>
+              </form>
+
+              <div className="mt-8 border-t border-border pt-6 text-sm text-muted-foreground space-y-3">
+                <p>
+                  Need an account? <Link to="/register" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">Register now</Link>
+                </p>
+                <p>
+                  <Link to="/" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">Return to free resources</Link>
+                </p>
               </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

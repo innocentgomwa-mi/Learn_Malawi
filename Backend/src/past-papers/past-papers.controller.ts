@@ -1,25 +1,19 @@
-// src/past-papers/past-papers.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseGuards, 
-  Query, 
-  UseInterceptors, 
-  UploadedFile,
-  ParseFilePipe,
-  MaxFileSizeValidator,
-  FileTypeValidator,
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Query,
   HttpCode,
   HttpStatus,
-  ForbiddenException,
-  NotFoundException
+  ClassSerializerInterceptor,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { PastPapersService } from './past-papers.service';
 import { CreatePastPaperDto } from './dto/create-past-paper.dto';
 import { UpdatePastPaperDto } from './dto/update-past-paper.dto';
@@ -29,38 +23,18 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
 import { UserRole } from '../users/entities/user.entity';
-import { User } from '../common/decorators/user.decorator';
-import { EducationLevel } from '../books/entities/book.entity';
 import { plainToInstance } from 'class-transformer';
-import { bookMulterConfig, imageMulterConfig } from '../config/multer.config';
+import { EducationLevel } from './entities/past-paper.entity';
 
 @Controller('past-papers')
+@UseInterceptors(ClassSerializerInterceptor)
 export class PastPapersController {
   constructor(private readonly pastPapersService: PastPapersService) {}
 
   private toResponseDto(pastPaper: any): PastPaperResponseDto {
-    return plainToInstance(PastPaperResponseDto, {
-      ...pastPaper,
-      uploadedBy: {
-        id: pastPaper.uploadedBy?.id,
-        firstName: pastPaper.uploadedBy?.firstName,
-        lastName: pastPaper.uploadedBy?.lastName,
-        email: pastPaper.uploadedBy?.email,
-      },
-    }, {
-      excludeExtraneousValues: false,
+    return plainToInstance(PastPaperResponseDto, pastPaper, {
+      excludeExtraneousValues: true,
     });
-  }
-
-  @Post()
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  async create(
-    @Body() createPastPaperDto: CreatePastPaperDto,
-    @User() user,
-  ): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.create(createPastPaperDto, user);
-    return this.toResponseDto(pastPaper);
   }
 
   @Get()
@@ -69,41 +43,15 @@ export class PastPapersController {
     @Query('page') page: number = 1,
     @Query('limit') limit: number = 12,
     @Query('level') level?: EducationLevel,
-    @Query('category') category?: string,
-    @Query('class') classFilter?: string,
-    @Query('year') year?: number,
     @Query('subject') subject?: string,
-    @Query('examinationBody') examinationBody?: string,
+    @Query('year') year?: number,
     @Query('search') search?: string,
   ) {
-    const result = await this.pastPapersService.findAll(
-      page,
-      limit,
-      level,
-      category,
-      classFilter,
-      year,
-      subject,
-      examinationBody,
-      search,
-    );
-
+    const result = await this.pastPapersService.findAll(page, limit, level, subject, year, search);
     return {
       ...result,
-      data: result.data.map(pastPaper => this.toResponseDto(pastPaper)),
+      data: result.data.map((pastPaper) => this.toResponseDto(pastPaper)),
     };
-  }
-
-  @Get('categories')
-  @Public()
-  async getCategories(@Query('level') level?: EducationLevel) {
-    return await this.pastPapersService.getCategories(level);
-  }
-
-  @Get('classes')
-  @Public()
-  async getClasses(@Query('level') level?: EducationLevel) {
-    return await this.pastPapersService.getClasses(level);
   }
 
   @Get('years')
@@ -112,10 +60,16 @@ export class PastPapersController {
     return await this.pastPapersService.getYears(level);
   }
 
-  @Get('examination-bodies')
+  @Get('subjects')
   @Public()
-  async getExaminationBodies(@Query('level') level?: EducationLevel) {
-    return await this.pastPapersService.getExaminationBodies(level);
+  async getSubjects(@Query('level') level?: EducationLevel) {
+    return await this.pastPapersService.getSubjects(level);
+  }
+
+  @Get('classes')
+  @Public()
+  async getClasses(@Query('level') level?: EducationLevel) {
+    return await this.pastPapersService.getClasses(level);
   }
 
   @Get('latest')
@@ -125,7 +79,7 @@ export class PastPapersController {
     @Query('limit') limit: number = 10,
   ) {
     const pastPapers = await this.pastPapersService.getLatest(level, limit);
-    return pastPapers.map(pastPaper => this.toResponseDto(pastPaper));
+    return pastPapers.map((pastPaper) => this.toResponseDto(pastPaper));
   }
 
   @Get('stats')
@@ -142,115 +96,30 @@ export class PastPapersController {
     return this.toResponseDto(pastPaper);
   }
 
+  @Post()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async create(@Body() createPastPaperDto: CreatePastPaperDto): Promise<PastPaperResponseDto> {
+    const pastPaper = await this.pastPapersService.create(createPastPaperDto);
+    return this.toResponseDto(pastPaper);
+  }
+
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   async update(
     @Param('id') id: string,
     @Body() updatePastPaperDto: UpdatePastPaperDto,
-    @User() user,
   ): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.update(id, updatePastPaperDto, user);
+    const pastPaper = await this.pastPapersService.update(id, updatePastPaperDto);
     return this.toResponseDto(pastPaper);
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @HttpCode(HttpStatus.NO_CONTENT)
-  async remove(@Param('id') id: string, @User() user): Promise<void> {
-    await this.pastPapersService.remove(id, user);
-  }
-
-  @Post(':id/file')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('file', bookMulterConfig))
-  async uploadFile(
-    @Param('id') id: string,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 50 * 1024 * 1024 }), // 50MB for past papers
-          new FileTypeValidator({ fileType: /(pdf|doc|docx|ppt|pptx|txt)$/ }),
-        ],
-      }),
-    ) file: Express.Multer.File,
-    @User() user,
-  ): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.uploadFile(id, file, user, false);
-    return this.toResponseDto(pastPaper);
-  }
-
-  @Post(':id/thumbnail')
-  @UseGuards(JwtAuthGuard)
-  @UseInterceptors(FileInterceptor('thumbnail', imageMulterConfig))
-  async uploadThumbnail(
-    @Param('id') id: string,
-    @UploadedFile(
-      new ParseFilePipe({
-        validators: [
-          new MaxFileSizeValidator({ maxSize: 5 * 1024 * 1024 }), // 5MB for thumbnails
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png|gif|webp)$/ }),
-        ],
-      }),
-    ) file: Express.Multer.File,
-    @User() user,
-  ): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.uploadFile(id, file, user, true);
-    return this.toResponseDto(pastPaper);
-  }
-
-  /* =========================
-     VIEW PAST PAPER IN BROWSER
-  ========================= */
-  @Post(':id/view')
-  @Public()
-  async getViewUrl(
-    @Param('id') id: string,
-  ): Promise<{ viewUrl: string; fileName: string }> {
-    return await this.pastPapersService.getViewUrl(id);
-  }
-
-  /* =========================
-     DOWNLOAD PAST PAPER
-  ========================= */
-  @Post(':id/download')
-  @Public()
-  async download(
-    @Param('id') id: string,
-  ): Promise<{ downloadUrl: string; fileName: string }> {
-    return await this.pastPapersService.getDownloadUrl(id);
-  }
-
-  /* =========================
-     REMOVE FILE
-  ========================= */
-  @Delete(':id/file')
-  @UseGuards(JwtAuthGuard)
-  async removeFile(@Param('id') id: string, @User() user): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.findOne(id);
-
-    if (pastPaper.uploadedById !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You can only remove files from your own past papers');
-    }
-
-    // Use the service method instead of direct repository access
-    await this.pastPapersService.removeFile(id);
-    return this.toResponseDto(await this.pastPapersService.findOne(id));
-  }
-
-  /* =========================
-     REMOVE THUMBNAIL
-  ========================= */
-  @Delete(':id/thumbnail')
-  @UseGuards(JwtAuthGuard)
-  async removeThumbnail(@Param('id') id: string, @User() user): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.findOne(id);
-
-    if (pastPaper.uploadedById !== user.id && user.role !== UserRole.ADMIN) {
-      throw new ForbiddenException('You can only remove thumbnails from your own past papers');
-    }
-
-    // Use the service method instead of direct repository access
-    await this.pastPapersService.removeThumbnail(id);
-    return this.toResponseDto(await this.pastPapersService.findOne(id));
+  async remove(@Param('id') id: string): Promise<void> {
+    await this.pastPapersService.remove(id);
   }
 }

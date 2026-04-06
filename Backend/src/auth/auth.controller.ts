@@ -1,4 +1,4 @@
-import { Controller, Post, Body, UseGuards, Get, Request, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, UsePipes, ValidationPipe, Patch } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -6,6 +6,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 
 @Controller('auth')
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -48,5 +49,11 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     return this.authService.getProfile(req.user.id);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+    return this.authService.updateProfile(req.user.id, updateUserDto);
   }
 }

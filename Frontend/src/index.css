@@ -1,60 +1,87 @@
-<<<<<<< HEAD
-=======
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
 
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-/*   Color System - Institutional Blue + Neutral Gray-White + Progressive Green accent */
-  --color-navy: #1a3f7a;          /* Deepened institutional blue */
-  --color-navy-light: #2f5fa8;    /* Calm academic blue */
- /* --color-yellow: #dffb00; */
-  
-  --color-sand: #f4f6f8;          /* Clean gray-white background */
-  --color-sand-dark: #d9dee4;     /* Soft institutional gray for borders/dividers */
-  
-  --color-red: #2e9f3a;           /* Institutional green accent */
-  
-  --color-white: #ffffff;
-  
-  /* Typography */
-  --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  
-  /* Spacing System - Extremely generous */
-  --spacing-xs: 0.5rem;
-  --spacing-sm: 1rem;
-  --spacing-md: 2rem;
-  --spacing-lg: 4rem;
-  --spacing-xl: 6rem;
-  --spacing-xxl: 10rem;
-  
-  /* Transitions */
-  --transition-slow: 800ms ease;
-  --transition-normal: 400ms ease;
-  
-  /* Borders */
-  --border-thin: 1px solid var(--color-sand-dark);
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 220 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+    --primary: 174 72% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 43 96% 52%;
+    --secondary-foreground: 220 25% 12%;
+    --muted: 210 30% 94%;
+    --muted-foreground: 220 15% 46%;
+    --accent: 174 72% 94%;
+    --accent-foreground: 174 72% 20%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 25% 88%;
+    --input: 210 25% 88%;
+    --ring: 174 72% 28%;
+    --radius: 0.75rem;
+    --font-inter: 'Inter', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
+
+    /* Custom brand colors */
+    --brand-teal: 174 72% 28%;
+    --brand-gold: 43 96% 52%;
+    --brand-red: 4 80% 50%;
+    --brand-dark: 220 25% 12%;
+
+    --sidebar-background: 174 72% 18%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 96% 52%;
+    --sidebar-primary-foreground: 220 25% 12%;
+    --sidebar-accent: 174 60% 25%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 174 50% 22%;
+    --sidebar-ring: 43 96% 52%;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 40% 96%;
+    --card: 220 25% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 220 25% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 174 72% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 43 96% 52%;
+    --secondary-foreground: 220 25% 12%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 210 20% 60%;
+    --accent: 174 50% 20%;
+    --accent-foreground: 174 72% 70%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 174 72% 40%;
+    --sidebar-background: 220 25% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 96% 52%;
+    --sidebar-primary-foreground: 220 25% 12%;
+    --sidebar-accent: 220 20% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 20% 14%;
+    --sidebar-ring: 43 96% 52%;
+  }
 }
 
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
 
->>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-<<<<<<< HEAD
-=======
-    font-display: 'Roboto';
->>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
-}
-
-
-a {
-    text-decoration: none;
-    
-}
-
-.HeaderWrapper{
-    display: flex;
-    flex-flow: row;
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
 }

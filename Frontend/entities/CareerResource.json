@@ -1,0 +1,48 @@
+{
+  "name": "CareerResource",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "university_guide",
+        "scholarship",
+        "career_path",
+        "bursary"
+      ],
+      "title": "Type"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "institution": {
+      "type": "string",
+      "title": "Institution/Organization"
+    },
+    "deadline": {
+      "type": "string",
+      "title": "Deadline"
+    },
+    "url": {
+      "type": "string",
+      "title": "Link"
+    },
+    "country": {
+      "type": "string",
+      "title": "Country"
+    },
+    "requirements": {
+      "type": "string",
+      "title": "Requirements"
+    }
+  },
+  "required": [
+    "title",
+    "type"
+  ]
+}
