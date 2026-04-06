@@ -1,4 +1,5 @@
-import { IsString, IsEmail, IsEnum, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString, IsEmail, IsIn, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
 import { UserRole } from '../../users/entities/user.entity';
 
 export class RegisterDto {
@@ -21,6 +22,14 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
-  @IsEnum(UserRole)
+  @Transform(({ value }) => {
+    if (typeof value !== 'string') return value;
+    const normalized = value.trim().toLowerCase();
+    if (normalized === 'student') return 'Student';
+    if (normalized === 'teacher') return 'Teacher';
+    if (normalized === 'admin') return 'Admin';
+    return value;
+  })
+  @IsIn([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])
   role: UserRole;
 }

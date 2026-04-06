@@ -1,415 +1,154 @@
-<<<<<<< HEAD
-import React, { useState } from "react";
-import { tutorials } from "../Data/tutorials";
-import "../styles/tutorials.css";
+﻿/**
+ * @typedef {'PSLC' | 'JCE' | 'MSCE'} TutorialLevel
+ * @typedef {'video' | 'animation' | 'audio'} TutorialType
+ * @typedef {{
+ *   id: string,
+ *   title: string,
+ *   subject: string,
+ *   level: TutorialLevel,
+ *   type: TutorialType,
+ *   duration_minutes: number,
+ *   description: string,
+ *   url: string,
+ *   thumbnail_url?: string,
+ *   topic?: string
+ * }} Tutorial
+ */
 
-const Tutorials = () => {
-  const [level, setLevel] = useState("primary");
-  const [subjectFilter, setSubjectFilter] = useState("all");
+import { useState } from "react";
+import { useQuery } from '@tanstack/react-query';
+import { fetchTutorials } from "@/api";
+import { Play, Search, Clock, Film, Volume2, Zap } from "lucide-react";
 
-  const filteredByLevel = tutorials.filter((tut) => tut.level === level);
+/** @type {Array<'All' | TutorialLevel>} */
+const LEVELS = ["All", "primary", "secondary"];
+/** @type {Array<'All' | TutorialType>} */
+const TYPES = ["All", "video", "animation", "audio"];
+/** @type {Record<TutorialType, typeof Film | typeof Zap | typeof Volume2>} */
+const TYPE_ICONS = { video: Film, animation: Zap, audio: Volume2 };
+/** @type {Record<TutorialType, string>} */
+const TYPE_COLORS = {
+  video: "bg-red-100 text-red-700",
+  animation: "bg-purple-100 text-purple-700",
+  audio: "bg-green-100 text-green-700",
+};
 
-  const allSubjects = ["all", ...new Set(filteredByLevel.map((tut) => tut.subject))];
+/** @type {Tutorial[]} */
 
-  const filtered =
-    subjectFilter === "all"
-      ? filteredByLevel
-      : filteredByLevel.filter((tut) => tut.subject === subjectFilter);
+export default function Tutorials() {
+  const [search, setSearch] = useState("");
+  const [level, setLevel] = useState(/** @type { 'All' | TutorialLevel } */ ("All"));
+  const [type, setType] = useState(/** @type { 'All' | TutorialType } */ ("All"));
+
+  const { data: tutorials = [], isLoading: loading } = useQuery({
+    queryKey: ['tutorials'],
+    queryFn: fetchTutorials,
+    staleTime: 1000 * 60,
+    retry: 1,
+  });
+
+  const filtered = tutorials.filter((t) => {
+    const matchLevel = level === "All" || t.level === level;
+    const matchType = type === "All" || t.type === type;
+    const matchSearch = !search ||
+      t.title.toLowerCase().includes(search.toLowerCase()) ||
+      t.subject?.toLowerCase().includes(search.toLowerCase());
+    return matchLevel && matchType && matchSearch;
+  });
 
   return (
-    <div className="tutorials-wrapper">
-      <h1 className="tutorials-title">Educational Tutorials</h1>
-
-      <div className="level-tabs">
-        <button
-          className={level === "primary" ? "active" : ""}
-          onClick={() => {
-            setLevel("primary");
-            setSubjectFilter("all");
-          }}
-        >
-          Primary
-        </button>
-        <button
-          className={level === "secondary" ? "active" : ""}
-          onClick={() => {
-            setLevel("secondary");
-            setSubjectFilter("all");
-          }}
-        >
-          Secondary
-        </button>
+    <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="font-poppins text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+          <Play className="h-8 w-8 text-primary" /> Tutorials
+        </h1>
+        <p className="text-muted-foreground">Animated lessons, videos & audio summaries for every topic</p>
       </div>
 
-     
-      <div className="tutorials-filter">
-        <select
-          value={subjectFilter}
-          onChange={(e) => setSubjectFilter(e.target.value)}
-          className="subject-select"
-        >
-          {allSubjects.map((subject) => (
-            <option key={subject} value={subject}>
-              {subject === "all" ? "All Subjects" : subject}
-            </option>
-          ))}
-        </select>
+      <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <input
+            type="text"
+            placeholder="Search tutorials..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full pl-9 pr-4 py-2.5 bg-card border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary"
+          />
+        </div>
       </div>
 
-      <div className="tutorials-grid">
-        {filtered.length > 0 ? (
-          filtered.map((tut) => (
-            <div className="tutorial-card" key={tut.id}>
-              <h3>{tut.title}</h3>
-              <p className="tutorial-subject">{tut.subject}</p>
-              <p className="tutorial-description">{tut.description}</p>
-
-              <div className="video-wrapper">
-                <iframe
-                  src={tut.videoUrl}
-                  title={tut.title}
-                  allowFullScreen
-                  frameBorder="0"
-                ></iframe>
-              </div>
-
-              {tut.attachments && tut.attachments.length > 0 && (
-                <div className="attachments">
-                  <h4>Attachments:</h4>
-                  <ul>
-                    {tut.attachments.map((file, idx) => (
-                      <li key={idx}>
-                        <a
-                          href={file.url}
-                          download
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="attachment-link"
-                        >
-                          {file.name}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
-          ))
-        ) : (
-          <p className="no-results">No tutorials available for this selection.</p>
-        )}
-      </div>
-    </div>
-  );
-};
-
-export default Tutorials;
-=======
-import React, { useState, useEffect } from "react";
-import { useTutorials } from "../contexts/TutorialsContext";
-import "../styles/tutorials.css";
-import Footer from "../components/Footer.jsx";
-import Header from "../components/Header";
-import PageHeader from "../components/page-header";
-import Pagination from "../components/Pagination";
-
-const Tutorials = () => {
-const [level, setLevel] = useState("secondary");
-const [subjectFilter, setSubjectFilter] = useState("all");
-const [classFilter, setClassFilter] = useState("all");
-const [currentPage, setCurrentPage] = useState(1);
-const [totalItems, setTotalItems] = useState(0);
-const itemsPerPage = 12;
-const [videoErrors, setVideoErrors] = useState({});
-
-const {
-tutorials,
-subjects,
-classes,
-loading,
-error,
-fetchTutorials,
-fetchSubjects,
-fetchClasses,
-clearError,
-} = useTutorials();
-
-useEffect(() => {
-window.scrollTo(0, 0);
-}, []);
-
-useEffect(() => {
-const loadData = async () => {
-const filters = {
-level,
-...(subjectFilter !== "all" && { subject: subjectFilter }),
-...(classFilter !== "all" && { class: classFilter }),
-};
-
-  const result = await fetchTutorials(currentPage, itemsPerPage, filters);
-
-  if (result?.total) {
-    setTotalItems(result.total);
-  }
-
-  await Promise.all([fetchSubjects(level), fetchClasses(level)]);
-};
-
-loadData();
-
-}, [level, subjectFilter, classFilter, currentPage]);
-
-useEffect(() => {
-setSubjectFilter("all");
-setClassFilter("all");
-setCurrentPage(1);
-}, [level]);
-
-const handleVideoError = (tutorialId) => {
-setVideoErrors((prev) => ({
-...prev,
-[tutorialId]: true,
-}));
-};
-
-const extractYouTubeId = (url) => {
-if (!url) return null;
-const patterns = [
-  /youtu\.be\/([a-zA-Z0-9_-]{11})(?:\?.*)?/,
-  /youtube\.com\/watch\?v=([a-zA-Z0-9_-]{11})/,
-  /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
-  /youtube\.com\/v\/([a-zA-Z0-9_-]{11})/,
-];
-for (const pattern of patterns) {
-const match = url.match(pattern);
-if (match && match[1]) return match[1];
-}
-return null;
-};
-
-const getYouTubeEmbedUrl = (url) => {
-const videoId = extractYouTubeId(url);
-return videoId ? "https://www.youtube.com/embed/${videoId}" : url;
-};
-
-const isYouTubeUrl = (url) => {
-return url?.includes("youtube.com") || url?.includes("youtu.be");
-};
-
-const getSortedClasses = () => {
-if (!classes || !Array.isArray(classes)) return [];
-return [...classes].sort((a, b) => {
-const aNum = parseInt(a.replace(/\D/g, ""));
-const bNum = parseInt(b.replace(/\D/g, ""));
-return aNum - bNum;
-});
-};
-
-if (loading && tutorials.length === 0) {
-return (
-<>
-<Header />
-<main className="tutorials-page">
-<PageHeader
-title="Educational Tutorials"
-description="Access comprehensive video tutorials covering various subjects for both Primary and Secondary levels."
-/>
-<div className="state-box">
-<span className="spinner" />
-<p>Loading tutorials...</p>
-</div>
-</main>
-<Footer />
-</>
-);
-}
-
-if (error && tutorials.length === 0) {
-return (
-<>
-<Header />
-<main className="tutorials-page">
-<div className="state-box">
-<h3>Error Loading Tutorials</h3>
-<p>{error}</p>
-<button
-onClick={() => {
-clearError();
-fetchTutorials(currentPage, itemsPerPage, { level });
-}}
->
-Retry
-</button>
-</div>
-</main>
-<Footer />
-</>
-);
-}
-
-return (
-<>
-<Header />
-<main className="tutorials-page">
-<PageHeader
-title="Educational Tutorials"
-description="Access comprehensive video tutorials covering various subjects for both Primary and Secondary levels."
-/>
-
-    <div className="level-switch">
-      <button
-        className={level === "primary" ? "active" : ""}
-        onClick={() => setLevel("primary")}
-      >
-        Primary Level
-      </button>
-      <button
-        className={level === "secondary" ? "active" : ""}
-        onClick={() => setLevel("secondary")}
-      >
-        Secondary Level
-      </button>
-    </div>
-
-    <div className="filters">
-      <select
-        value={subjectFilter}
-        onChange={(e) => {
-          setSubjectFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-      >
-        <option value="all">All Subjects</option>
-        {(subjects || []).map((subject, i) => (
-          <option key={i} value={subject}>
-            {subject}
-          </option>
+      <div className="flex flex-wrap gap-2 mb-8">
+        {LEVELS.map((l) => (
+          <button key={l} onClick={() => setLevel(l)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${level === l ? "bg-primary text-primary-foreground" : "bg-card border border-border text-foreground hover:bg-muted"}`}>
+            {l}
+          </button>
         ))}
-      </select>
-
-      <select
-        value={classFilter}
-        onChange={(e) => {
-          setClassFilter(e.target.value);
-          setCurrentPage(1);
-        }}
-      >
-        <option value="all">All Classes</option>
-        {getSortedClasses().map((cls, i) => (
-          <option key={i} value={cls}>
-            {cls}
-          </option>
+        <div className="w-px bg-border mx-1" />
+        {TYPES.map((t) => (
+          <button key={t} onClick={() => setType(t)}
+            className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all capitalize ${type === t ? "bg-secondary text-secondary-foreground" : "bg-card border border-border text-foreground hover:bg-muted"}`}>
+            {t}
+          </button>
         ))}
-      </select>
-    </div>
+      </div>
 
-    <section className="materials">
-      {tutorials.length > 0 ? (
-        <div className="materials-grid">
-          {tutorials.map((tut) => {
-            const isYouTube = isYouTubeUrl(tut.videoUrl);
-            const embedUrl = getYouTubeEmbedUrl(tut.videoUrl);
-            const thumbnail = isYouTube
-              ? `https://img.youtube.com/vi/${extractYouTubeId(
-                  tut.videoUrl
-                )}/hqdefault.jpg`
-              : "/images/video-placeholder.jpg";
-
+      {loading ? (
+        <div className="flex justify-center py-20">
+          <div className="w-8 h-8 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center py-20">
+          <Play className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+          <p className="text-muted-foreground font-medium">No tutorials available yet.</p>
+          <p className="text-muted-foreground text-sm mt-1">Video and animated lessons coming soon!</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          {filtered.map((tut) => {
+            const typeValue = tut.type || 'video';
+            const TypeIcon = TYPE_ICONS[typeValue] || Play;
             return (
-              <div className="tutorial-card" key={tut.id}>
-                <div className="card-media">
-                  {videoErrors[tut.id] ? (
-                    <div className="media-error">
-                      <span>Video unavailable</span>
-                    </div>
-                  ) : isYouTube ? (
-                    <>
-                      <img
-                        src={thumbnail}
-                        alt={tut.title}
-                        className="card-thumbnail"
-                        loading="lazy"
-                      />
-                      <iframe
-                        src={embedUrl}
-                        title={tut.title}
-                        allowFullScreen
-                        frameBorder="0"
-                        className="video-iframe"
-                        onError={() => handleVideoError(tut.id)}
-                      ></iframe>
-                    </>
-                  ) : tut.videoUrl?.endsWith(".mp4") ? (
-                    <video controls className="video-player">
-                      <source src={tut.videoUrl} type="video/mp4" />
-                    </video>
-                  ) : (
-                    <div className="media-error">
-                      <span>Format not supported</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="card-content">
-                  <h3 className="card-title">{tut.title}</h3>
-                  <div className="card-meta">
-                    <span className="badge subject">{tut.subject}</span>
-                    <span className="badge class">
-                      Class {tut.class}
-                    </span>
+              <div key={tut.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-shadow">
+                {tut.thumbnailUrl ? (
+                  <img src={tut.thumbnailUrl} alt={tut.title} className="w-full h-40 object-cover" />
+                ) : (
+                  <div className="w-full h-40 bg-muted flex items-center justify-center">
+                    <Play className="h-12 w-12 text-muted-foreground/40" />
                   </div>
-                  {tut.description && (
-                    <p className="card-description">
-                      {tut.description}
-                    </p>
-                  )}
-                </div>
-
-                <div className="card-footer">
-                  <a
-                    href={tut.videoUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="action-link primary"
-                  >
-                    Open Video
-                  </a>
+                )}
+                <div className="p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${TYPE_COLORS[typeValue] || "bg-muted text-muted-foreground"}`}>
+                      <TypeIcon className="h-3 w-3" /> {typeValue}
+                    </span>
+                    <span className="text-xs text-muted-foreground">{tut.level}</span>
+                  </div>
+                  <h3 className="font-semibold text-foreground text-sm mb-1">{tut.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-3">{tut.subject}</p>
+                  {tut.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{tut.description}</p>}
+                  <div className="flex items-center justify-between">
+                    {tut.durationMinutes && (
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" /> {tut.durationMinutes} min
+                      </span>
+                    )}
+                    {tut.videoUrl ? (
+                      <a href={tut.videoUrl} target="_blank" rel="noopener noreferrer"
+                        className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:opacity-90 flex items-center gap-1">
+                        <Play className="h-3 w-3" /> Watch
+                      </a>
+                    ) : (
+                      <span className="text-xs text-muted-foreground italic">Coming soon</span>
+                    )}
+                  </div>
                 </div>
               </div>
             );
           })}
         </div>
-      ) : (
-        <div className="empty">
-          <h3>No Tutorials Available</h3>
-          <p>
-            No tutorials found for the selected filters. Please try
-            different subject or class selection.
-          </p>
-        </div>
       )}
-    </section>
-
-    {totalItems > 0 && (
-      <Pagination
-        currentPage={currentPage}
-        onPageChange={setCurrentPage}
-        totalItems={totalItems}
-        itemsPerPage={itemsPerPage}
-      />
-    )}
-
-    <div className="status">
-      Showing {tutorials.length}{" "}
-      {tutorials.length === 1 ? "tutorial" : "tutorials"}
-      {loading && " · loading"}
     </div>
-  </main>
-  <Footer />
-</>
-
-);
-};
-
-export default Tutorials;
->>>>>>> 8e873ea79fbc5315d326d9a388dcf797b3f4a90a
+  );
+}

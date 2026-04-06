@@ -1,9 +1,12 @@
 // components/ProtectedRoute.jsx
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '@/lib/AuthContext';
 //import '../styles/ProtectedRoute.css';
 
+/**
+ * @param {{ children: import('react').ReactNode, requiredRoles?: string[] }} props
+ */
 const ProtectedRoute = ({ children, requiredRoles = ['admin', 'teacher'] }) => {
   const { user, loading, isAuthenticated } = useAuth();
   const location = useLocation();
@@ -12,7 +15,7 @@ const ProtectedRoute = ({ children, requiredRoles = ['admin', 'teacher'] }) => {
     return (
       <div className="loading-screen">
         <div className="spinner"></div>
-        <p>Loading admin portal...</p>
+        <p>Loading teachers dashboard...</p>
       </div>
     );
   }

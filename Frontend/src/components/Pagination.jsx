@@ -1,6 +1,27 @@
 import React from "react";
 import "../styles/pagination.css";
 
+/**
+ * @typedef {Object} PaginationProps
+ * @property {number} [currentPage]
+ * @property {(page: number) => void} onPageChange
+ * @property {number} [totalItems]
+ * @property {number} [itemsPerPage]
+ * @property {boolean} [showPageNumbers]
+ * @property {boolean} [showPrevNext]
+ * @property {string} [prevLabel]
+ * @property {string} [nextLabel]
+ * @property {string} [className]
+ * @property {number} [maxVisiblePages]
+ * @property {boolean} [showFirstLast]
+ * @property {string} [firstLabel]
+ * @property {string} [lastLabel]
+ * @property {boolean} [disabled]
+ */
+
+/**
+ * @param {PaginationProps} props
+ */
 const Pagination = ({
   currentPage = 1,
   onPageChange,
@@ -22,30 +43,39 @@ const Pagination = ({
   // Don't render if only one page
   if (totalPages <= 1) return null;
   
+  /**
+   * @param {number} page
+   */
   const handlePageClick = (page) => {
     if (page >= 1 && page <= totalPages && page !== currentPage) {
       onPageChange(page);
     }
   };
   
-  // Calculate visible page numbers
+  // Calculate visible page numbers with optional leading/trailing ellipsis
   const getVisiblePages = () => {
-    let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+    if (totalPages <= maxVisiblePages) {
+      return { pages: Array.from({ length: totalPages }, (_, index) => index + 1), startPage: 1, endPage: totalPages };
+    }
+
+    const half = Math.floor(maxVisiblePages / 2);
+    let startPage = Math.max(1, currentPage - half);
     let endPage = startPage + maxVisiblePages - 1;
-    
+
     if (endPage > totalPages) {
       endPage = totalPages;
-      startPage = Math.max(1, endPage - maxVisiblePages + 1);
+      startPage = totalPages - maxVisiblePages + 1;
     }
-    
+
     const pages = [];
-    for (let i = startPage; i <= endPage; i++) {
+    for (let i = startPage; i <= endPage; i += 1) {
       pages.push(i);
     }
-    return pages;
+
+    return { pages, startPage, endPage };
   };
-  
-  const visiblePages = getVisiblePages();
+
+  const { pages: visiblePages, startPage, endPage } = getVisiblePages();
 
   return (
     <div className={`pagination-container ${className}`}>
@@ -60,7 +90,7 @@ const Pagination = ({
             {firstLabel}
           </button>
         )}
-        
+
         {showPrevNext && (
           <button
             className="pagination-btn pagination-prev"
@@ -71,41 +101,56 @@ const Pagination = ({
             {prevLabel}
           </button>
         )}
-        
+
         {showPageNumbers && (
           <div className="pagination-pages">
-            {visiblePages.map(page => (
+            {startPage > 1 && (
+              <>
+                <button
+                  className="pagination-btn pagination-page"
+                  onClick={() => handlePageClick(1)}
+                  disabled={disabled}
+                  aria-label="Page 1"
+                >
+                  1
+                </button>
+                {startPage > 2 && (
+                  <span className="pagination-ellipsis" aria-hidden="true">...</span>
+                )}
+              </>
+            )}
+
+            {visiblePages.map((page) => (
               <button
                 key={page}
-                className={`pagination-btn pagination-page ${
-                  currentPage === page ? 'active' : ''
-                }`}
+                className={`pagination-btn pagination-page ${currentPage === page ? 'active' : ''}`}
                 onClick={() => handlePageClick(page)}
                 disabled={disabled}
                 aria-label={`Page ${page}`}
-                aria-current={currentPage === page ? "page" : undefined}
+                aria-current={currentPage === page ? 'page' : undefined}
               >
                 {page}
               </button>
             ))}
+
+            {endPage < totalPages && (
+              <>
+                {endPage < totalPages - 1 && (
+                  <span className="pagination-ellipsis" aria-hidden="true">...</span>
+                )}
+                <button
+                  className="pagination-btn pagination-page"
+                  onClick={() => handlePageClick(totalPages)}
+                  disabled={disabled}
+                  aria-label={`Page ${totalPages}`}
+                >
+                  {totalPages}
+                </button>
+              </>
+            )}
           </div>
         )}
-        
-        {showPageNumbers && totalPages > maxVisiblePages && currentPage < totalPages - 2 && (
-          <span className="pagination-ellipsis">...</span>
-        )}
-        
-        {showPageNumbers && totalPages > maxVisiblePages && currentPage < totalPages - 1 && (
-          <button
-            className="pagination-btn pagination-page"
-            onClick={() => handlePageClick(totalPages)}
-            disabled={disabled}
-            aria-label={`Page ${totalPages}`}
-          >
-            {totalPages}
-          </button>
-        )}
-        
+
         {showPrevNext && (
           <button
             className="pagination-btn pagination-next"
@@ -116,7 +161,7 @@ const Pagination = ({
             {nextLabel}
           </button>
         )}
-        
+
         {showFirstLast && (
           <button
             className="pagination-btn pagination-last"
@@ -127,7 +172,7 @@ const Pagination = ({
             {lastLabel}
           </button>
         )}
-        
+
         {showPageNumbers && (
           <div className="pagination-info">
             Page {currentPage} of {totalPages}

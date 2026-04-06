@@ -1,31 +1,30 @@
-import { AIModule } from './ai/ai.module';
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_GUARD } from '@nestjs/core';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
-import { NewsModule } from './news/news.module';
 import { JwtAuthGuardWithPublic } from './auth/guards/public.guard';
 import { User } from './users/entities/user.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
-import { News } from './news/entities/news.entity';
-import { Book } from './books/entities/book.entity';
-import { PastPaper } from './past-papers/entities/past-paper.entity'; 
 import { CareerResource } from './career-resources/entities/career-resource.entity';
 import { Quiz } from './quizzes/entities/quiz.entity';
 import { Question } from './quizzes/entities/question.entity';
 import { Tutorial } from './tutorials/entities/tutorial.entity';
-import { Message } from './messages/entities/message.entity'; 
+import { PastPaper } from './past-papers/entities/past-paper.entity';
+import { StudyNote } from './study-notes/entities/study-note.entity';
+import { Attendance } from './attendance/entities/attendance.entity';
 import * as Joi from 'joi';
-import { BooksModule } from './books/books.module';
-import { PastPapersModule } from './past-papers/past-papers.module';
-import { CareerResourcesModule } from "./career-resources/career-resources.module";
+import { CareerResourcesModule } from './career-resources/career-resources.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
 import { TutorialsModule } from './tutorials/tutorials.module';
-import { MessagesModule } from './messages/messages.module';
-
-import { DashboardModule } from './dashboard/dashboard.module';
+import { PastPapersModule } from './past-papers/past-papers.module';
+import { StudyNotesModule } from './study-notes/study-notes.module';
+import { AttendanceModule } from './attendance/attendance.module';
+import { AnnouncementsModule } from './announcements/announcements.module';
+import { DiscussionsModule } from './discussions/discussions.module';
+import { Announcement } from './announcements/entities/announcement.entity';
+import { Discussion } from './discussions/entities/discussion.entity';
 
 @Module({
   imports: [
@@ -36,10 +35,6 @@ import { DashboardModule } from './dashboard/dashboard.module';
         DATABASE_URL: Joi.string().required(),
         JWT_SECRET: Joi.string().required(),
         JWT_REFRESH_SECRET: Joi.string().required(),
-        CLOUDINARY_CLOUD_NAME: Joi.string().optional(),
-        CLOUDINARY_API_KEY: Joi.string().optional(),
-        GROQ_API_KEY: Joi.string().optional(),
-        CLOUDINARY_API_SECRET: Joi.string().optional(),
         PORT: Joi.number().default(3000),
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
       }),
@@ -55,16 +50,17 @@ import { DashboardModule } from './dashboard/dashboard.module';
         url: configService.get<string>('DATABASE_URL'),
         ssl: configService.get<string>('NODE_ENV') === 'production',
         entities: [
-          User, 
-          RefreshToken, 
-          News, 
-          Book, 
-          PastPaper, 
+          User,
+          RefreshToken,
           CareerResource,
           Quiz,
           Question,
           Tutorial,
-          Message 
+          PastPaper,
+          StudyNote,
+          Attendance,
+          Announcement,
+          Discussion,
         ],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
@@ -73,15 +69,14 @@ import { DashboardModule } from './dashboard/dashboard.module';
     }),
     UsersModule,
     AuthModule,
-    NewsModule,
     PastPapersModule,
-    BooksModule,
     CareerResourcesModule,
     QuizzesModule,
     TutorialsModule,
-    MessagesModule, 
-    DashboardModule,
-    AIModule
+    StudyNotesModule,
+    AttendanceModule,
+    AnnouncementsModule,
+    DiscussionsModule,
   ],
   controllers: [],
   providers: [

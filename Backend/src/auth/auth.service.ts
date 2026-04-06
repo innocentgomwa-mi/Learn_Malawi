@@ -9,6 +9,7 @@ import { UsersService } from '../users/users.service';
 import { User, UserRole } from '../users/entities/user.entity';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
+import { UpdateUserDto } from '../users/dto/update-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { TokenResponseDto } from './dto/token-response.dto';
 import { RefreshToken } from './entities/refresh-token.entity';
@@ -152,8 +153,13 @@ export class AuthService {
     return { accessToken, refreshToken };
   }
 
+  async updateProfile(userId: string, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password'>> {
+    const updatedUser = await this.usersService.update(userId, updateUserDto);
+    const { password, ...updated } = updatedUser;
+    return updated;
+  }
 
-async getProfile(userId: string): Promise<Omit<User, 'password'>> {
+  async getProfile(userId: string): Promise<Omit<User, 'password'>> {
     const user = await this.usersService.findOne(userId);
 
     return user as Omit<User, 'password'>;
