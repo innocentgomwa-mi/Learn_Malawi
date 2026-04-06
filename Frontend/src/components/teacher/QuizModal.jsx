@@ -172,7 +172,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
         })),
       };
 
-      if (existing) {
+      if (existing?.id) {
         await updateQuiz(existing.id, payload);
       } else {
         await createQuiz(payload);

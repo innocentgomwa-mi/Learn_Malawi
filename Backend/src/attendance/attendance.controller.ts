@@ -32,7 +32,9 @@ export class AttendanceController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  async create(@Body() createAttendanceDto: CreateAttendanceDto): Promise<Attendance> {
+  async create(
+    @Body() createAttendanceDto: CreateAttendanceDto,
+  ): Promise<Attendance> {
     return this.attendanceService.create(createAttendanceDto);
   }
 

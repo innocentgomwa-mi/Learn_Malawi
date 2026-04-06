@@ -1,4 +1,10 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum EducationLevel {
   PSLC = 'PSLC',
@@ -9,19 +15,19 @@ export enum EducationLevel {
 @Entity('past_papers')
 export class PastPaper {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   subject?: string;
 
   @Column({ type: 'varchar', length: 50 })
-  level: EducationLevel;
+  level!: EducationLevel;
 
   @Column({ type: 'integer' })
-  year: number;
+  year!: number;
 
   @Column({ type: 'text', nullable: true })
   description?: string;
@@ -36,14 +42,14 @@ export class PastPaper {
   class?: string;
 
   @Column({ type: 'integer', default: 0 })
-  downloadCount: number;
+  downloadCount!: number;
 
   @Column({ type: 'integer', default: 0 })
-  viewCount: number;
+  viewCount!: number;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

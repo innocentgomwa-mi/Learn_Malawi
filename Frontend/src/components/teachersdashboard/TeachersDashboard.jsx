@@ -60,21 +60,12 @@ export default function TeachersDashboard() {
     );
   }
 
-  const userName = user?.full_name?.split(' ')[0] || user?.firstName || user?.email?.split('@')[0] || 'Teacher';
-
   return (
     <div className="flex min-h-screen bg-slate-50">
       <TeacherSidebar />
       <main className="flex-1 p-8 animate-fade-in">
-        <div className="mb-8">
-          <h1 className="text-2xl font-jakarta font-bold text-foreground">Welcome back, {userName} 👋</h1>
-          <p className="text-muted-foreground mt-1">
-            Manage your learning resources for Learn Malawi. All uploads are reviewed by an administrator before going live.
-          </p>
-        </div>
-
         <div className="space-y-6">
-          <Outlet context={{ counts, statuses, userName }} />
+          <Outlet context={{ counts, statuses }} />
         </div>
       </main>
     </div>

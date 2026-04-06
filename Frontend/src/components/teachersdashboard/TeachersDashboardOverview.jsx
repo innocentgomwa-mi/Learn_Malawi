@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { useOutletContext } from 'react-router-dom';
+import { Link, useOutletContext } from 'react-router-dom';
 import { BookOpen, FileText, PlayCircle, HelpCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
 
 const resourceCards = [
@@ -32,13 +32,17 @@ export default function TeachersDashboardOverview() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {resourceCards.map(({ label, key, icon: Icon, color }) => (
-            <div key={key} className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow group">
+            <Link
+              key={key}
+              to={`/teacher/${key === 'notes' ? 'study-notes' : key === 'papers' ? 'past-papers' : key}`}
+              className="bg-card rounded-xl border border-border p-5 hover:shadow-md transition-shadow group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+            >
               <div className={`${color} w-10 h-10 rounded-lg flex items-center justify-center mb-3`}>
                 <Icon className="w-5 h-5 text-white" />
               </div>
               <p className="text-2xl font-jakarta font-bold text-foreground">{counts[key]}</p>
               <p className="text-sm text-muted-foreground mt-0.5">{label}</p>
-            </div>
+            </Link>
           ))}
         </div>
       </section>

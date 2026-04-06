@@ -28,6 +28,7 @@ import TeachersAttendance from './components/teachersdashboard/TeachersAttendanc
 import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics';
 import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussions';
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
+import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AuthenticatedApp = () => {
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
           <Route path="analytics" element={<TeachersAnalytics />} />
           <Route path="discussions" element={<TeachersDiscussions />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />
+          <Route path="settings" element={<TeacherSettings />} />
         </Route>
         <Route path="/teachersdashboard" element={<Navigate to="/teacher" replace />} />
         <Route path="/onboarding" element={<Onboarding />} />

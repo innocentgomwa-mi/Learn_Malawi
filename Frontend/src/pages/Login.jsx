@@ -25,16 +25,11 @@ const Login = () => {
       
       if (userRole === 'admin' || userRole === 'teacher') {
         console.log('Redirecting to teachers dashboard...');
-        // If user came from a protected route, redirect them back
-        if (from !== '/') {
-          navigate(from, { replace: true });
-        } else {
-          navigate('/teacher', { replace: true });
-        }
+        const target = from !== '/' ? from : '/teacher';
+        navigate(target);
       } else {
         console.log('User is not admin/teacher, redirecting to homepage...');
-        // Regular users go to homepage
-        navigate('/', { replace: true });
+        navigate('/');
       }
     }
   }, [user, navigate, from]);

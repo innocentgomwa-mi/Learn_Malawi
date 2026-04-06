@@ -1,40 +1,46 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 export enum EducationLevel {
   PRIMARY = 'primary',
-  SECONDARY = 'secondary'
+  SECONDARY = 'secondary',
 }
 
 @Entity('tutorials')
 export class Tutorial {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'varchar', length: 100 })
-  subject: string;
+  subject!: string;
 
   @Column({
     type: 'enum',
     enum: EducationLevel,
-    default: EducationLevel.PRIMARY
+    default: EducationLevel.PRIMARY,
   })
-  level: EducationLevel;
+  level!: EducationLevel;
 
   @Column({ type: 'varchar', length: 50 })
-  class: string;
+  class!: string;
 
   @Column({ type: 'text' })
-  description: string;
+  description!: string;
 
   @Column({ type: 'varchar', length: 500 })
-  videoUrl: string;
+  videoUrl!: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

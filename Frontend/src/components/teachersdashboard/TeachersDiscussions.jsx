@@ -1,18 +1,26 @@
-﻿import { useEffect, useState } from 'react';
+﻿/**
+ * @typedef {{
+ *   id: string;
+ *   title: string;
+ *   body: string;
+ *   comments?: Array<{ author: string; message: string; createdAt: string }>;
+ *   createdAt: string;
+ * }} DiscussionThread
+ */
+
+import { useEffect, useState } from 'react';
 import { MessageSquare, Plus, UploadCloud } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { fetchDiscussions, createDiscussion } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function TeacherDiscussions() {
   const { user } = useAuth();
-  const [threads, setThreads] = useState([]);
+  const [threads, setThreads] = useState(/** @type {DiscussionThread[]} */ ([]));
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState(/** @type {string | null} */ (null));
 
   const loadThreads = async () => {
     setLoading(true);
@@ -23,7 +31,11 @@ export default function TeacherDiscussions() {
       const response = await fetchDiscussions({ teacherEmail });
       setThreads(Array.isArray(response) ? response : []);
     } catch (fetchError) {
-      setError(fetchError.message ?? 'Unable to load discussions.');
+      const message =
+        fetchError instanceof Error
+          ? fetchError.message
+          : String(fetchError);
+      setError(message || 'Unable to load discussions.');
     } finally {
       setLoading(false);
     }
@@ -57,10 +69,24 @@ export default function TeacherDiscussions() {
       setNewBody('');
       await loadThreads();
     } catch (createError) {
-      setError(createError.message ?? 'Unable to create discussion.');
+      const message =
+        createError instanceof Error
+          ? createError.message
+          : String(createError);
+      setError(message || 'Unable to create discussion.');
     } finally {
       setSaving(false);
     }
+  };
+
+  /** @param {import('react').ChangeEvent<HTMLInputElement>} event */
+  const handleTitleChange = (event) => {
+    setNewTitle(event.target.value);
+  };
+
+  /** @param {import('react').ChangeEvent<HTMLTextAreaElement>} event */
+  const handleBodyChange = (event) => {
+    setNewBody(event.target.value);
   };
 
   return (
@@ -86,7 +112,13 @@ export default function TeacherDiscussions() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700">Title</label>
-                <Input value={newTitle} onChange={(event) => setNewTitle(event.target.value)} placeholder="Enter thread title" />
+                <input
+                  type="text"
+                  value={newTitle}
+                  onChange={handleTitleChange}
+                  placeholder="Enter thread title"
+                  className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700">Description</label>
@@ -94,15 +126,20 @@ export default function TeacherDiscussions() {
                   className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
                   rows={5}
                   value={newBody}
-                  onChange={(event) => setNewBody(event.target.value)}
+                  onChange={handleBodyChange}
                   placeholder="Write the discussion thread content here"
                 />
               </div>
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
-              <Button onClick={handleCreateThread} disabled={saving}>
+              <button
+                type="button"
+                onClick={handleCreateThread}
+                disabled={saving}
+                className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 <Plus className="mr-2 h-4 w-4" />
                 {saving ? 'Creating...' : 'Create thread'}
-              </Button>
+              </button>
             </div>
           </div>
 
@@ -112,9 +149,14 @@ export default function TeacherDiscussions() {
                 <h2 className="text-lg font-semibold">Active discussion threads</h2>
                 <p className="text-sm text-slate-500">Threads created by you appear below.</p>
               </div>
-              <Button variant="secondary" onClick={loadThreads} disabled={loading}>
+              <button
+                type="button"
+                onClick={loadThreads}
+                disabled={loading}
+                className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+              >
                 Refresh
-              </Button>
+              </button>
             </div>
 
             {loading ? (
