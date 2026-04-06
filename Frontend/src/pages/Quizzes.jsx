@@ -18,7 +18,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { saveUserAttempt } from "@/lib/dashboardStorage";
-import { fetchQuizzes } from "@/api";
+import { fetchQuizzes, fetchAiChat } from "@/api";
 import Leaderboard from "../components/Leaderboard";
 
 /** @type {Array<'All' | string>} */
@@ -103,9 +103,18 @@ export default function Quizzes() {
     }
 
     setFeedbackLoading(true);
-    const feedback = `Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongTopics.length ? wrongTopics.join(", ") : "core concepts"}. You are making good progress!`;
-    setAiFeedback(feedback);
-    setFeedbackLoading(false);
+    try {
+      const wrongList = wrongTopics.length > 0 ? wrongTopics.join(', ') : 'core concepts';
+      const prompt = `You are a friendly Malawi curriculum study tutor. A student completed the quiz titled "${activeQuiz.title}" in ${activeQuiz.subject} at ${activeQuiz.level} level and scored ${score}%. The questions they answered incorrectly are: ${wrongList}. Provide encouraging feedback, explain what to review next, and suggest one or two study tips.`;
+      const response = await fetchAiChat(prompt);
+      const feedbackText = typeof response === 'string' ? response : response?.text;
+      setAiFeedback(feedbackText || `Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongList}. You are making good progress!`);
+    } catch (error) {
+      console.error(error);
+      setAiFeedback(`Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongTopics.length ? wrongTopics.join(', ') : 'core concepts'}. You are making good progress!`);
+    } finally {
+      setFeedbackLoading(false);
+    }
   };
 
   if (activeQuiz) {

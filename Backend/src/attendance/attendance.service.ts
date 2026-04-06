@@ -31,11 +31,15 @@ export class AttendanceService {
     const query = this.attendanceRepository.createQueryBuilder('attendance');
 
     if (teacherEmail) {
-      query.andWhere('attendance.teacherEmail = :teacherEmail', { teacherEmail });
+      query.andWhere('attendance.teacherEmail = :teacherEmail', {
+        teacherEmail,
+      });
     }
 
     if (course) {
-      query.andWhere('attendance.course ILIKE :course', { course: `%${course}%` });
+      query.andWhere('attendance.course ILIKE :course', {
+        course: `%${course}%`,
+      });
     }
 
     if (date) {
@@ -46,20 +50,26 @@ export class AttendanceService {
   }
 
   async findOne(id: string): Promise<Attendance> {
-    const attendance = await this.attendanceRepository.findOne({ where: { id } });
+    const attendance = await this.attendanceRepository.findOne({
+      where: { id },
+    });
     if (!attendance) {
       throw new NotFoundException(`Attendance record with ID ${id} not found`);
     }
     return attendance;
   }
 
-  async update(id: string, updateAttendanceDto: UpdateAttendanceDto): Promise<Attendance> {
+  async update(
+    id: string,
+    updateAttendanceDto: UpdateAttendanceDto,
+  ): Promise<Attendance> {
     const attendance = await this.findOne(id);
     Object.assign(attendance, {
       course: updateAttendanceDto.course ?? attendance.course,
       classLevel: updateAttendanceDto.class_level ?? attendance.classLevel,
       date: updateAttendanceDto.date ?? attendance.date,
-      teacherEmail: updateAttendanceDto.teacher_email ?? attendance.teacherEmail,
+      teacherEmail:
+        updateAttendanceDto.teacher_email ?? attendance.teacherEmail,
       records: updateAttendanceDto.records ?? attendance.records,
     });
     return this.attendanceRepository.save(attendance);

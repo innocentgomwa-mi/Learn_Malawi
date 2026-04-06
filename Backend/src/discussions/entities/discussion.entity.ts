@@ -1,25 +1,37 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+
+export type DiscussionComment = {
+  author: string;
+  message: string;
+  createdAt: string;
+};
 
 @Entity('discussions')
 export class Discussion {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'text' })
-  body: string;
+  body!: string;
 
   @Column({ name: 'teacher_email', length: 255 })
-  teacherEmail: string;
+  teacherEmail!: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  comments: any[];
+  comments!: DiscussionComment[] | null;
 
   @CreateDateColumn({ name: 'created_at' })
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
-  updatedAt: Date;
+  updatedAt!: Date;
 }

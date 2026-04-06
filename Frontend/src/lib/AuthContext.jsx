@@ -4,6 +4,8 @@
  *   email?: string,
  *   firstName?: string,
  *   lastName?: string,
+ *   full_name?: string,
+ *   school?: string,
  *   role?: string,
  * }} User
  *
@@ -40,12 +42,12 @@ const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(ACCESS_TOKEN_KEY);
+  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
-  return window.localStorage.getItem(REFRESH_TOKEN_KEY);
+  return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
 /**
@@ -54,14 +56,14 @@ function getStoredRefreshToken() {
  */
 function saveAuthTokens(accessToken, refreshToken) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
-  window.localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  window.sessionStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
+  window.sessionStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
 }
 
 function clearAuthTokens() {
   if (typeof window === 'undefined') return;
-  window.localStorage.removeItem(ACCESS_TOKEN_KEY);
-  window.localStorage.removeItem(REFRESH_TOKEN_KEY);
+  window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
+  window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 }
 
 /**

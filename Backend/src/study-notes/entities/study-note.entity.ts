@@ -1,18 +1,24 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('study_notes')
 export class StudyNote {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ type: 'varchar', length: 255 })
-  title: string;
+  title!: string;
 
   @Column({ type: 'varchar', length: 100 })
-  subject: string;
+  subject!: string;
 
   @Column({ type: 'varchar', length: 50 })
-  level: string;
+  level!: string;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   grade?: string;
@@ -30,8 +36,8 @@ export class StudyNote {
   fileUrl?: string;
 
   @CreateDateColumn()
-  createdAt: Date;
+  createdAt!: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

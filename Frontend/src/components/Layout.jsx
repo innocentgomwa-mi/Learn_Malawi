@@ -21,6 +21,7 @@ export default function Layout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, isAuthenticated, logout } = useAuth();
+  const isTeacher = user?.role?.toLowerCase() === 'teacher';
 
   const closeMenu = () => setMobileOpen(false);
   const hideTopNav = location.pathname.startsWith('/teacher');
@@ -169,7 +170,7 @@ export default function Layout() {
       </footer>
 
       {/* AI Tutor floating widget */}
-      <AiTutor />
+      {!isTeacher && <AiTutor />}
     </div>
   );
 }

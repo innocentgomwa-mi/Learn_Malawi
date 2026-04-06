@@ -1,30 +1,36 @@
-import { Entity, Column, PrimaryGeneratedColumn, ManyToOne, JoinColumn } from 'typeorm';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  ManyToOne,
+  JoinColumn,
+} from 'typeorm';
 import { Quiz } from './quiz.entity';
 
 @Entity('questions')
 export class Question {
   @PrimaryGeneratedColumn()
-  id: number;
+  id!: number;
 
   @Column({ type: 'text' })
-  question: string;
+  question!: string;
 
   @Column({ type: 'simple-array' })
-  options: string[];
+  options!: string[];
 
   @Column({ type: 'varchar', length: 255 })
-  answer: string;
+  answer!: string;
 
   @Column({ type: 'int' })
-  timeLimit: number;
+  timeLimit!: number;
 
   @Column({ type: 'int', default: 0 })
-  completionTimePerQuestion: number;
+  completionTimePerQuestion!: number;
 
   @ManyToOne(() => Quiz, (quiz) => quiz.questions, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'quizId' })
-  quiz: Quiz;
+  quiz!: Quiz;
 
   @Column()
-  quizId: number;
+  quizId!: number;
 }

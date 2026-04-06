@@ -1,10 +1,10 @@
 ﻿/**
  * @typedef {{
  *   id: string;
- *   title?: string;
- *   subject?: string;
+ *   title: string;
+ *   subject: string;
  *   year?: number;
- *   level?: string;
+ *   level: string;
  *   markingSchemeUrl?: string;
  *   status?: string;
  *   createdAt?: string | number | Date;

@@ -23,6 +23,7 @@ import { StudyNotesModule } from './study-notes/study-notes.module';
 import { AttendanceModule } from './attendance/attendance.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { DiscussionsModule } from './discussions/discussions.module';
+import { AiModule } from './ai/ai.module';
 import { Announcement } from './announcements/entities/announcement.entity';
 import { Discussion } from './discussions/entities/discussion.entity';
 
@@ -37,6 +38,8 @@ import { Discussion } from './discussions/entities/discussion.entity';
         JWT_REFRESH_SECRET: Joi.string().required(),
         PORT: Joi.number().default(3000),
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
+        HF_API_KEY: Joi.string().required(),
+        HF_MODEL: Joi.string().default('google/flan-t5-small'),
       }),
       validationOptions: {
         allowUnknown: true,
@@ -77,6 +80,7 @@ import { Discussion } from './discussions/entities/discussion.entity';
     AttendanceModule,
     AnnouncementsModule,
     DiscussionsModule,
+    AiModule,
   ],
   controllers: [],
   providers: [

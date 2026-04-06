@@ -5,29 +5,29 @@ import { ApiProperty } from '@nestjs/swagger';
 export class CareerResourceResponseDto {
   @ApiProperty()
   @Expose()
-  id: number;
+  id!: number;
 
   @ApiProperty()
   @Expose()
-  title: string;
+  title!: string;
 
   @ApiProperty()
   @Expose()
-  description: string;
+  description!: string;
 
   @ApiProperty()
   @Expose()
-  link: string;
+  link!: string;
 
   @ApiProperty()
   @Expose()
-  icon: string;
+  icon!: string;
 
   @ApiProperty()
   @Expose()
-  createdAt: Date;
+  createdAt!: Date;
 
   @ApiProperty()
   @Expose()
-  updatedAt: Date;
+  updatedAt!: Date;
 }

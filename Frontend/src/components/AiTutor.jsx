@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Bot, Loader2 } from "lucide-react";
+import { X, Send, Bot, Loader2 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { fetchAiChat } from "@/api";
 
 export default function AiTutor() {
   const [open, setOpen] = useState(false);
@@ -25,16 +26,24 @@ export default function AiTutor() {
     setInput("");
     setLoading(true);
 
-    const history = [...messages, userMsg]
-      .map((m) => `${m.role === "user" ? "Student" : "Tutor"}: ${m.content}`)
-      .join("\n");
+    const prompt = `You are a friendly Malawi study tutor. Answer the student's question clearly, gently, and with examples. Student asked: ${input}`;
 
-    const feedback = `Great question! I’m here as your local study tutor. Review the topic again with examples, practise the important problems, and keep asking questions when anything is unclear. (${input.slice(0, 120)})`;
-
-    setTimeout(() => {
-      setMessages((prev) => [...prev, { role: "assistant", content: feedback }]);
+    try {
+      const response = await fetchAiChat(prompt);
+      const assistantText = typeof response === "string" ? response : response?.text || "Sorry, I couldn't generate an answer right now.";
+      setMessages((prev) => [...prev, { role: "assistant", content: assistantText }]);
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "Sorry, I couldn't connect to the AI service. Please try again later.",
+        },
+      ]);
+      console.error(error);
+    } finally {
       setLoading(false);
-    }, 600);
+    }
   };
 
   return (

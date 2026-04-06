@@ -9,7 +9,7 @@ import { createPastPaper, updatePastPaper, createStudyNote, updateStudyNote, cre
  * @property {() => void} onClose
  * @property {() => void} onSaved
  * @property {'studynote'|'tutorial'|'pastpaper'} type
- * @property {StudyNote|Tutorial|PastPaper|undefined} [existing]
+ * @property {StudyNote|Tutorial|PastPaper|null|undefined} [existing]
  */
 
 /**
