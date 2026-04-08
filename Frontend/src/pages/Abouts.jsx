@@ -1,16 +1,8 @@
 import React from "react";
 import "../styles/abouts.css";
 import { FaUsers, FaBullseye, FaLightbulb, FaChalkboardTeacher, FaBookOpen, FaClock, FaProjectDiagram } from "react-icons/fa";
-import inno from "../images/inno.jpg";
-import willard from "../images/willard.JPG";
 
 const About = () => {
-  const teamMembers = [
-    { name: "Willard Zimba", role: "Founder", bio: "Passionate about education in Malawi.", image: willard },
-    { name: "Willard Zimba", role: "Content Lead", bio: "Ensures quality learning resources.", image: willard },
-    { name: "Innocent Frank Gomwa", role: "Developer", bio: "Builds the Learn Malawi platform.", image: inno },
-  ];
-
   const missionVision = [
     {
       title: "Mission",
@@ -42,35 +34,36 @@ const About = () => {
 
   return (
     <div className="about-wrapper">
-      <section className="story-section">
-        <h2>Our Story</h2>
-        <p>
-          <br />
-          Learn Malawi is a free digital education platform dedicated to one
-          powerful goal: Free, Quality Education for Every Malawian Student.
-          <br /> We provide comprehensive, curriculum-aligned learning resources
-          for JCE and MSCE students across Malawi...
-        </p>
-      </section>
+      <div className="about-hero">
+        <section className="story-section">
+          <span className="section-label">About Learn Malawi</span>
+          <h2>Free education for every Malawian student.</h2>
+          <p>
+            Learn Malawi is a free digital education platform dedicated to one
+            powerful goal: free, quality education for every secondary school
+            student in Malawi. We provide curriculum-aligned resources for JCE
+            and MSCE learners, with accessible, engaging content built for real
+            classroom success.
+          </p>
+        </section>
 
-      
-      <section className="mission-vision">
-        <h2>Mission & Vision</h2>
-        <div className="mv-grid">
-          {missionVision.map((mv, index) => {
-            const Icon = mv.icon;
-            return (
-              <div key={index} className="mv-card">
-                <Icon className="mv-icon" />
-                <h3>{mv.title}</h3>
-                <p>{mv.description}</p>
-              </div>
-            );
-          })}
-        </div>
-      </section>
+        <section className="mission-vision">
+          <h2>Mission & Vision</h2>
+          <div className="mv-grid">
+            {missionVision.map((mv, index) => {
+              const Icon = mv.icon;
+              return (
+                <div key={index} className="mv-card">
+                  <Icon className="mv-icon" />
+                  <h3>{mv.title}</h3>
+                  <p>{mv.description}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      </div>
 
-      
       <section className="values-section">
         <h2>Our Values</h2>
         <div className="values-grid">
@@ -87,7 +80,6 @@ const About = () => {
         </div>
       </section>
 
-      
       <section className="philosophy-section">
         <h2>Our Educational Philosophy</h2>
         <ul className="philosophy-list">
@@ -95,37 +87,28 @@ const About = () => {
             const Icon = point.icon;
             return (
               <li key={index}>
-                <Icon className="philosophy-icon" /> {point.text}
+                <Icon className="philosophy-icon" />
+                <span>{point.text}</span>
               </li>
             );
           })}
         </ul>
       </section>
 
-      
-      <section className="team-section">
-        <h2>Meet Our Team</h2>
-        <div className="team-grid">
-          {teamMembers.map((member, index) => (
-            <div key={index} className="team-card">
-              <img src={member.image} alt={member.name} className="team-image" />
-              <h3>{member.name}</h3>
-              <p>{member.role}</p>
-              <p>{member.bio}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      
       <section className="contact-section">
-        <h2>Contact Us</h2>
-        <p>If you have any questions or suggestions, feel free to reach out to us!</p>
-        <p>Mr Willard Zimba on +265 997 67 47 58 OR Mr Innocent Gomwa on +265 883 36 08 44</p>
+        <div className="contact-copy">
+          <h2>Contact Us</h2>
+          <p>If you have any questions or suggestions, feel free to reach out.</p>
+          <p>
+            Mr Willard Zimba: +265 997 67 47 58
+            <br />
+            Mr Innocent Gomwa: +265 883 36 08 44
+          </p>
+        </div>
         <form className="contact-form">
           <input type="text" name="name" placeholder="Your Name" required />
           <input type="email" name="email" placeholder="Your Email" required />
-          <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
+          <textarea name="message" rows={5} placeholder="Your Message" required />
           <button type="submit">Send Message</button>
         </form>
       </section>

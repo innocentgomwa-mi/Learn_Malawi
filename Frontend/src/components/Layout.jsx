@@ -1,7 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import { useState } from "react";
 import {
-  BookOpen, FileText, Play, Brain, Briefcase, Home, Menu, X, GraduationCap, Settings, User
+  BookOpen, FileText, Play, Brain, Briefcase, Home, Menu, X, GraduationCap, Settings, User, Info
 } from "lucide-react";
 import AiTutor from "./AiTutor";
 import ThemeToggle from "./ThemeToggle";
@@ -13,6 +13,7 @@ const navItems = [
   { path: "/study-notes", label: "Study Notes", icon: BookOpen },
   { path: "/past-papers", label: "Past Papers", icon: FileText },
   { path: "/tutorials", label: "Tutorials", icon: Play },
+  { path: "/abouts", label: "About", icon: Info, guestOnly: true },
   { path: "/quizzes", label: "Quizzes", icon: Brain, authRequired: true },
   { path: "/career", label: "Career Resources", icon: Briefcase, authRequired: true },
 ];
@@ -47,7 +48,7 @@ export default function Layout() {
               {/* Desktop Nav */}
               <nav className="hidden md:flex items-center gap-1">
                 {navItems
-                  .filter((item) => !item.authRequired || isAuthenticated)
+                  .filter((item) => (!item.authRequired || isAuthenticated) && (!item.guestOnly || !isAuthenticated))
                   .map(({ path, label, icon: Icon }) => (
                     <Link
                       key={path}
@@ -117,7 +118,7 @@ export default function Layout() {
             {mobileOpen && (
               <div className="md:hidden border-t border-primary-foreground/20 bg-primary px-4 pb-4">
                 {navItems
-                  .filter((item) => !item.authRequired || isAuthenticated)
+                  .filter((item) => (!item.authRequired || isAuthenticated) && (!item.guestOnly || !isAuthenticated))
                   .map(({ path, label, icon: Icon }) => (
                     <Link
                       key={path}
