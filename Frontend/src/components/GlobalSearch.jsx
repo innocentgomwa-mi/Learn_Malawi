@@ -89,7 +89,7 @@ export default function GlobalSearch() {
       </button>
 
       <div
-        className={`absolute right-0 top-full mt-2 w-[min(100vw,28rem)] overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 ease-out ${open ? 'opacity-100 scale-100 max-h-[32rem]' : 'opacity-0 scale-95 max-h-0 pointer-events-none'}`}
+        className={`absolute top-full mt-2 left-1/2 z-50 w-[min(100vw-1rem,28rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 ease-out md:left-auto md:right-0 md:translate-x-0 ${open ? 'opacity-100 scale-100 max-h-[32rem] pointer-events-auto' : 'opacity-0 scale-95 max-h-0 pointer-events-none'}`}
         aria-hidden={!open}
       >
         <div className="flex items-center gap-3 px-4 py-3 border-b border-border">

@@ -12,6 +12,7 @@ import PastPapers from './pages/PastPapers';
 import Tutorials from './pages/Tutorials';
 import Quizzes from './pages/Quizzes';
 import Career from './pages/Career';
+import Abouts from './pages/Abouts';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -32,7 +33,7 @@ import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -62,6 +63,7 @@ const AuthenticatedApp = () => {
         <Route path="/study-notes" element={<StudyNotes />} />
         <Route path="/past-papers" element={<PastPapers />} />
         <Route path="/tutorials" element={<Tutorials />} />
+        <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />
