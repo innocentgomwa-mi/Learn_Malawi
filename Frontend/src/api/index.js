@@ -8,14 +8,20 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const ACCESS_TOKEN_KEY = 'learnmalawi_access_token';
 const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
+function isValidToken(token) {
+  return typeof token === 'string' && token.trim() !== '' && token.trim().toLowerCase() !== 'undefined' && token.trim().toLowerCase() !== 'null';
+}
+
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 /**
@@ -81,9 +87,12 @@ function cleanRequestBody(body) {
  */
 async function request(path, options = {}) {
   const headers = /** @type {Record<string, string>} */ ({
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   });
+
+  if (options.body !== undefined && options.body !== null && !headers['Content-Type'] && !headers['content-type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const accessToken = getStoredAccessToken();
   if (accessToken) {
@@ -153,12 +162,21 @@ export async function authRegister(data) {
 export function fetchProfile() {
   return request('/auth/profile');
 }
-
+export function fetchSystemSettings() {
+  return request('/system-settings');
+}
 /**
  * @param {JsonObject} data
  */
 export function updateProfile(data) {
   return request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+/**
+ * @param {JsonObject} data
+ */
+export function logActivity(data) {
+  return request('/activity-log', { method: 'POST', body: JSON.stringify(data) });
 }
 
 /**

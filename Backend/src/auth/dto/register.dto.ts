@@ -32,4 +32,14 @@ export class RegisterDto {
   })
   @IsIn([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])
   role: UserRole;
+
+  @IsString()
+  @IsNotEmpty()
+  @MaxLength(150)
+  school: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsIn(['PSLC', 'JCE', 'MSCE'])
+  level: string;
 }

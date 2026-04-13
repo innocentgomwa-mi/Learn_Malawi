@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,13 @@ export default function MaintenanceMode() {
 
   const maintenanceSetting = settings.find(s => s.key === "maintenance_mode");
   const isMaintenanceOn = maintenanceSetting?.value === "true";
-  const storedMessage = settings.find(s => s.key === "maintenance_message")?.value || message;
+  const storedMessage = settings.find(s => s.key === "maintenance_message")?.value;
+
+  useEffect(() => {
+    if (storedMessage) {
+      setMessage(storedMessage);
+    }
+  }, [storedMessage]);
 
   const toggle = useMutation({
     mutationFn: async () => {
@@ -92,7 +98,7 @@ export default function MaintenanceMode() {
         <CardContent className="space-y-3">
           <p className="text-sm text-gray-500">This message is shown to users when maintenance mode is enabled.</p>
           <Input
-            value={message || storedMessage}
+            value={message}
             onChange={e => setMessage(e.target.value)}
             placeholder="Enter maintenance message..."
           />
@@ -110,7 +116,7 @@ export default function MaintenanceMode() {
           <div className="bg-blue-900 rounded-xl p-8 text-center text-white">
             <Wrench className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
             <h3 className="text-xl font-bold mb-2">Learn Malawi</h3>
-            <p className="text-blue-200 text-sm">{message || storedMessage}</p>
+            <p className="text-blue-200 text-sm">{message}</p>
             <p className="text-blue-300 text-xs mt-4">Thank you for your patience.</p>
           </div>
         </CardContent>

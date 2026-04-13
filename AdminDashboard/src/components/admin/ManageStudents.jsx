@@ -17,7 +17,7 @@ export default function ManageStudents() {
   const [search, setSearch] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
-  const [form, setForm] = useState({ full_name: "", email: "", level: "JCE", school: "", district: "" });
+  const [form, setForm] = useState({ firstName: "", lastName: "", email: "", level: "JCE", school: "", district: "" });
   const qc = useQueryClient();
 
   const { data: students = [], isLoading } = useQuery({
@@ -27,7 +27,7 @@ export default function ManageStudents() {
 
   const createMutation = useMutation({
     mutationFn: (data) => apiClient.entities.Student.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["students"] }); setShowAdd(false); setForm({ full_name: "", email: "", level: "JCE", school: "", district: "" }); },
+    onSuccess: () => { qc.invalidateQueries({ queryKey: ["students"] }); setShowAdd(false); setForm({ firstName: "", lastName: "", email: "", level: "JCE", school: "", district: "" }); },
   });
 
   const updateMutation = useMutation({
@@ -41,7 +41,8 @@ export default function ManageStudents() {
   });
 
   const filtered = students.filter(s => {
-    const matchSearch = s.full_name?.toLowerCase().includes(search.toLowerCase()) ||
+    const studentName = s.full_name || [s.firstName, s.lastName].filter(Boolean).join(' ');
+    const matchSearch = studentName?.toLowerCase().includes(search.toLowerCase()) ||
       s.email?.toLowerCase().includes(search.toLowerCase()) ||
       s.school?.toLowerCase().includes(search.toLowerCase());
     const matchLevel = filterLevel === "all" || s.level === filterLevel;
@@ -111,7 +112,7 @@ export default function ManageStudents() {
             <tbody className="divide-y divide-gray-100">
               {filtered.map(student => (
                 <tr key={student.id} className="hover:bg-gray-50">
-                  <td className="px-4 py-3 font-medium text-gray-900">{student.full_name}</td>
+                  <td className="px-4 py-3 font-medium text-gray-900">{student.full_name || [student.firstName, student.lastName].filter(Boolean).join(' ') || student.email}</td>
                   <td className="px-4 py-3 text-gray-500 hidden sm:table-cell">{student.email}</td>
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${levelColor[student.level] || "bg-gray-100 text-gray-600"}`}>
@@ -148,7 +149,7 @@ export default function ManageStudents() {
         <DialogContent>
           <DialogHeader><DialogTitle>Add New Student</DialogTitle></DialogHeader>
           <div className="space-y-3">
-            {[["Full Name", "full_name", "text"], ["Email", "email", "email"], ["School", "school", "text"], ["District", "district", "text"]].map(([label, key, type]) => (
+            {[["First Name", "firstName", "text"], ["Last Name", "lastName", "text"], ["Email", "email", "email"], ["School", "school", "text"], ["District", "district", "text"]].map(([label, key, type]) => (
               <div key={key}>
                 <Label className="text-sm">{label}</Label>
                 <Input type={type} value={form[key]} onChange={e => setForm(f => ({ ...f, [key]: e.target.value }))} className="mt-1" />
@@ -167,7 +168,7 @@ export default function ManageStudents() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => createMutation.mutate(form)} disabled={!form.full_name || !form.email}>
+            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => createMutation.mutate(form)} disabled={!form.firstName || !form.lastName || !form.email}>
               Add Student
             </Button>
             <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>

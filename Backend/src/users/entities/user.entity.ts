@@ -30,6 +30,12 @@ export class User {
   })
   role!: UserRole;
 
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  school?: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  level?: string;
+
   @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',
