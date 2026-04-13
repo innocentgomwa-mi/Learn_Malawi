@@ -6,6 +6,8 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
+import MaintenancePage from './components/MaintenancePage';
+import { usePageLogger } from '@/hooks/usePageLogger';
 import Home from './pages/Home';
 import StudyNotes from './pages/StudyNotes';
 import PastPapers from './pages/PastPapers';
@@ -33,7 +35,18 @@ import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
+  const { isLoadingAuth, isLoadingPublicSettings, error, navigateToLogin, isAuthenticated, appPublicSettings } = useAuth();
+
+  usePageLogger('page_viewed');
+
+  const maintenanceSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_mode');
+  const maintenanceMessageSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_message');
+  const isMaintenanceMode = maintenanceSetting?.value === 'true';
+  const maintenanceMessage = maintenanceMessageSetting?.value || "We'll be back shortly.";
+
+  if (isMaintenanceMode) {
+    return <MaintenancePage message={maintenanceMessage} />;
+  }
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -45,14 +58,13 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors
-  if (authError) {
-    if (authError.type === 'user_not_registered') {
+  if (error) {
+    if (typeof error === 'object' && error?.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
-    } else if (authError.type === 'auth_required') {
-      // Redirect to login automatically
-      navigateToLogin();
-      return null;
     }
+
+    navigateToLogin();
+    return null;
   }
 
   // Render the main app
@@ -97,7 +109,7 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthenticatedApp />
         </Router>
         <Toaster />

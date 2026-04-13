@@ -5,6 +5,12 @@ import { Button } from "@/components/ui/button";
 import { Download, Database, CheckCircle, Clock, AlertCircle, Archive } from "lucide-react";
 import { format } from "date-fns";
 
+const safeFormatDate = (value, dateFormat, fallback = "") => {
+  const date = value ? new Date(value) : null;
+  if (!date || Number.isNaN(date.getTime())) return fallback;
+  return format(date, dateFormat);
+};
+
 export default function BackupRestore() {
   const [downloading, setDownloading] = useState(null);
   const [backupLog, setBackupLog] = useState([]);
@@ -36,13 +42,21 @@ export default function BackupRestore() {
       mimeType = "application/json";
     } else if (type === "logs") {
       const headers = ["Time", "Action", "User Email", "User Name", "Role", "Resource", "Subject", "Level", "Score"];
-      const rows = logs.map(l => [
-        format(new Date(l.created_date), "yyyy-MM-dd HH:mm:ss"),
-        l.action, l.user_email, l.user_name || "", l.user_role || "",
-        l.resource_title || "", l.subject || "", l.level || "",
-        l.score != null ? l.score : "",
-      ]);
-      content = [headers, ...rows].map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const rows = logs.map((l) => {
+        const createdAt = l.created_date ?? l.createdDate ?? l.createdAt;
+        return [
+          safeFormatDate(createdAt, "yyyy-MM-dd HH:mm:ss", ""),
+          l.action,
+          l.user_email,
+          l.user_name || "",
+          l.user_role || "",
+          l.resource_title || "",
+          l.subject || "",
+          l.level || "",
+          l.score != null ? l.score : "",
+        ];
+      });
+      content = [headers, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")).join("\n");
       filename = `learnmalawi-activity-logs-${timestamp}.csv`;
       mimeType = "text/csv";
     } else if (type === "audit") {
@@ -124,7 +138,7 @@ export default function BackupRestore() {
                     <CheckCircle className="w-4 h-4 text-green-600" />
                     <span className="font-mono text-xs text-gray-600">{b.filename}</span>
                   </div>
-                  <span className="text-xs text-gray-400">{format(new Date(b.timestamp), "HH:mm:ss")}</span>
+                  <span className="text-xs text-gray-400">{safeFormatDate(b.timestamp, "HH:mm:ss", "--:--:--")}</span>
                 </div>
               ))}
             </div>

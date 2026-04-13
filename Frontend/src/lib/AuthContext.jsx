@@ -32,7 +32,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authLogin, authLogout, fetchProfile } from '@/api';
+import { authLogin, authLogout, fetchProfile, fetchSystemSettings } from '@/api';
 
 /** @type {import('react').Context<AuthContextValue | null>} */
 const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null));
@@ -40,14 +40,20 @@ const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null))
 const ACCESS_TOKEN_KEY = 'learnmalawi_access_token';
 const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
+function isValidToken(token) {
+  return typeof token === 'string' && token.trim() !== '' && token.trim().toLowerCase() !== 'undefined' && token.trim().toLowerCase() !== 'null';
+}
+
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 /**
@@ -87,6 +93,15 @@ export function AuthProvider(props) {
     setIsLoadingAuth(true);
     setIsLoadingPublicSettings(true);
     setError(null);
+
+    let settings = [];
+    try {
+      const response = await fetchSystemSettings();
+      settings = Array.isArray(response) ? response : [];
+    } catch {
+      settings = [];
+    }
+    setAppPublicSettings(settings);
 
     const token = getStoredAccessToken();
     if (!token) {

@@ -3,7 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Clock, Activity, Globe } from "lucide-react";
-import { formatDistanceToNow, format, subHours } from "date-fns";
+import { formatDistanceToNow, format, subHours, subMinutes } from "date-fns";
 
 export default function SessionsViewer() {
   const { data: logs = [] } = useQuery({
@@ -13,23 +13,32 @@ export default function SessionsViewer() {
   });
 
   // Derive active sessions: users with activity in last 30 min
-  const cutoff30min = subHours(new Date(), 0.5).getTime();
+  const cutoff30min = subMinutes(new Date(), 30).getTime();
   const cutoff24h = subHours(new Date(), 24).getTime();
 
   const sessions = useMemo(() => {
     const userMap = {};
-    logs.forEach(l => {
-      const t = new Date(l.created_date).getTime();
-      if (!userMap[l.user_email] || t > userMap[l.user_email].lastSeen) {
-        userMap[l.user_email] = {
-          email: l.user_email,
-          name: l.user_name || l.user_email,
-          role: l.user_role || "student",
+    logs.forEach((l) => {
+      const timestamp = l?.createdDate ?? l?.created_date;
+      const t = new Date(timestamp).getTime();
+      if (Number.isNaN(t)) {
+        return;
+      }
+
+      const userKey = l?.user_email || l?.user_name || `${l?.action || 'anonymous'}-${l?.resource_title || ''}`;
+      const displayEmail = l?.user_email || l?.user_name || 'unknown';
+      const displayName = l?.user_name || l?.user_email || 'Unknown User';
+
+      if (!userMap[userKey] || t > userMap[userKey].lastSeen) {
+        userMap[userKey] = {
+          email: displayEmail,
+          name: displayName,
+          role: l?.user_role || 'student',
           lastSeen: t,
           actions: 0,
         };
       }
-      userMap[l.user_email].actions++;
+      userMap[userKey].actions++;
     });
     return Object.values(userMap).sort((a, b) => b.lastSeen - a.lastSeen);
   }, [logs]);
@@ -44,31 +53,38 @@ export default function SessionsViewer() {
 
   const ROLE_COLOR = { admin: "bg-purple-100 text-purple-700", teacher: "bg-emerald-100 text-emerald-700", student: "bg-slate-100 text-slate-700" };
 
-  const SessionRow = ({ s }) => (
-    <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-      <div className="flex items-center gap-3">
-        <div className="relative">
-          <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold text-gray-600">
-            {(s.name || s.email)[0].toUpperCase()}
+  const SessionRow = ({ s }) => {
+    const lastSeenDate = new Date(s.lastSeen);
+    const lastSeenLabel = Number.isNaN(lastSeenDate.getTime())
+      ? "unknown time"
+      : formatDistanceToNow(lastSeenDate, { addSuffix: true });
+
+    return (
+      <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <div className="w-9 h-9 bg-gray-200 rounded-full flex items-center justify-center text-sm font-bold text-gray-600">
+              {(s.name || s.email)[0].toUpperCase()}
+            </div>
+            {s.lastSeen > cutoff30min && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />}
           </div>
-          {s.lastSeen > cutoff30min && <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-500 rounded-full border-2 border-white" />}
+          <div>
+            <p className="text-sm font-medium text-gray-800">{s.name}</p>
+            <p className="text-xs text-gray-400">{s.email}</p>
+          </div>
         </div>
-        <div>
-          <p className="text-sm font-medium text-gray-800">{s.name}</p>
-          <p className="text-xs text-gray-400">{s.email}</p>
+        <div className="flex items-center gap-3 text-right">
+          <div>
+            <Badge variant="outline" className={`text-xs ${ROLE_COLOR[s.role] || ROLE_COLOR.student}`}>{s.role}</Badge>
+            <p className="text-xs text-gray-400 mt-1">{s.actions} events</p>
+          </div>
+          <div className="text-xs text-gray-500 min-w-20 text-right">
+            {lastSeenLabel}
+          </div>
         </div>
       </div>
-      <div className="flex items-center gap-3 text-right">
-        <div>
-          <Badge variant="outline" className={`text-xs ${ROLE_COLOR[s.role] || ROLE_COLOR.student}`}>{s.role}</Badge>
-          <p className="text-xs text-gray-400 mt-1">{s.actions} events</p>
-        </div>
-        <div className="text-xs text-gray-500 min-w-20 text-right">
-          {formatDistanceToNow(new Date(s.lastSeen), { addSuffix: true })}
-        </div>
-      </div>
-    </div>
-  );
+    );
+  };
 
   return (
     <div className="space-y-6">

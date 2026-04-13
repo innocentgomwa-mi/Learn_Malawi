@@ -12,6 +12,7 @@ import StudentDashboard from "./pages/StudentDashboard";
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
+  const location = useLocation();
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -23,8 +24,6 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors
-  const location = useLocation();
-
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
@@ -56,7 +55,7 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
-        <Router>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
           <AuthenticatedApp />
         </Router>
         <Toaster />
