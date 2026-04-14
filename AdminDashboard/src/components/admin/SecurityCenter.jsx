@@ -3,7 +3,18 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Shield, AlertTriangle, Users, LogIn, TrendingUp, Activity } from "lucide-react";
-import { format, subDays, startOfDay } from "date-fns";
+import { format, subDays, startOfDay, isValid } from "date-fns";
+
+const parseDate = (value) => {
+  if (value == null) return null;
+  const date = value instanceof Date ? value : new Date(value);
+  return isValid(date) ? date : null;
+};
+
+const safeFormat = (value, dateFormat, fallback = "") => {
+  const date = parseDate(value);
+  return date ? format(date, dateFormat) : fallback;
+};
 
 export default function SecurityCenter() {
   const { data: logs = [] } = useQuery({
@@ -23,14 +34,24 @@ export default function SecurityCenter() {
       const label = format(day, "MMM d");
       const start = startOfDay(day).getTime();
       const end = start + 86400000;
-      const logins = logs.filter(l => l.action === "login" && new Date(l.created_date).getTime() >= start && new Date(l.created_date).getTime() < end).length;
+      const logins = logs.filter((l) => {
+        const created = parseDate(l.created_date);
+        return created?.getTime() >= start && created?.getTime() < end && l.action === "login";
+      }).length;
       return { day: label, logins };
     });
   }, [logs]);
 
   // Active users (unique emails in last 24h)
-  const cutoff24h = Date.now() - 86400000;
-  const activeUsers24h = new Set(logs.filter(l => new Date(l.created_date).getTime() > cutoff24h).map(l => l.user_email)).size;
+    const cutoff24h = Date.now() - 86400000;
+  const activeUsers24h = new Set(
+    logs
+      .filter((l) => {
+        const created = parseDate(l.created_date);
+        return created?.getTime() > cutoff24h;
+      })
+      .map((l) => l.user_email),
+  ).size;
 
   // Actions by role
   const roleBreakdown = useMemo(() => {
@@ -119,7 +140,7 @@ export default function SecurityCenter() {
                     <p className="text-sm font-medium text-gray-800 capitalize">{h.action.replace(/_/g, " ")} — <span className="text-purple-600">{h.entity_type}</span></p>
                     <p className="text-xs text-gray-400 mt-0.5">By {h.performed_by_name || h.performed_by_email} {h.notes ? `· ${h.notes}` : ""}</p>
                   </div>
-                  <span className="text-xs text-gray-400 whitespace-nowrap ml-3">{format(new Date(h.created_date), "MMM d, HH:mm")}</span>
+                  <span className="text-xs text-gray-400 whitespace-nowrap ml-3">{safeFormat(h.created_date, "MMM d, HH:mm", "Unknown")}</span>
                 </div>
               ))}
             </div>

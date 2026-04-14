@@ -96,7 +96,13 @@ const User = {
 };
 
 const Teacher = {
-  list: async () => (await User.list()).filter((user) => user?.role === 'Teacher'),
+  list: async () => {
+    const teachers = (await User.list()).filter((user) => user?.role === 'Teacher');
+    return teachers.map((teacher) => ({
+      ...teacher,
+      full_name: teacher.full_name || [teacher.firstName, teacher.lastName].filter(Boolean).join(' '),
+    }));
+  },
   create: async (data) => User.create({ ...data, role: 'Teacher' }),
   update: User.update,
   delete: User.delete,
