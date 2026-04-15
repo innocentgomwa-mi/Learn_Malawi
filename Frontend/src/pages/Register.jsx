@@ -13,8 +13,9 @@ const Register = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [role, setRole] = useState(location.state?.role ?? 'Admin');
-  const roleLabel = role === 'Student' ? 'student' : role === 'Admin' ? 'admin' : 'teacher';
+  const defaultRole = location.state?.role === 'Teacher' ? 'Teacher' : 'Student';
+  const [role, setRole] = useState(defaultRole);
+  const roleLabel = role === 'Student' ? 'student' : 'teacher';
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [loading, setLoading] = useState(false);
 
@@ -143,7 +144,6 @@ const Register = () => {
                 onChange={(event) => setRole(event.target.value)}
                 className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
               >
-                <option value="Admin">Admin</option>
                 <option value="Teacher">Teacher</option>
                 <option value="Student">Student</option>
               </select>

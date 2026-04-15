@@ -192,24 +192,40 @@ export function authLogout(refreshToken) {
 /**
  * @param {StudyNotesParams} [params]
  */
-export function fetchStudyNotes({ level, subject, search } = {}) {
+export function fetchStudyNotes({ level, subject, search, teacherEmail } = {}) {
   const params = new URLSearchParams();
   if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
   if (search) params.set('search', search);
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/study-notes${query}`);
 }
 
-export function fetchPastPapers() {
-  return request('/past-papers').then((response) => {
+export function fetchPastPapers({ teacherEmail, level, subject, year, search, page, limit } = {}) {
+  const params = new URLSearchParams();
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (year) params.set('year', String(year));
+  if (search) params.set('search', search);
+  if (page) params.set('page', String(page));
+  if (limit) params.set('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/past-papers${query}`).then((response) => {
     if (Array.isArray(response)) return response;
     return response?.data ?? [];
   });
 }
 
-export function fetchTutorials() {
-  return request('/tutorials');
+export function fetchTutorials({ teacherEmail, level, subject, classFilter } = {}) {
+  const params = new URLSearchParams();
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (classFilter) params.set('class', classFilter);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/tutorials${query}`);
 }
 
 export function fetchCareerResources() {
@@ -415,12 +431,13 @@ export function deleteQuiz(id) {
 /**
  * @param {QuizzesParams} [params]
  */
-export function fetchQuizzes({ level, subject, difficulty, classFilter } = {}) {
+export function fetchQuizzes({ level, subject, difficulty, classFilter, teacherEmail } = {}) {
   const params = new URLSearchParams();
   if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
   if (difficulty && difficulty !== 'All') params.set('difficulty', difficulty);
   if (classFilter) params.set('class', classFilter);
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/quizzes${query}`);
 }

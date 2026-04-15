@@ -12,7 +12,7 @@ export class PastPapersService {
     private pastPapersRepository: Repository<PastPaper>,
   ) {}
 
-  async create(createPastPaperDto: CreatePastPaperDto): Promise<PastPaper> {
+  async create(createPastPaperDto: CreatePastPaperDto & { teacherEmail?: string }): Promise<PastPaper> {
     const pastPaper = this.pastPapersRepository.create(createPastPaperDto);
     return await this.pastPapersRepository.save(pastPaper);
   }
@@ -24,6 +24,7 @@ export class PastPapersService {
     subject?: string,
     year?: number,
     search?: string,
+    teacherEmail?: string,
   ): Promise<{ data: PastPaper[]; total: number; page: number; totalPages: number }> {
     const query = this.pastPapersRepository.createQueryBuilder('pastPaper');
 
@@ -44,6 +45,10 @@ export class PastPapersService {
         '(pastPaper.title ILIKE :search OR pastPaper.subject ILIKE :search OR pastPaper.description ILIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (teacherEmail) {
+      query.andWhere('pastPaper.teacherEmail = :teacherEmail', { teacherEmail });
     }
 
     const [data, total] = await query

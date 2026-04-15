@@ -19,6 +19,15 @@ export const AuthProvider = ({ children }) => {
       setIsLoadingAuth(true);
       setAuthError(null);
 
+      if (!apiClient.hasAuthToken()) {
+        setIsAuthenticated(false);
+        setAuthError({
+          type: 'auth_required',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
       const currentUser = await apiClient.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);

@@ -30,7 +30,7 @@ export default function TeacherPastPapers() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchPastPapers();
+      const data = await fetchPastPapers({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
       setPapers(sorted);

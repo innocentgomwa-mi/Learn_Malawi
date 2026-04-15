@@ -21,6 +21,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { User } from '../common/decorators/user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 
@@ -39,9 +40,14 @@ export class StudyNotesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
   async create(
+    @User() user: any,
     @Body() createStudyNoteDto: CreateStudyNoteDto,
   ): Promise<StudyNoteResponseDto> {
-    const note = await this.studyNotesService.create(createStudyNoteDto);
+    const payload = {
+      ...createStudyNoteDto,
+      teacherEmail: user?.email,
+    };
+    const note = await this.studyNotesService.create(payload as any);
     return this.toResponseDto(note);
   }
 
@@ -51,8 +57,9 @@ export class StudyNotesController {
     @Query('level') level?: string,
     @Query('subject') subject?: string,
     @Query('search') search?: string,
+    @Query('teacher_email') teacherEmail?: string,
   ): Promise<StudyNoteResponseDto[]> {
-    const notes = await this.studyNotesService.findAll(level, subject, search);
+    const notes = await this.studyNotesService.findAll(level, subject, search, teacherEmail);
     return notes.map((note) => this.toResponseDto(note));
   }
 

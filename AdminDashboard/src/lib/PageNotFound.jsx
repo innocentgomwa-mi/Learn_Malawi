@@ -1,5 +1,6 @@
 import { useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '@/api/apiClient';
 
 
 export default function PageNotFound({}) {

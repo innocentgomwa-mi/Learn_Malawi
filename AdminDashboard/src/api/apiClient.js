@@ -15,6 +15,8 @@ const getAuthToken = () => {
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
 };
 
+const hasAuthToken = () => Boolean(getAuthToken());
+
 const setAuthToken = (token) => {
   if (typeof window === 'undefined') return;
   if (token) {
@@ -81,11 +83,38 @@ const tryFetchJson = async (endpoint, fallback = null, options = {}) => {
 };
 
 const buildEntity = (basePath) => ({
-  list: async () => tryFetchJson(basePath, []),
-  filter: async () => tryFetchJson(basePath, []),
-  create: async (data) => tryFetchJson(basePath, {}, { method: 'POST', body: data }),
-  update: async (id, data) => tryFetchJson(`${basePath}/${id}`, {}, { method: 'PATCH', body: data }),
-  delete: async (id) => tryFetchJson(`${basePath}/${id}`, {}, { method: 'DELETE' }),
+  list: async () => {
+    if (!hasAuthToken()) return [];
+    return tryFetchJson(basePath, []);
+  },
+  filter: async () => {
+    if (!hasAuthToken()) return [];
+    return tryFetchJson(basePath, []);
+  },
+  create: async (data) => {
+    if (!hasAuthToken()) {
+      const error = new Error('Authentication required');
+      error.status = 401;
+      throw error;
+    }
+    return tryFetchJson(basePath, {}, { method: 'POST', body: data });
+  },
+  update: async (id, data) => {
+    if (!hasAuthToken()) {
+      const error = new Error('Authentication required');
+      error.status = 401;
+      throw error;
+    }
+    return tryFetchJson(`${basePath}/${id}`, {}, { method: 'PATCH', body: data });
+  },
+  delete: async (id) => {
+    if (!hasAuthToken()) {
+      const error = new Error('Authentication required');
+      error.status = 401;
+      throw error;
+    }
+    return tryFetchJson(`${basePath}/${id}`, {}, { method: 'DELETE' });
+  },
 });
 
 const User = {
@@ -183,6 +212,7 @@ const auth = {
 
 export const apiClient = {
   auth,
+  hasAuthToken,
   entities: {
     User,
     Teacher,
