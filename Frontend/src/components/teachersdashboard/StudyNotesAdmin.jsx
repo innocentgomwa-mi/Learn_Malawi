@@ -16,7 +16,7 @@ export default function StudyNotesAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchStudyNotes();
+      const data = await fetchStudyNotes({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 

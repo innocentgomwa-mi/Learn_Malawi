@@ -17,10 +17,10 @@ export default function TeachersDashboard() {
       setLoading(true);
       const email = user?.email || '';
       const [notes, papers, tutorials, quizzes] = await Promise.all([
-        fetchStudyNotes(),
-        fetchPastPapers(),
-        fetchTutorials(),
-        fetchQuizzes(),
+        fetchStudyNotes({ teacherEmail: email }),
+        fetchPastPapers({ teacherEmail: email }),
+        fetchTutorials({ teacherEmail: email }),
+        fetchQuizzes({ teacherEmail: email }),
       ]);
 
       const supportedNotes = Array.isArray(notes) ? notes : [];
@@ -34,10 +34,10 @@ export default function TeachersDashboard() {
       const filteredQuizzes = filterByTeacher(supportedQuizzes, email);
 
       setCounts({
-        notes: filteredNotes.length || (!supportedNotes.some(hasTeacherField) ? supportedNotes.length : filteredNotes.length),
-        papers: filteredPapers.length || (!supportedPapers.some(hasTeacherField) ? supportedPapers.length : filteredPapers.length),
-        tutorials: filteredTutorials.length || (!supportedTutorials.some(hasTeacherField) ? supportedTutorials.length : filteredTutorials.length),
-        quizzes: filteredQuizzes.length || (!supportedQuizzes.some(hasTeacherField) ? supportedQuizzes.length : filteredQuizzes.length),
+        notes: filteredNotes.length,
+        papers: filteredPapers.length,
+        tutorials: filteredTutorials.length,
+        quizzes: filteredQuizzes.length,
       });
 
       const all = [...filteredNotes, ...filteredPapers, ...filteredTutorials, ...filteredQuizzes];

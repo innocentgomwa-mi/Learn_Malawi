@@ -85,8 +85,29 @@ export function AuthProvider(props) {
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [appPublicSettings, setAppPublicSettings] = useState(/** @type {any} */ (null));
 
+  const refreshPublicSettings = async () => {
+    try {
+      const response = await fetchSystemSettings();
+      setAppPublicSettings(Array.isArray(response) ? response : []);
+    } catch {
+      setAppPublicSettings([]);
+    }
+  };
+
   useEffect(() => {
     checkAppState();
+
+    const refreshOnFocus = () => {
+      refreshPublicSettings();
+    };
+
+    const intervalId = window.setInterval(refreshPublicSettings, 15000);
+    window.addEventListener('focus', refreshOnFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshOnFocus);
+    };
   }, []);
 
   const checkAppState = async () => {
@@ -94,14 +115,7 @@ export function AuthProvider(props) {
     setIsLoadingPublicSettings(true);
     setError(null);
 
-    let settings = [];
-    try {
-      const response = await fetchSystemSettings();
-      settings = Array.isArray(response) ? response : [];
-    } catch {
-      settings = [];
-    }
-    setAppPublicSettings(settings);
+    await refreshPublicSettings();
 
     const token = getStoredAccessToken();
     if (!token) {

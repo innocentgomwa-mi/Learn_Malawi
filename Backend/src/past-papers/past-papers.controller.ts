@@ -22,6 +22,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { User } from '../common/decorators/user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { EducationLevel } from './entities/past-paper.entity';
@@ -46,8 +47,9 @@ export class PastPapersController {
     @Query('subject') subject?: string,
     @Query('year') year?: number,
     @Query('search') search?: string,
+    @Query('teacher_email') teacherEmail?: string,
   ) {
-    const result = await this.pastPapersService.findAll(page, limit, level, subject, year, search);
+    const result = await this.pastPapersService.findAll(page, limit, level, subject, year, search, teacherEmail);
     return {
       ...result,
       data: result.data.map((pastPaper) => this.toResponseDto(pastPaper)),
@@ -99,8 +101,15 @@ export class PastPapersController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  async create(@Body() createPastPaperDto: CreatePastPaperDto): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.create(createPastPaperDto);
+  async create(
+    @User() user: any,
+    @Body() createPastPaperDto: CreatePastPaperDto,
+  ): Promise<PastPaperResponseDto> {
+    const payload = {
+      ...createPastPaperDto,
+      teacherEmail: user?.email,
+    };
+    const pastPaper = await this.pastPapersService.create(payload as any);
     return this.toResponseDto(pastPaper);
   }
 

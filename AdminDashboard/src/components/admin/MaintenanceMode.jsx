@@ -5,14 +5,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Wrench, AlertTriangle, CheckCircle, Power } from "lucide-react";
 import { auditLog } from "@/lib/auditLogger";
+import { apiClient } from "@/api/apiClient";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function MaintenanceMode() {
   const qc = useQueryClient();
+  const { isAuthenticated } = useAuth();
   const [message, setMessage] = useState("We are performing scheduled maintenance. We'll be back shortly.");
 
   const { data: settings = [] } = useQuery({
     queryKey: ["system-settings"],
     queryFn: () => apiClient.entities.SystemSettings.list(),
+    enabled: isAuthenticated,
   });
 
   const maintenanceSetting = settings.find(s => s.key === "maintenance_mode");

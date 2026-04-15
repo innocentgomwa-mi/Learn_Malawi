@@ -38,6 +38,9 @@ export class PastPaper {
   @Column({ type: 'varchar', length: 500, nullable: true })
   markingSchemeUrl?: string;
 
+  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
+  teacherEmail?: string;
+
   @Column({ type: 'varchar', length: 100, nullable: true })
   class?: string;
 

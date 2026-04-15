@@ -16,7 +16,7 @@ export default function TutorialsAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchTutorials();
+      const data = await fetchTutorials({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 

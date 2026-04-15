@@ -21,6 +21,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
+import { User } from '../common/decorators/user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 
@@ -38,8 +39,15 @@ export class TutorialsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  async create(@Body() createTutorialDto: CreateTutorialDto): Promise<TutorialResponseDto> {
-    const tutorial = await this.tutorialsService.create(createTutorialDto);
+  async create(
+    @User() user: any,
+    @Body() createTutorialDto: CreateTutorialDto,
+  ): Promise<TutorialResponseDto> {
+    const payload = {
+      ...createTutorialDto,
+      teacherEmail: user?.email,
+    };
+    const tutorial = await this.tutorialsService.create(payload as any);
     return this.toResponseDto(tutorial);
   }
 
@@ -49,8 +57,9 @@ export class TutorialsController {
     @Query('level') level?: string,
     @Query('subject') subject?: string,
     @Query('class') classFilter?: string,
+    @Query('teacher_email') teacherEmail?: string,
   ): Promise<TutorialResponseDto[]> {
-    const tutorials = await this.tutorialsService.findAll(level, subject, classFilter);
+    const tutorials = await this.tutorialsService.findAll(level, subject, classFilter, teacherEmail);
     return tutorials.map(tutorial => this.toResponseDto(tutorial));
   }
 

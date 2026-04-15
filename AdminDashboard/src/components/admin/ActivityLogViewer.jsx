@@ -1,7 +1,6 @@
 import React, { useState } from "react";
-import { format } from "date-fns";
+import { format, formatDistanceToNow, isValid, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import {
   BookOpen, CheckCircle, Star, Search, LogIn, FileText,
   Clock, Filter, Download, RefreshCw, User, GraduationCap,
@@ -44,10 +43,25 @@ export default function ActivityLogViewer() {
     refetchInterval: 30000,
   });
 
+  const parseLogDate = (value) => {
+    const parsed = typeof value === 'string' ? parseISO(value) : new Date(value);
+    return isValid(parsed) ? parsed : null;
+  };
+
+  const formatLogTime = (value) => {
+    const date = parseLogDate(value);
+    return date ? format(date, "yyyy-MM-dd HH:mm:ss") : "Unknown time";
+  };
+
+  const formatRelativeTime = (value) => {
+    const date = parseLogDate(value);
+    return date ? formatDistanceToNow(date, { addSuffix: true }) : "Unknown time";
+  };
+
   const downloadCSV = () => {
     const headers = ["Time", "Action", "User Email", "User Name", "Role", "Resource", "Subject", "Level", "Score"];
     const rows = logs.map(l => [
-      format(new Date(l.created_date), "yyyy-MM-dd HH:mm:ss"),
+      formatLogTime(l.created_date),
       l.action,
       l.user_email,
       l.user_name || "",
@@ -168,7 +182,7 @@ export default function ActivityLogViewer() {
                       </div>
                       <div className="text-right">
                         {l.score != null && <p className={`text-xs font-bold ${l.score >= 70 ? "text-green-600" : "text-amber-600"}`}>{l.score}%</p>}
-                        <p className="text-xs text-gray-400">{formatDistanceToNow(new Date(l.created_date), { addSuffix: true })}</p>
+                        <p className="text-xs text-gray-400">{formatRelativeTime(l.created_date)}</p>
                       </div>
                     </div>
                   );
@@ -266,7 +280,7 @@ export default function ActivityLogViewer() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
-                        {formatDistanceToNow(new Date(log.created_date), { addSuffix: true })}
+                        {formatRelativeTime(log.created_date)}
                       </td>
                     </tr>
                   );

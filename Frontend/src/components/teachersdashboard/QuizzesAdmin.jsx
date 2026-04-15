@@ -29,7 +29,7 @@ export default function QuizzesAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchQuizzes();
+      const data = await fetchQuizzes({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 

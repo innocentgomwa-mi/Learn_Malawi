@@ -1,5 +1,5 @@
 import React from "react";
-import { apiClient } from '@/api/apiClient';
+import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard,
   ClipboardCheck,
@@ -61,6 +61,8 @@ const SECTIONS = [
 ];
 
 export default function AdminSidebar({ activeSection, onNavigate }) {
+  const { logout } = useAuth();
+
   return (
     <div className="w-64 h-full bg-blue-950 text-white flex flex-col">
       {/* Logo */}
@@ -103,7 +105,7 @@ export default function AdminSidebar({ activeSection, onNavigate }) {
       {/* Logout */}
       <div className="px-3 py-4 border-t border-blue-800">
         <button
-          onClick={() => apiClient.auth.logout()}
+          onClick={() => logout()}
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800 hover:text-white transition-colors"
         >
           <LogOut className="w-5 h-5" />
