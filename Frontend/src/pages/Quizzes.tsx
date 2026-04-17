@@ -65,7 +65,7 @@ export default function Quizzes() {
   const generateSelfTest = async () => {
     if (!genTopic.trim()) { setGenError("Please enter a topic first."); return; }
     setGenLoading(true); setGenError("");
-    try {
+    try {     
       const generated = await fetchAiGenerateQuiz({
         topic: genTopic.trim() + " following the Malawi school curriculum",
         numQuestions: genCount,
