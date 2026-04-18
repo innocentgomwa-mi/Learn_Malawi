@@ -19,6 +19,9 @@ import { createPastPaper, updatePastPaper, createStudyNote, updateStudyNote, cre
  *   subject: string;
  *   level: string;
  *   grade?: string;
+ *   topic?: string;
+ *   summary?: string;
+ *   content?: string;
  *   fileUrl?: string;
  *   file_url?: string;
  *   class?: string;
@@ -92,6 +95,9 @@ const initialStudyNote = {
   subject: '',
   level: 'PSLC',
   grade: '',
+  topic: '',
+  summary: '',
+  content: '',
   fileUrl: '',
 };
 
@@ -118,11 +124,15 @@ const initialTutorial = {
  */
 export default function ResourceModal({ open, onClose, onSaved, type, existing }) {
   const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState(null);
+  const [imageFile, setImageFile] = useState(null);
   const [resource, setResource] = useState(
     /** @type {Resource} */(type === 'studynote' ? initialStudyNote : type === 'tutorial' ? initialTutorial : initialPastPaper)
   );
 
   useEffect(() => {
+    setFile(null);
+    setImageFile(null);
     if (existing) {
       if (type === 'studynote') {
         setResource({
@@ -130,7 +140,11 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           subject: existing.subject || '',
           level: existing.level || 'PSLC',
           grade: existing.grade || '',
+          topic: existing.topic || '',
+          summary: existing.summary || '',
+          content: existing.content || '',
           fileUrl: existing.fileUrl || existing.file_url || '',
+          imageUrl: existing.imageUrl || existing.image_url || '',
         });
       } else if (type === 'tutorial') {
         setResource({
@@ -166,9 +180,31 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
     };
   };
 
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files?.[0] ?? null;
+    setFile(selectedFile);
+    if (selectedFile) {
+      setResource((prev) => ({ ...prev, fileUrl: '' }));
+    }
+  };
+
+  const handleImageChange = (event) => {
+    const selectedImage = event.target.files?.[0] ?? null;
+    setImageFile(selectedImage);
+    if (selectedImage) {
+      setResource((prev) => ({ ...prev, imageUrl: '' }));
+    }
+  };
+
   /**
    * @param {import('react').FormEvent<HTMLFormElement>} event
    */
+  const isStudyNote = type === 'studynote';
+  const isTutorial = type === 'tutorial';
+  const studyNote = /** @type {StudyNote} */ (resource);
+  const tutorial = /** @type {Tutorial} */ (resource);
+  const pastPaper = /** @type {PastPaper} */ (resource);
+
   const handleSave = async (event) => {
     event.preventDefault();
     if (loading) return;
@@ -181,13 +217,40 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           subject: studyNote.subject,
           level: studyNote.level,
           grade: studyNote.grade || undefined,
-          fileUrl: studyNote.fileUrl || undefined,
+          topic: studyNote.topic || undefined,
+          content: studyNote.content || undefined,
+          summary: studyNote.summary || undefined,
+          imageUrl: studyNote.imageUrl || undefined,
         };
 
-        if (existing?.id) {
-          await updateStudyNote(existing.id, payload);
+        if (file || imageFile) {
+          const formData = new FormData();
+          Object.entries(payload).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              formData.append(key, String(value));
+            }
+          });
+          if (file) formData.append('file', file);
+          if (imageFile) formData.append('image', imageFile);
+
+          if (existing?.id) {
+            await updateStudyNote(existing.id, formData);
+          } else {
+            await createStudyNote(formData);
+          }
         } else {
-          await createStudyNote(payload);
+          if (studyNote.fileUrl) {
+            payload.fileUrl = studyNote.fileUrl;
+          }
+          if (studyNote.imageUrl) {
+            payload.imageUrl = studyNote.imageUrl;
+          }
+
+          if (existing?.id) {
+            await updateStudyNote(existing.id, payload);
+          } else {
+            await createStudyNote(payload);
+          }
         }
       } else if (type === 'tutorial') {
         const payload = {
@@ -231,12 +294,6 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
   };
 
   if (!open) return null;
-
-  const isStudyNote = type === 'studynote';
-  const isTutorial = type === 'tutorial';
-  const studyNote = /** @type {StudyNote} */ (resource);
-  const tutorial = /** @type {Tutorial} */ (resource);
-  const pastPaper = /** @type {PastPaper} */ (resource);
 
   return (
     <Dialog open={open} onOpenChange={(value) => { if (!value) onClose(); }}>
@@ -320,16 +377,57 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="space-y-2 text-sm">
-              <span>{isStudyNote ? 'File URL' : isTutorial ? 'Video URL' : 'Paper URL'}</span>
-              <input
-                type="text"
-                value={isStudyNote ? studyNote.fileUrl : isTutorial ? tutorial.videoUrl : pastPaper.paperUrl}
-                onChange={handleChange(isStudyNote ? 'fileUrl' : isTutorial ? 'videoUrl' : 'paperUrl')}
-                placeholder="https://..."
-                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
+              <span>{isStudyNote ? 'File URL or upload file' : isTutorial ? 'Video URL' : 'Paper URL'}</span>
+              {isStudyNote ? (
+                <>
+                  <input
+                    type="text"
+                    value={studyNote.fileUrl}
+                    onChange={handleChange('fileUrl')}
+                    placeholder="https://..."
+                    className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                  <input
+                    type="file"
+                    accept=".pdf,.doc,.docx"
+                    onChange={handleFileChange}
+                    className="mt-2 w-full text-sm text-slate-700"
+                  />
+                  {file ? (
+                    <div className="text-xs text-slate-500">Selected file: {file.name}</div>
+                  ) : null}
+                </>
+              ) : (
+                <input
+                  type="text"
+                  value={tutorial.videoUrl}
+                  onChange={handleChange('videoUrl')}
+                  placeholder="https://..."
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              )}
             </label>
-            {isStudyNote ? null : isTutorial ? null : (
+            {isStudyNote ? (
+              <label className="space-y-2 text-sm">
+                <span>Card Image URL or upload image</span>
+                <input
+                  type="text"
+                  value={studyNote.imageUrl}
+                  onChange={handleChange('imageUrl')}
+                  placeholder="https://..."
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp"
+                  onChange={handleImageChange}
+                  className="mt-2 w-full text-sm text-slate-700"
+                />
+                {imageFile ? (
+                  <div className="text-xs text-slate-500">Selected image: {imageFile.name}</div>
+                ) : null}
+              </label>
+            ) : isTutorial ? null : (
               <label className="space-y-2 text-sm">
                 <span>Marking Scheme URL</span>
                 <input
@@ -343,6 +441,30 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
             )}
           </div>
 
+          {isStudyNote && (
+            <>
+              <label className="space-y-2 text-sm">
+                <span>Full Notes</span>
+                <textarea
+                  value={studyNote.content}
+                  onChange={handleChange('content')}
+                  rows={6}
+                  placeholder="Add the full study note content that students will read when they open the card."
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+              <label className="space-y-2 text-sm">
+                <span>Summary</span>
+                <textarea
+                  value={studyNote.summary}
+                  onChange={handleChange('summary')}
+                  rows={4}
+                  placeholder="Add a short summary that students will see in the study notes list."
+                  className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+            </>
+          )}
           {isTutorial && (
             <label className="space-y-2 text-sm">
               <span>Description</span>

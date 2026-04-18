@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsString, IsEmail, IsIn, IsNotEmpty, MinLength, MaxLength } from 'class-validator';
+import { IsString, IsEmail, IsIn, IsNotEmpty, MinLength, MaxLength, IsOptional } from 'class-validator';
 import { UserRole } from '../../users/entities/user.entity';
 
 export class RegisterDto {
@@ -33,13 +33,8 @@ export class RegisterDto {
   @IsIn([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])
   role: UserRole;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  @MaxLength(150)
-  school: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(['PSLC', 'JCE', 'MSCE'])
-  level: string;
+  @MaxLength(50)
+  secretKey?: string;
 }

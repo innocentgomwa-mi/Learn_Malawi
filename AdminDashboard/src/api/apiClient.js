@@ -64,7 +64,9 @@ const fetchJson = async (endpoint, options = {}) => {
   const raw = await response.text();
   const data = raw ? safeJsonParse(raw) : null;
   if (!response.ok) {
-    const error = new Error(data?.message || response.statusText || 'Request failed');
+    const error = new Error(
+      data?.message || (typeof data === 'object' ? JSON.stringify(data) : response.statusText) || 'Request failed'
+    );
     error.status = response.status;
     error.data = data;
     throw error;
@@ -82,14 +84,31 @@ const tryFetchJson = async (endpoint, fallback = null, options = {}) => {
   }
 };
 
+const normalizeListResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (response && typeof response === 'object' && Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
+const toQueryString = (query = {}) => {
+  if (!query || typeof query !== 'object') return '';
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      params.set(key, String(value));
+    }
+  });
+  return params.toString() ? `?${params.toString()}` : '';
+};
+
 const buildEntity = (basePath) => ({
-  list: async () => {
+  list: async (query = {}) => {
     if (!hasAuthToken()) return [];
-    return tryFetchJson(basePath, []);
+    return normalizeListResponse(await tryFetchJson(`${basePath}${toQueryString(query)}`, []));
   },
-  filter: async () => {
+  filter: async (query = {}) => {
     if (!hasAuthToken()) return [];
-    return tryFetchJson(basePath, []);
+    return normalizeListResponse(await tryFetchJson(`${basePath}${toQueryString(query)}`, []));
   },
   create: async (data) => {
     if (!hasAuthToken()) {
@@ -152,14 +171,19 @@ const Announcement = {
 };
 
 const TeacherPost = {
-  list: async () => tryFetchJson('/teacher-posts', []),
-  filter: async () => tryFetchJson('/teacher-posts', []),
+  list: async (query = {}) => tryFetchJson(`/teacher-posts${toQueryString(query)}`, []),
+  filter: async (query = {}) => tryFetchJson(`/teacher-posts${toQueryString(query)}`, []),
   create: async (data) => tryFetchJson('/teacher-posts', data, { method: 'POST', body: data }),
   update: async (id, data) => tryFetchJson(`/teacher-posts/${id}`, data, { method: 'PATCH', body: data }),
   delete: async (id) => tryFetchJson(`/teacher-posts/${id}`, {}, { method: 'DELETE' }),
 };
 
 const ResourceRating = buildEntity('/resource-ratings');
+const StudyNote = buildEntity('/study-notes');
+const Tutorial = buildEntity('/tutorials');
+const PastPaper = buildEntity('/past-papers');
+const CareerResource = buildEntity('/career-resources');
+const Quiz = buildEntity('/quizzes');
 const SystemSettings = buildEntity('/system-settings');
 const DataChangeHistory = buildEntity('/data-change-history');
 const StudentProgress = buildEntity('/student-progress');
@@ -176,6 +200,16 @@ const auth = {
       setRefreshToken(data.refreshToken);
     }
     return data;
+  },
+  register: async (data) => {
+    const response = await fetchJson('/auth/register', { method: 'POST', body: data });
+    if (response?.accessToken) {
+      setAuthToken(response.accessToken);
+    }
+    if (response?.refreshToken) {
+      setRefreshToken(response.refreshToken);
+    }
+    return response;
   },
   refresh: async () => {
     const refreshToken = typeof window !== 'undefined' ? window.localStorage.getItem(REFRESH_TOKEN_KEY) : null;
@@ -220,6 +254,11 @@ export const apiClient = {
     Announcement,
     TeacherPost,
     ResourceRating,
+    StudyNote,
+    Tutorial,
+    PastPaper,
+    CareerResource,
+    Quiz,
     SystemSettings,
     DataChangeHistory,
     StudentProgress,
