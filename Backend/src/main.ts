@@ -1,14 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+<<<<<<< HEAD
 import { join } from 'path';
 import * as express from 'express';
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+<<<<<<< HEAD
   app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
 
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   app.enableCors({
     origin: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],

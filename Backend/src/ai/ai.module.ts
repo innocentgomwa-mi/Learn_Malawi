@@ -7,6 +7,9 @@ import { AiService } from './ai.service';
   imports: [ConfigModule],
   controllers: [AiController],
   providers: [AiService],
+<<<<<<< HEAD
   exports: [AiService],
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
 })
 export class AiModule {}

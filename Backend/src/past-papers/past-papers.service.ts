@@ -12,7 +12,11 @@ export class PastPapersService {
     private pastPapersRepository: Repository<PastPaper>,
   ) {}
 
+<<<<<<< HEAD
   async create(createPastPaperDto: CreatePastPaperDto): Promise<PastPaper> {
+=======
+  async create(createPastPaperDto: CreatePastPaperDto & { teacherEmail?: string }): Promise<PastPaper> {
+>>>>>>> 4174fba (changes to admin dashboard)
     const pastPaper = this.pastPapersRepository.create(createPastPaperDto);
     return await this.pastPapersRepository.save(pastPaper);
   }
@@ -24,6 +28,10 @@ export class PastPapersService {
     subject?: string,
     year?: number,
     search?: string,
+<<<<<<< HEAD
+=======
+    teacherEmail?: string,
+>>>>>>> 4174fba (changes to admin dashboard)
   ): Promise<{ data: PastPaper[]; total: number; page: number; totalPages: number }> {
     const query = this.pastPapersRepository.createQueryBuilder('pastPaper');
 
@@ -46,6 +54,13 @@ export class PastPapersService {
       );
     }
 
+<<<<<<< HEAD
+=======
+    if (teacherEmail) {
+      query.andWhere('pastPaper.teacherEmail = :teacherEmail', { teacherEmail });
+    }
+
+>>>>>>> 4174fba (changes to admin dashboard)
     const [data, total] = await query
       .orderBy('pastPaper.year', 'DESC')
       .addOrderBy('pastPaper.createdAt', 'DESC')
