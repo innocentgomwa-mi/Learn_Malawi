@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { IsNotEmpty, IsString, IsOptional, IsNumber, IsArray } from 'class-validator';
 
 export class AskQuestionDto {
@@ -9,12 +10,16 @@ export class AskQuestionDto {
   @IsOptional()
   context?: string;
 }
+=======
+import { IsNotEmpty, IsString } from 'class-validator';
+>>>>>>> 4174fba (changes to admin dashboard)
 
 export class CreateAiRequestDto {
   @IsString()
   @IsNotEmpty()
   prompt!: string;
 }
+<<<<<<< HEAD
 
 export class QuizDto {
   @IsString()
@@ -86,3 +91,5 @@ export class ChatCompletionDto {
   @IsOptional()
   max_tokens?: number;
 }
+=======
+>>>>>>> 4174fba (changes to admin dashboard)

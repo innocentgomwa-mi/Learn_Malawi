@@ -12,6 +12,7 @@ export enum Difficulty {
   HARD = 'hard'
 }
 
+<<<<<<< HEAD
 export enum QuizStatus {
   PENDING = 'pending',
   UPLOADED = 'uploaded',
@@ -19,6 +20,8 @@ export enum QuizStatus {
   REJECTED = 'rejected',
 }
 
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
 @Entity('quizzes')
 export class Quiz {
   @PrimaryGeneratedColumn()
@@ -37,6 +40,12 @@ export class Quiz {
   @Column({ type: 'varchar', length: 100 })
   subject: string;
 
+<<<<<<< HEAD
+=======
+  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
+  teacherEmail?: string;
+
+>>>>>>> 4174fba (changes to admin dashboard)
   @Column({
     type: 'enum',
     enum: Difficulty,
@@ -50,9 +59,12 @@ export class Quiz {
   @OneToMany(() => Question, (question) => question.quiz, { cascade: true, eager: true })
   questions: Question[];
 
+<<<<<<< HEAD
   @Column({ type: 'enum', enum: QuizStatus, default: QuizStatus.PENDING })
   status: QuizStatus;
 
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   @Column({ type: 'int', default: 0 })
   totalTime: number;
 }

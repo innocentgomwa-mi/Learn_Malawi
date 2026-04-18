@@ -1,5 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useOutletContext } from 'react-router-dom';
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
 import { useAuth } from '@/lib/AuthContext';
 import { fetchQuizzes, deleteQuiz } from '@/api';
 import { Button } from '@/components/ui/button';
@@ -22,7 +25,10 @@ function getOptionLabels(question) {
 
 export default function QuizzesAdmin() {
   const { user } = useAuth();
+<<<<<<< HEAD
   const { refreshDashboard } = useOutletContext() || {};
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
@@ -31,7 +37,11 @@ export default function QuizzesAdmin() {
   const load = async () => {
     setLoading(true);
     try {
+<<<<<<< HEAD
       const data = await fetchQuizzes();
+=======
+      const data = await fetchQuizzes({ teacherEmail: user?.email });
+>>>>>>> 4174fba (changes to admin dashboard)
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 
@@ -52,7 +62,10 @@ export default function QuizzesAdmin() {
     if (!confirm('Delete this quiz?')) return;
     await deleteQuiz(id);
     load();
+<<<<<<< HEAD
     refreshDashboard?.();
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   };
 
   return (
@@ -123,7 +136,11 @@ export default function QuizzesAdmin() {
       <QuizModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}
+<<<<<<< HEAD
         onSaved={() => { setModal({ open: false, existing: null }); load(); refreshDashboard?.(); }}
+=======
+        onSaved={() => { setModal({ open: false, existing: null }); load(); }}
+>>>>>>> 4174fba (changes to admin dashboard)
         existing={modal.existing}
       />
     </div>

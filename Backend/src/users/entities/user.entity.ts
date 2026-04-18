@@ -30,6 +30,15 @@ export class User {
   })
   role!: UserRole;
 
+<<<<<<< HEAD
+=======
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  school?: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  level?: string;
+
+>>>>>>> 4174fba (changes to admin dashboard)
   @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',

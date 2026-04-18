@@ -1,5 +1,8 @@
 ﻿import { useEffect, useState } from 'react';
+<<<<<<< HEAD
 import { useOutletContext } from 'react-router-dom';
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
 import { useAuth } from '@/lib/AuthContext';
 import { fetchStudyNotes, deleteStudyNote } from '@/api';
 import { Button } from '@/components/ui/button';
@@ -10,7 +13,10 @@ import { filterByTeacher, sortByLatest } from './teacherUtils';
 
 export default function StudyNotesAdmin() {
   const { user } = useAuth();
+<<<<<<< HEAD
   const { refreshDashboard } = useOutletContext() || {};
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState({ open: false, existing: null });
@@ -18,7 +24,11 @@ export default function StudyNotesAdmin() {
   const load = async () => {
     setLoading(true);
     try {
+<<<<<<< HEAD
       const data = await fetchStudyNotes();
+=======
+      const data = await fetchStudyNotes({ teacherEmail: user?.email });
+>>>>>>> 4174fba (changes to admin dashboard)
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 
@@ -39,7 +49,10 @@ export default function StudyNotesAdmin() {
     if (!confirm('Delete this study note?')) return;
     await deleteStudyNote(id);
     load();
+<<<<<<< HEAD
     refreshDashboard?.();
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   };
 
   return (
@@ -78,7 +91,11 @@ export default function StudyNotesAdmin() {
                   <td className="px-4 py-3 text-muted-foreground">{n.subject}</td>
                   <td className="px-4 py-3 text-muted-foreground">{n.level}</td>
                   <td className="px-4 py-3 text-muted-foreground">{n.grade || '—'}</td>
+<<<<<<< HEAD
                   <td className="px-4 py-3"><StatusBadge status={n.status || 'uploaded'} /></td>
+=======
+                  <td className="px-4 py-3"><StatusBadge status={n.status || 'pending'} /></td>
+>>>>>>> 4174fba (changes to admin dashboard)
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => setModal({ open: true, existing: n })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
@@ -99,7 +116,11 @@ export default function StudyNotesAdmin() {
       <ResourceModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}
+<<<<<<< HEAD
         onSaved={() => { setModal({ open: false, existing: null }); load(); refreshDashboard?.(); }}
+=======
+        onSaved={() => { setModal({ open: false, existing: null }); load(); }}
+>>>>>>> 4174fba (changes to admin dashboard)
         type="studynote"
         existing={modal.existing}
       />

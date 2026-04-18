@@ -6,6 +6,11 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
+<<<<<<< HEAD
+=======
+import MaintenancePage from './components/MaintenancePage';
+import { usePageLogger } from '@/hooks/usePageLogger';
+>>>>>>> 4174fba (changes to admin dashboard)
 import Home from './pages/Home';
 import StudyNotes from './pages/StudyNotes';
 import PastPapers from './pages/PastPapers';
@@ -31,10 +36,27 @@ import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussi
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import ProtectedRoute from './components/ProtectedRoute';
+<<<<<<< HEAD
 import CreateAccountPrompt from './components/CreateAccountPrompt';
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin, isAuthenticated } = useAuth();
+=======
+
+const AuthenticatedApp = () => {
+  const { isLoadingAuth, isLoadingPublicSettings, error, navigateToLogin, isAuthenticated, appPublicSettings } = useAuth();
+
+  usePageLogger('page_viewed');
+
+  const maintenanceSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_mode');
+  const maintenanceMessageSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_message');
+  const isMaintenanceMode = maintenanceSetting?.value === 'true';
+  const maintenanceMessage = maintenanceMessageSetting?.value || "We'll be back shortly.";
+
+  if (isMaintenanceMode) {
+    return <MaintenancePage message={maintenanceMessage} />;
+  }
+>>>>>>> 4174fba (changes to admin dashboard)
 
   // Show loading spinner while checking app public settings or auth
   if (isLoadingPublicSettings || isLoadingAuth) {
@@ -46,6 +68,7 @@ const AuthenticatedApp = () => {
   }
 
   // Handle authentication errors
+<<<<<<< HEAD
   if (authError) {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
@@ -54,6 +77,15 @@ const AuthenticatedApp = () => {
       navigateToLogin();
       return null;
     }
+=======
+  if (error) {
+    if (typeof error === 'object' && error?.type === 'user_not_registered') {
+      return <UserNotRegisteredError />;
+    }
+
+    navigateToLogin();
+    return null;
+>>>>>>> 4174fba (changes to admin dashboard)
   }
 
   // Render the main app
@@ -61,12 +93,21 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
+<<<<<<< HEAD
         <Route path="/study-notes" element={isAuthenticated ? <StudyNotes /> : <CreateAccountPrompt />} />
         <Route path="/past-papers" element={isAuthenticated ? <PastPapers /> : <CreateAccountPrompt />} />
         <Route path="/tutorials" element={isAuthenticated ? <Tutorials /> : <CreateAccountPrompt />} />
         <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
         <Route path="/quizzes" element={isAuthenticated ? <Quizzes /> : <CreateAccountPrompt />} />
         <Route path="/career" element={isAuthenticated ? <Career /> : <CreateAccountPrompt />} />
+=======
+        <Route path="/study-notes" element={<StudyNotes />} />
+        <Route path="/past-papers" element={<PastPapers />} />
+        <Route path="/tutorials" element={<Tutorials />} />
+        <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
+        <Route path="/quizzes" element={<Quizzes />} />
+        <Route path="/career" element={<Career />} />
+>>>>>>> 4174fba (changes to admin dashboard)
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
@@ -98,7 +139,11 @@ function App() {
   return (
     <AuthProvider>
       <QueryClientProvider client={queryClientInstance}>
+<<<<<<< HEAD
         <Router>
+=======
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+>>>>>>> 4174fba (changes to admin dashboard)
           <AuthenticatedApp />
         </Router>
         <Toaster />

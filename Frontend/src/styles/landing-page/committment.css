@@ -1,0 +1,205 @@
+.institutional-trust-section {
+  padding: clamp(3rem, 6vw, 8rem) clamp(1rem, 3vw, 2rem);
+  max-width: 1400px;
+  margin: 0 auto;
+  background: #ffffff;
+  overflow-x: hidden;
+}
+
+.institutional-trust-section h2 {
+  text-align: center;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 700;
+  color: #1a3f7a;
+  margin-bottom: 1rem;
+  position: relative;
+  font-family: "Oswald", sans-serif;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  padding: 0 0.5rem;
+}
+
+.institutional-trust-section h2::after {
+  content: "";
+  display: block;
+  width: clamp(60px, 15vw, 72px);
+  height: 3px;
+  margin: 1rem auto clamp(2rem, 5vw, 4rem);
+  background: #2e9f3a;
+}
+
+.trust-grid {
+  display: grid;
+  grid-template-columns: repeat(1, 1fr);
+  gap: clamp(1.5rem, 3vw, 2rem); /* Reduced gap */
+  max-width: 1000px; /* Reduced max-width for tighter layout */
+  margin: 0 auto;
+  padding: 0 0.5rem;
+}
+
+@media (min-width: 768px) {
+  .trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: clamp(1.5rem, 2.5vw, 2rem);
+  }
+}
+
+/* Changed from auto-fit to fixed 2x2 layout on desktop */
+@media (min-width: 1024px) {
+  .trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, auto);
+    gap: clamp(1.5rem, 2vw, 1.75rem); /* Reduced gap on desktop */
+    max-width: 900px; /* Further reduced for tighter layout */
+    justify-content: center;
+  }
+}
+
+.trust-principle {
+  padding: clamp(1.5rem, 3vw, 2rem) clamp(1.25rem, 2.5vw, 1.75rem); /* Reduced padding */
+  border: 1px solid #d9dee4;
+  border-radius: clamp(10px, 2vw, 12px);
+  transition: all 0.3s ease;
+  background: #ffffff;
+  min-height: 180px; /* Reduced min-height */
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Center content vertically */
+}
+
+/* Ensure all cards are same height in 2x2 grid */
+@media (min-width: 1024px) {
+  .trust-principle {
+    min-height: 175px; /* Slightly smaller on desktop */
+    height: 100%;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .trust-principle:hover {
+    border-color: #2f5fa8;
+    box-shadow: 0 12px 28px rgba(26, 63, 122, 0.08);
+    transform: translateY(-4px);
+  }
+}
+
+.trust-principle:active {
+  transform: scale(0.98);
+  transition: transform 0.1s ease;
+}
+
+.trust-principle h3 {
+  font-size: clamp(1.3rem, 3vw, 1.45rem);
+  font-weight: 600;
+  color: #1a3f7a;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: "Roboto", sans-serif;
+  line-height: 1.3;
+}
+
+.trust-principle h3 svg {
+  color: #2e9f3a;
+  font-size: clamp(1.2rem, 2.5vw, 1.4rem);
+  flex-shrink: 0;
+}
+
+.trust-principle p {
+  font-size: clamp(1.05rem, 2.5vw, 1.15rem);
+  line-height: 1.6;
+  color: #4b5b6b;
+  font-family: "Roboto", sans-serif;
+  margin-left: calc(clamp(1.2rem, 2.5vw, 1.4rem) + 0.75rem);
+}
+
+@media (max-width: 640px) {
+  .trust-principle p {
+    margin-left: 0;
+    margin-top: 0.5rem;
+  }
+  
+  .trust-principle h3 {
+    flex-wrap: wrap;
+  }
+}
+
+@media (max-width: 360px) {
+  .institutional-trust-section {
+    padding: 2.5rem 0.75rem 3.5rem;
+  }
+  
+  .trust-principle {
+    padding: 1.25rem 1rem; /* Reduced padding */
+    min-height: 160px; /* Reduced min-height */
+  }
+  
+  .trust-principle h3 {
+    font-size: 1.2rem;
+  }
+  
+  .trust-principle p {
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) and (orientation: landscape) {
+  .trust-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem;
+  }
+  
+  .trust-principle {
+    min-height: 160px; /* Reduced min-height */
+    padding: 1.25rem;
+  }
+}
+
+/* Desktop-specific adjustments for tighter layout */
+@media (min-width: 1024px) {
+  .trust-principle h3 {
+    font-size: 1.4rem; /* Slightly smaller on desktop */
+    margin-bottom: 0.75rem; /* Reduced margin */
+  }
+  
+  .trust-principle p {
+    font-size: 1.1rem; /* Slightly smaller on desktop */
+    line-height: 1.55; /* Tighter line height */
+  }
+  
+  .trust-principle h3 svg {
+    font-size: 1.3rem; /* Slightly smaller icon */
+  }
+}
+
+/* Large desktop adjustments for 2x2 layout */
+@media (min-width: 1400px) {
+  .trust-grid {
+    max-width: 950px; /* Slightly wider on large screens */
+    gap: 1.75rem;
+  }
+  
+  .trust-principle {
+    padding: 1.75rem 1.5rem;
+    min-height: 180px;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .trust-principle {
+    border: 2px solid #000;
+  }
+  
+  .trust-principle h3 {
+    color: #000;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trust-principle,
+  .trust-principle:active {
+    transition: none;
+    transform: none;
+  }
+}

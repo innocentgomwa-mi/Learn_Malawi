@@ -12,12 +12,20 @@ export class StudyNotesService {
     private studyNotesRepository: Repository<StudyNote>,
   ) {}
 
+<<<<<<< HEAD
   async create(createStudyNoteDto: CreateStudyNoteDto): Promise<StudyNote> {
+=======
+  async create(createStudyNoteDto: CreateStudyNoteDto & { teacherEmail?: string }): Promise<StudyNote> {
+>>>>>>> 4174fba (changes to admin dashboard)
     const studyNote = this.studyNotesRepository.create(createStudyNoteDto);
     return await this.studyNotesRepository.save(studyNote);
   }
 
+<<<<<<< HEAD
   async findAll(level?: string, subject?: string, search?: string): Promise<StudyNote[]> {
+=======
+  async findAll(level?: string, subject?: string, search?: string, teacherEmail?: string): Promise<StudyNote[]> {
+>>>>>>> 4174fba (changes to admin dashboard)
     const query = this.studyNotesRepository.createQueryBuilder('studyNote');
 
     if (level && level !== 'All') {
@@ -35,6 +43,13 @@ export class StudyNotesService {
       );
     }
 
+<<<<<<< HEAD
+=======
+    if (teacherEmail) {
+      query.andWhere('studyNote.teacherEmail = :teacherEmail', { teacherEmail });
+    }
+
+>>>>>>> 4174fba (changes to admin dashboard)
     return await query.orderBy('studyNote.createdAt', 'DESC').getMany();
   }
 

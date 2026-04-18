@@ -30,7 +30,11 @@ export default function AiTutor() {
 
     try {
       const response = await fetchAiChat(prompt);
+<<<<<<< HEAD
       const assistantText = response?.content || response?.text || (typeof response === "string" ? response : "Sorry, I couldn't generate an answer right now.");
+=======
+      const assistantText = typeof response === "string" ? response : response?.text || "Sorry, I couldn't generate an answer right now.";
+>>>>>>> 4174fba (changes to admin dashboard)
       setMessages((prev) => [...prev, { role: "assistant", content: assistantText }]);
     } catch (error) {
       setMessages((prev) => [
