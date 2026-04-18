@@ -84,4 +84,44 @@
   body {
     @apply bg-background text-foreground font-inter;
   }
+
+  html.accessibility-high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 100%;
+    --border: 0 0% 70%;
+    --primary: 50 100% 60%;
+    --secondary: 45 100% 60%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 90%;
+    --accent: 55 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --input: 0 0% 12%;
+    --ring: 55 100% 60%;
+  }
+
+  html.accessibility-large-text {
+    font-size: 115%;
+  }
+
+  html.accessibility-dyslexia-font {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  html.accessibility-line-spacing body,
+  html.accessibility-line-spacing p,
+  html.accessibility-line-spacing label,
+  html.accessibility-line-spacing input,
+  html.accessibility-line-spacing select,
+  html.accessibility-line-spacing button {
+    line-height: 1.8 !important;
+  }
+
+  html.accessibility-reduced-motion * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
 }

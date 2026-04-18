@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { BookOpen, FileText, Play, Brain, Briefcase, ArrowRight, Users, BookMarked, Award, UserCheck, GraduationCap, Trophy, Star, Flame, MessageCircle, Zap, Bell } from "lucide-react";
+import { BookOpen, FileText, Play, Brain, Briefcase, ArrowRight, Users, BookMarked, Award, UserCheck, GraduationCap, Trophy, Star, Flame, MessageCircle, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
@@ -89,12 +89,6 @@ export default function Home() {
                   className="bg-primary-foreground/10 text-primary-foreground border border-primary-foreground/20 font-semibold px-6 py-3 rounded-xl hover:bg-primary-foreground/20 transition-colors"
                 >
                   Take a Quiz
-                </Link>
-                <Link
-                  to="/notifications"
-                  className="inline-flex items-center gap-2 border border-primary-foreground/30 text-primary-foreground px-5 py-3 rounded-xl hover:bg-primary-foreground/10 transition-colors"
-                >
-                  <Bell className="h-4 w-4" /> Notifications
                 </Link>
               </div>
             </motion.div>

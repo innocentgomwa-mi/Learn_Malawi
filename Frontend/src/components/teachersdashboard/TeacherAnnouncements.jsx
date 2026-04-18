@@ -19,7 +19,7 @@ export default function TeacherAnnouncements() {
     setError(null);
 
     try {
-      const response = await fetchAnnouncements({ published: true });
+      const response = await fetchAnnouncements({ teacherEmail: user?.email, published: true });
       setAnnouncements(Array.isArray(response) ? response : []);
     } catch (fetchError) {
       setError(fetchError.message ?? 'Unable to load announcements.');
@@ -53,6 +53,8 @@ export default function TeacherAnnouncements() {
         title: title.trim(),
         body: body.trim(),
         teacherEmail: user.email,
+        targetAudience: 'students',
+        isPublished: true,
       });
       setTitle('');
       setBody('');

@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { updateProfile } from "@/api";
 import { loadDashboardData } from "@/lib/dashboardStorage";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 import { User, BookOpen, Trophy, TrendingUp, CheckCircle } from "lucide-react";
@@ -9,7 +8,7 @@ import { User, BookOpen, Trophy, TrendingUp, CheckCircle } from "lucide-react";
 const COLORS = ["#0d9488", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981"];
 
 export default function Dashboard() {
-  const { user, refreshUser } = useAuth();
+  const { user } = useAuth();
   const [progress, setProgress] = useState([]);
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -29,43 +28,9 @@ export default function Dashboard() {
     setLoading(false);
   }, [user]);
 
-  const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', school: '', level: '' });
-  const [profileSaving, setProfileSaving] = useState(false);
-  const [profileSaved, setProfileSaved] = useState(false);
-  const [profileError, setProfileError] = useState(null);
-
-  useEffect(() => {
-    if (user) {
-      setProfileForm({
-        firstName: user.firstName || '',
-        lastName: user.lastName || '',
-        school: user.school || '',
-        level: user.level || '',
-      });
-    }
-  }, [user]);
-
   const userName = user
     ? user.full_name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
     : 'My Dashboard';
-
-  const handleProfileSave = async () => {
-    if (!user) return;
-    setProfileSaving(true);
-    setProfileError(null);
-
-    try {
-      await updateProfile({ firstName: profileForm.firstName, lastName: profileForm.lastName, school: profileForm.school, level: profileForm.level });
-      await refreshUser();
-      setProfileSaved(true);
-      window.setTimeout(() => setProfileSaved(false), 2500);
-    } catch (saveError) {
-      const message = saveError instanceof Error ? saveError.message : String(saveError);
-      setProfileError(message || 'Unable to update profile. Please try again.');
-    } finally {
-      setProfileSaving(false);
-    }
-  };
 
   // Compute per-subject progress
   const subjectMap = {};
@@ -110,66 +75,6 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Profile editor */}
-      <div className="bg-card border border-border rounded-2xl p-6 mb-8">
-        <div className="flex items-center justify-between gap-4 mb-6">
-          <div>
-            <h2 className="font-poppins text-xl font-bold text-foreground">Profile</h2>
-            <p className="text-muted-foreground text-sm">Update your name and keep your dashboard profile current.</p>
-          </div>
-          <button
-            type="button"
-            onClick={handleProfileSave}
-            disabled={profileSaving}
-            className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {profileSaving ? 'Saving...' : profileSaved ? 'Saved' : 'Save profile'}
-          </button>
-        </div>
-
-        <div className="grid gap-4 md:grid-cols-2">
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">First Name</span>
-            <input
-              type="text"
-              value={profileForm.firstName}
-              onChange={(event) => setProfileForm(prev => ({ ...prev, firstName: event.target.value }))}
-              className="mt-2 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Last Name</span>
-            <input
-              type="text"
-              value={profileForm.lastName}
-              onChange={(event) => setProfileForm(prev => ({ ...prev, lastName: event.target.value }))}
-              className="mt-2 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">School</span>
-            <input
-              type="text"
-              value={profileForm.school}
-              onChange={(event) => setProfileForm(prev => ({ ...prev, school: event.target.value }))}
-              className="mt-2 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-            />
-          </label>
-          <label className="block">
-            <span className="text-sm font-medium text-slate-700">Level</span>
-            <select
-              value={profileForm.level}
-              onChange={(event) => setProfileForm(prev => ({ ...prev, level: event.target.value }))}
-              className="mt-2 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-            >
-              <option value="PSLC">PSLC</option>
-              <option value="JCE">JCE</option>
-              <option value="MSCE">MSCE</option>
-            </select>
-          </label>
-        </div>
-        {profileError ? <p className="mt-4 text-sm text-rose-600">{profileError}</p> : null}
-      </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

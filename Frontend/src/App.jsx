@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
+import { AccessibilityProvider } from '@/lib/AccessibilityContext';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
@@ -33,6 +34,8 @@ import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussi
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import Notifications from './pages/Notifications';
+import Profile from './pages/Profile';
+import Accessibility from './pages/Accessibility';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AuthenticatedApp = () => {
@@ -81,6 +84,8 @@ const AuthenticatedApp = () => {
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notifications" element={<Notifications />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
           <Route path="study-notes" element={<StudyNotesAdmin />} />
@@ -110,12 +115,14 @@ function App() {
 
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
+      <AccessibilityProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AccessibilityProvider>
     </AuthProvider>
   )
 }
