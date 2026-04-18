@@ -1,23 +1,28 @@
 import React from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Users, GraduationCap, ClipboardCheck, Megaphone, TrendingUp, BookOpen, FileText, CheckCircle } from "lucide-react";
+import { Users, GraduationCap, ClipboardCheck, Megaphone, BookOpen, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiClient } from "@/api/apiClient";
 
 export default function AdminOverview() {
   const { data: posts = [] } = useQuery({ queryKey: ["posts"], queryFn: () => apiClient.entities.TeacherPost.list() });
+  const { data: studyNotes = [] } = useQuery({ queryKey: ["study-notes"], queryFn: () => apiClient.entities.StudyNote.list() });
+  const { data: tutorials = [] } = useQuery({ queryKey: ["tutorials"], queryFn: () => apiClient.entities.Tutorial.list() });
+  const { data: pastPapers = [] } = useQuery({ queryKey: ["past-papers"], queryFn: () => apiClient.entities.PastPaper.list() });
   const { data: teachers = [] } = useQuery({ queryKey: ["teachers"], queryFn: () => apiClient.entities.Teacher.list() });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: () => apiClient.entities.Student.list() });
   const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => apiClient.entities.Announcement.list() });
 
-  const pending = posts.filter(p => p.status === "pending").length;
-  const approved = posts.filter(p => p.status === "approved").length;
-  const rejected = posts.filter(p => p.status === "rejected").length;
+  const pending = Array.isArray(posts) ? posts.filter(p => p.status === "pending").length : 0;
+  const approved = Array.isArray(posts) ? posts.filter(p => p.status === "approved").length : 0;
+  const rejected = Array.isArray(posts) ? posts.filter(p => p.status === "rejected").length : 0;
+  const publishedResources = approved + (Array.isArray(studyNotes) ? studyNotes.length : 0) + (Array.isArray(tutorials) ? tutorials.length : 0) + (Array.isArray(pastPapers) ? pastPapers.length : 0);
 
   const stats = [
     { label: "Total Students", value: students.length, icon: Users, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
     { label: "Total Teachers", value: teachers.length, icon: GraduationCap, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
     { label: "Pending Approvals", value: pending, icon: ClipboardCheck, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
-    { label: "Published Resources", value: approved, icon: BookOpen, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
+    { label: "Published Resources", value: publishedResources, icon: BookOpen, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
   ];
 
   const recentPosts = posts.slice(0, 5);

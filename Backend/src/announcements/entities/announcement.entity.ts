@@ -11,6 +11,15 @@ export class Announcement {
   @Column({ type: 'text' })
   body: string;
 
+  @Column({ name: 'target_audience', length: 50, default: 'all' })
+  targetAudience: string;
+
+  @Column({ length: 50, default: 'normal' })
+  priority: string;
+
+  @Column({ name: 'is_published', default: false })
+  isPublished: boolean;
+
   @Column({ name: 'teacher_email', length: 255 })
   teacherEmail: string;
 

@@ -19,7 +19,7 @@ export default function TeacherAnnouncements() {
     setError(null);
 
     try {
-      const response = await fetchAnnouncements({ teacherEmail: user?.email });
+      const response = await fetchAnnouncements({ published: true });
       setAnnouncements(Array.isArray(response) ? response : []);
     } catch (fetchError) {
       setError(fetchError.message ?? 'Unable to load announcements.');

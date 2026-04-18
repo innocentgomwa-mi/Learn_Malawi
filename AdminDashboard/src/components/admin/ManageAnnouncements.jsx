@@ -6,18 +6,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
-} from "@/components/ui/dialog";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue
-} from "@/components/ui/select";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { apiClient } from "@/api/apiClient";
+import { useAuth } from "@/lib/AuthContext";
 
 const PRIORITY_COLORS = { low: "bg-gray-100 text-gray-600", normal: "bg-blue-100 text-blue-700", high: "bg-red-100 text-red-700" };
 const AUDIENCE_COLORS = { all: "bg-purple-100 text-purple-700", students: "bg-green-100 text-green-700", teachers: "bg-amber-100 text-amber-700" };
 
 export default function ManageAnnouncements() {
+  const { user } = useAuth();
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ title: "", message: "", target_audience: "all", priority: "normal", is_published: false });
   const qc = useQueryClient();
@@ -29,7 +27,11 @@ export default function ManageAnnouncements() {
 
   const createMutation = useMutation({
     mutationFn: (data) => apiClient.entities.Announcement.create(data),
-    onSuccess: () => { qc.invalidateQueries({ queryKey: ["announcements"] }); setShowAdd(false); setForm({ title: "", message: "", target_audience: "all", priority: "normal", is_published: false }); },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["announcements"] });
+      setShowAdd(false);
+      setForm({ title: "", message: "", target_audience: "all", priority: "normal", is_published: false });
+    },
   });
 
   const updateMutation = useMutation({
@@ -42,8 +44,8 @@ export default function ManageAnnouncements() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["announcements"] }),
   });
 
-  const published = announcements.filter(a => a.is_published);
-  const drafts = announcements.filter(a => !a.is_published);
+  const published = announcements.filter(a => (a.isPublished ?? a.is_published));
+  const drafts = announcements.filter(a => !(a.isPublished ?? a.is_published));
 
   return (
     <div className="space-y-5">
@@ -67,33 +69,31 @@ export default function ManageAnnouncements() {
       ) : (
         <div className="space-y-3">
           {announcements.map(ann => (
-            <Card key={ann.id} className={`border shadow-sm ${ann.is_published ? "border-slate-200 bg-slate-50/30" : "border-gray-200"}`}>
+            <Card key={ann.id} className={`border shadow-sm ${ann.isPublished ?? ann.is_published ? "border-slate-200 bg-slate-50/30" : "border-gray-200"}`}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-gray-900 text-sm">{ann.title}</h3>
-                      {ann.is_published ? (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">Published</span>
-                      ) : (
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">Draft</span>
-                      )}
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">{ann.teacherEmail || 'Unknown author'}</span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{ann.message}</p>
                     <div className="flex gap-2 mt-2">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${AUDIENCE_COLORS[ann.target_audience]}`}>
-                        {ann.target_audience}
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${AUDIENCE_COLORS[ann.targetAudience || ann.target_audience] || 'bg-gray-100 text-gray-600'}`}>
+                        {ann.targetAudience || ann.target_audience || 'all'}
                       </span>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${PRIORITY_COLORS[ann.priority]}`}>
-                        {ann.priority} priority
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${PRIORITY_COLORS[ann.priority] || 'bg-gray-100 text-gray-600'}`}>
+                        {ann.priority || 'normal'} priority
                       </span>
                     </div>
+                    <p className="text-sm text-gray-600 mt-1 line-clamp-2">{ann.body}</p>
+                    {ann.createdAt && (
+                      <p className="text-xs text-gray-500 mt-2">{new Date(ann.createdAt).toLocaleDateString()}</p>
+                    )}
                   </div>
                   <div className="flex gap-1 flex-shrink-0">
                     <Button size="sm" variant="outline" className="h-8"
-                      onClick={() => updateMutation.mutate({ id: ann.id, data: { is_published: !ann.is_published } })}>
-                      {ann.is_published ? <EyeOff className="w-3.5 h-3.5 mr-1" /> : <Eye className="w-3.5 h-3.5 mr-1" />}
-                      {ann.is_published ? "Unpublish" : "Publish"}
+                      onClick={() => updateMutation.mutate({ id: ann.id, data: { isPublished: !(ann.isPublished ?? ann.is_published) } })}>
+                      {ann.isPublished ?? ann.is_published ? <><EyeOff className="w-3.5 h-3.5 mr-1" />Unpublish</> : <><Eye className="w-3.5 h-3.5 mr-1" />Publish</>}
                     </Button>
                     <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-red-400 hover:bg-red-50"
                       onClick={() => deleteMutation.mutate(ann.id)}>
@@ -110,15 +110,29 @@ export default function ManageAnnouncements() {
       {/* Add Announcement Dialog */}
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent className="max-w-lg">
-          <DialogHeader><DialogTitle>New Announcement</DialogTitle></DialogHeader>
+          <DialogHeader>
+            <DialogTitle>New Announcement</DialogTitle>
+            <DialogDescription>Enter the title and body for the announcement below.</DialogDescription>
+          </DialogHeader>
           <div className="space-y-3">
             <div>
               <Label className="text-sm">Title</Label>
-              <Input value={form.title} onChange={e => setForm(f => ({ ...f, title: e.target.value }))} className="mt-1" placeholder="Announcement title..." />
+              <Input
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                className="mt-1"
+                placeholder="Announcement title..."
+              />
             </div>
             <div>
               <Label className="text-sm">Message</Label>
-              <Textarea value={form.message} onChange={e => setForm(f => ({ ...f, message: e.target.value }))} className="mt-1" rows={4} placeholder="Write your announcement..." />
+              <Textarea
+                value={form.message}
+                onChange={e => setForm(f => ({ ...f, message: e.target.value }))}
+                className="mt-1"
+                rows={4}
+                placeholder="Write your announcement..."
+              />
             </div>
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -156,7 +170,18 @@ export default function ManageAnnouncements() {
             </div>
           </div>
           <DialogFooter className="gap-2">
-            <Button className="bg-blue-700 hover:bg-blue-800" onClick={() => createMutation.mutate(form)} disabled={!form.title || !form.message}>
+            <Button
+              className="bg-blue-700 hover:bg-blue-800"
+              onClick={() => createMutation.mutate({
+                title: form.title,
+                body: form.message,
+                teacherEmail: user?.email || '',
+                targetAudience: form.target_audience,
+                priority: form.priority,
+                isPublished: form.is_published,
+              })}
+              disabled={!form.title || !form.message || !user?.email}
+            >
               {form.is_published ? "Publish" : "Save as Draft"}
             </Button>
             <Button variant="outline" onClick={() => setShowAdd(false)}>Cancel</Button>

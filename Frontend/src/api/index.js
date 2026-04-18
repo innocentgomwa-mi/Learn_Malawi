@@ -57,8 +57,13 @@ async function parseJsonResponse(response) {
  * @param {any} body
  * @returns {any}
  */
+function isFormData(value) {
+  return typeof FormData !== 'undefined' && value instanceof FormData;
+}
+
 function cleanRequestBody(body) {
   if (body === null || body === undefined) return body;
+  if (isFormData(body)) return body;
   if (typeof body === 'string') {
     try {
       const parsed = JSON.parse(body);
@@ -90,7 +95,9 @@ async function request(path, options = {}) {
     ...(options.headers || {}),
   });
 
-  if (options.body !== undefined && options.body !== null && !headers['Content-Type'] && !headers['content-type']) {
+  const body = options.body;
+  const isForm = isFormData(body);
+  if (body !== undefined && body !== null && !headers['Content-Type'] && !headers['content-type'] && !isForm) {
     headers['Content-Type'] = 'application/json';
   }
 
@@ -99,13 +106,12 @@ async function request(path, options = {}) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const body = options.body;
-  const requestBody = body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body);
+  const requestBody = isForm ? body : body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body);
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
-    body: typeof requestBody === 'object' ? JSON.stringify(requestBody) : requestBody,
+    body: isForm ? requestBody : typeof requestBody === 'object' ? JSON.stringify(requestBody) : requestBody,
   });
 
   if (response.ok) {
@@ -239,19 +245,39 @@ export function fetchAiChat(prompt) {
   });
 }
 
+export function generateStudyNoteQuiz(note) {
+  return request('/ai/quiz', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: note.title,
+      subject: note.subject,
+      level: note.level,
+      topic: note.topic,
+      content: note.content,
+      summary: note.summary,
+    }),
+  });
+}
+
 /**
  * @param {JsonObject} data
  */
 export function createStudyNote(data) {
-  return request('/study-notes', { method: 'POST', body: JSON.stringify(data) });
+  return request('/study-notes', {
+    method: 'POST',
+    body: isFormData(data) ? data : JSON.stringify(data),
+  });
 }
 
 /**
  * @param {string} id
- * @param {JsonObject} data
+ * @param {JsonObject|FormData} data
  */
 export function updateStudyNote(id, data) {
-  return request(`/study-notes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  return request(`/study-notes/${id}`, {
+    method: 'PATCH',
+    body: isFormData(data) ? data : JSON.stringify(data),
+  });
 }
 
 /**
@@ -301,9 +327,10 @@ export function updateCareerResource(id, data) {
 /**
  * @param {{ teacherEmail?: string }} [params]
  */
-export function fetchAnnouncements({ teacherEmail } = {}) {
+export function fetchAnnouncements({ teacherEmail, published } = {}) {
   const params = new URLSearchParams();
   if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (published !== undefined) params.set('published', published ? 'true' : 'false');
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/announcements${query}`);
 }

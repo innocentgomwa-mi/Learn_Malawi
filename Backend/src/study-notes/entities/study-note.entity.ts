@@ -29,6 +29,9 @@ export class StudyNote {
   @Column({ type: 'text', nullable: true })
   summary?: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imageUrl?: string;
+
   @Column({ type: 'text', nullable: true })
   content?: string;
 

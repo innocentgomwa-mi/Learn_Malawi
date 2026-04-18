@@ -62,8 +62,16 @@ export class AuthService {
       throw new ConflictException('User with this email already exists');
     }
 
-    // Create user
-    const user = await this.usersService.create(registerDto);
+    if (registerDto.role === UserRole.ADMIN) {
+      const adminSecret = '26D7INNPEV';
+      if (registerDto.secretKey !== adminSecret) {
+        throw new UnauthorizedException('Invalid admin secret key');
+      }
+    }
+
+    // Create user without the secret key field
+    const { secretKey, ...createUserDto } = registerDto as any;
+    const user = await this.usersService.create(createUserDto);
     
     // Generate tokens
     const tokens = await this.generateTokens(user);

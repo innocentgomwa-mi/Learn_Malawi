@@ -64,6 +64,15 @@ export default function LoginPage() {
             {isLoadingAuth ? 'Signing in…' : 'Sign in'}
           </button>
         </form>
+
+        <div className="mt-6 text-center text-sm text-slate-500">
+          <p>
+            Need admin access?{' '}
+            <a href="/register" className="font-semibold text-slate-900 hover:text-slate-700">
+              Register as admin
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

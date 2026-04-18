@@ -13,12 +13,19 @@ export class AnnouncementsService {
   ) {}
 
   async create(createAnnouncementDto: CreateAnnouncementDto) {
-    const announcement = this.announcementsRepository.create(createAnnouncementDto);
+    const announcement = this.announcementsRepository.create({
+      ...createAnnouncementDto,
+      targetAudience: createAnnouncementDto.targetAudience ?? 'all',
+      priority: createAnnouncementDto.priority ?? 'normal',
+      isPublished: createAnnouncementDto.isPublished ?? false,
+    });
     return this.announcementsRepository.save(announcement);
   }
 
-  async findAll(teacherEmail?: string) {
-    const where = teacherEmail ? { teacherEmail } : {};
+  async findAll(teacherEmail?: string, published?: boolean) {
+    const where: Record<string, any> = {};
+    if (teacherEmail) where.teacherEmail = teacherEmail;
+    if (published !== undefined) where.isPublished = published;
     return this.announcementsRepository.find({ where, order: { createdAt: 'DESC' } });
   }
 

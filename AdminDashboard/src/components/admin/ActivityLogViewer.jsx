@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { format, formatDistanceToNow, isValid, parseISO } from "date-fns";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -33,6 +33,8 @@ const ROLE_COLORS = { student: "bg-blue-100 text-blue-700", teacher: "bg-emerald
 
 export default function ActivityLogViewer() {
   const [filterAction, setFilterAction] = useState("all");
+  const [filterDay, setFilterDay] = useState("all");
+  const [expandedDay, setExpandedDay] = useState(null);
   const [drilldown, setDrilldown] = useState(null);
   const [filterRole, setFilterRole] = useState("all");
   const [searchUser, setSearchUser] = useState("");
@@ -44,8 +46,19 @@ export default function ActivityLogViewer() {
   });
 
   const parseLogDate = (value) => {
+    if (value == null) return null;
     const parsed = typeof value === 'string' ? parseISO(value) : new Date(value);
     return isValid(parsed) ? parsed : null;
+  };
+
+  const getLogDay = (log) => {
+    const date = parseLogDate(log.created_date ?? log.createdDate);
+    return date ? format(date, "yyyy-MM-dd") : "unknown";
+  };
+
+  const formatLogDay = (value) => {
+    const parsed = typeof value === 'string' ? parseISO(value) : new Date(value);
+    return isValid(parsed) ? format(parsed, "MMMM d, yyyy") : "Unknown day";
   };
 
   const formatLogTime = (value) => {
@@ -55,6 +68,11 @@ export default function ActivityLogViewer() {
 
   const formatRelativeTime = (value) => {
     const date = parseLogDate(value);
+    return date ? formatDistanceToNow(date, { addSuffix: true }) : "Unknown time";
+  };
+
+  const getDisplayedTime = (log) => {
+    const date = parseLogDate(log.created_date ?? log.createdDate);
     return date ? formatDistanceToNow(date, { addSuffix: true }) : "Unknown time";
   };
 
@@ -91,20 +109,65 @@ export default function ActivityLogViewer() {
     URL.revokeObjectURL(url);
   };
 
-  const filtered = logs.filter(log => {
-    const matchAction = filterAction === "all" || log.action === filterAction;
-    const matchRole = filterRole === "all" || log.user_role === filterRole;
-    const matchUser = !searchUser || log.user_email?.toLowerCase().includes(searchUser.toLowerCase()) || log.user_name?.toLowerCase().includes(searchUser.toLowerCase());
-    return matchAction && matchRole && matchUser;
-  });
+  const filtered = useMemo(() => {
+    return logs
+      .filter((log) => {
+        const matchAction = filterAction === "all" || log.action === filterAction;
+        const matchRole = filterRole === "all" || log.user_role === filterRole;
+        const matchUser =
+          !searchUser ||
+          log.user_email?.toLowerCase().includes(searchUser.toLowerCase()) ||
+          log.user_name?.toLowerCase().includes(searchUser.toLowerCase());
+        const matchDay = filterDay === "all" || getLogDay(log) === filterDay;
+        return matchAction && matchRole && matchUser && matchDay;
+      })
+      .slice()
+      .sort((a, b) => {
+        const dateA = parseLogDate(a.created_date ?? a.createdDate)?.getTime() ?? 0;
+        const dateB = parseLogDate(b.created_date ?? b.createdDate)?.getTime() ?? 0;
+        return dateB - dateA;
+      });
+  }, [logs, filterAction, filterRole, searchUser, filterDay]);
 
   // Summary stats
   const today = new Date();
   today.setHours(0, 0, 0, 0);
-  const todayLogs = logs.filter(l => new Date(l.created_date) >= today);
-  const quizCompletions = logs.filter(l => l.action === "quiz_completed").length;
-  const resourceViews = logs.filter(l => l.action === "resource_viewed").length;
-  const uniqueUsers = new Set(logs.map(l => l.user_email)).size;
+  const todayLogs = logs.filter((l) => parseLogDate(l.created_date ?? l.createdDate) >= today);
+  const quizCompletions = logs.filter((l) => l.action === "quiz_completed").length;
+  const resourceViews = logs.filter((l) => l.action === "resource_viewed").length;
+  const uniqueUsers = new Set(logs.map((l) => l.user_email)).size;
+
+  const availableDays = useMemo(() => {
+    return [...new Set(logs.map(getLogDay))]
+      .filter((day) => day !== "unknown")
+      .sort((a, b) => (new Date(b).getTime() - new Date(a).getTime()));
+  }, [logs]);
+
+  const groupedLogs = useMemo(() => {
+    const groups = {};
+    filtered.forEach((log) => {
+      const day = getLogDay(log);
+      if (!groups[day]) groups[day] = [];
+      groups[day].push(log);
+    });
+    return Object.entries(groups)
+      .sort(([dayA], [dayB]) => (new Date(dayB).getTime() - new Date(dayA).getTime()));
+  }, [filtered]);
+
+  const toggleDay = (day) => {
+    setExpandedDay(day);
+  };
+
+  useEffect(() => {
+    if (groupedLogs.length === 0) {
+      setExpandedDay(null);
+      return;
+    }
+    const currentVisible = groupedLogs.some(([day]) => day === expandedDay);
+    if (!currentVisible) {
+      setExpandedDay(groupedLogs[0][0]);
+    }
+  }, [groupedLogs, expandedDay]);
 
   return (
     <div className="space-y-5">
@@ -217,6 +280,15 @@ export default function ActivityLogViewer() {
             <SelectItem value="admin">Admin</SelectItem>
           </SelectContent>
         </Select>
+        <Select value={filterDay} onValueChange={setFilterDay}>
+          <SelectTrigger className="w-44 h-9 text-sm"><SelectValue placeholder="All Days" /></SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Days</SelectItem>
+            {availableDays.map((day) => (
+              <SelectItem key={day} value={day}>{formatLogDay(day)}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       <p className="text-xs text-gray-400">{filtered.length} events{filtered.length !== logs.length ? ` (filtered from ${logs.length})` : ""}</p>
@@ -240,51 +312,68 @@ export default function ActivityLogViewer() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.map((log, i) => {
-                  const cfg = ACTION_CONFIG[log.action] || { icon: Clock, color: "bg-gray-100 text-gray-600", label: log.action };
-                  const Icon = cfg.icon;
-                  return (
-                    <tr key={i} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
-                          <div>
-                            <p className="font-medium text-gray-800 whitespace-nowrap">{cfg.label}</p>
-                            {log.score != null && (
-                              <span className={`text-xs font-medium ${log.score >= 70 ? "text-green-600" : "text-amber-600"}`}>
-                                Score: {log.score}%
-                              </span>
-                            )}
-                          </div>
+                {groupedLogs.map(([day, dayLogs]) => (
+                  <React.Fragment key={day}>
+                    <tr
+                      className="bg-slate-900 text-white border-t border-slate-700 cursor-pointer hover:bg-slate-800"
+                      onClick={() => toggleDay(day)}
+                    >
+                      <td className="px-4 py-3 font-semibold tracking-wide uppercase text-xs text-slate-100" colSpan={5}>
+                        <div className="flex items-center justify-between gap-4">
+                          <span>{formatLogDay(day)} — {dayLogs.length} event{dayLogs.length !== 1 ? "s" : ""}</span>
+                          <span className="text-[11px] uppercase tracking-[0.16em] text-slate-300">
+                            {expandedDay === day ? "Hide" : "Show"}
+                          </span>
                         </div>
-                      </td>
-                      <td className="px-4 py-3 hidden sm:table-cell">
-                        <div>
-                          <p className="text-gray-800">{log.user_name || log.user_email}</p>
-                          <div className="flex items-center gap-1 mt-0.5">
-                            <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${ROLE_COLORS[log.user_role] || "bg-gray-100 text-gray-600"}`}>
-                              {log.user_role}
-                            </span>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 hidden md:table-cell">
-                        <p className="text-gray-600 text-xs max-w-40 truncate">{log.resource_title || "—"}</p>
-                      </td>
-                      <td className="px-4 py-3 hidden lg:table-cell">
-                        <div className="flex gap-1">
-                          {log.subject && <Badge variant="secondary" className="text-xs">{log.subject}</Badge>}
-                          {log.level && <Badge variant="outline" className="text-xs">{log.level}</Badge>}
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
-                        {formatRelativeTime(log.created_date)}
                       </td>
                     </tr>
-                  );
-                })}
+                    {expandedDay === day && dayLogs.map((log, index) => {
+                      const cfg = ACTION_CONFIG[log.action] || { icon: Clock, color: "bg-gray-100 text-gray-600", label: log.action };
+                      const Icon = cfg.icon;
+                      return (
+                        <tr key={`${day}-${index}`} className="hover:bg-gray-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${cfg.color}`}>
+                                <Icon className="w-3.5 h-3.5" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-800 whitespace-nowrap">{cfg.label}</p>
+                                {log.score != null && (
+                                  <span className={`text-xs font-medium ${log.score >= 70 ? "text-green-600" : "text-amber-600"}`}>
+                                    Score: {log.score}%
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 hidden sm:table-cell">
+                            <div>
+                              <p className="text-gray-800">{log.user_name || log.user_email}</p>
+                              <div className="flex items-center gap-1 mt-0.5">
+                                <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${ROLE_COLORS[log.user_role] || "bg-gray-100 text-gray-600"}`}>
+                                  {log.user_role}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 hidden md:table-cell">
+                            <p className="text-gray-600 text-xs max-w-40 truncate">{log.resource_title || "—"}</p>
+                          </td>
+                          <td className="px-4 py-3 hidden lg:table-cell">
+                            <div className="flex gap-1">
+                              {log.subject && <Badge variant="secondary" className="text-xs">{log.subject}</Badge>}
+                              {log.level && <Badge variant="outline" className="text-xs">{log.level}</Badge>}
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
+                            {getDisplayedTime(log)}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </React.Fragment>
+                ))}
               </tbody>
             </table>
           </div>

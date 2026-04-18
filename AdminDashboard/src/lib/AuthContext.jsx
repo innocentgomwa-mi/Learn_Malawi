@@ -80,6 +80,27 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const register = async (registrationData) => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
+    try {
+      await apiClient.auth.register(registrationData);
+      const currentUser = await apiClient.auth.me();
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      return currentUser;
+    } catch (error) {
+      setIsAuthenticated(false);
+      setAuthError({
+        type: 'auth_required',
+        message: error?.message || 'Registration failed',
+      });
+      throw error;
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
   const navigateToLogin = () => {
     if (typeof window !== 'undefined') {
       window.location.href = '/login';
@@ -96,6 +117,7 @@ export const AuthProvider = ({ children }) => {
         authError,
         logout,
         login,
+        register,
         navigateToLogin,
         checkUserAuth,
         checkAppState: checkUserAuth,

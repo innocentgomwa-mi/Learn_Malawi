@@ -32,6 +32,7 @@ import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics'
 import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussions';
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
+import Notifications from './pages/Notifications';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AuthenticatedApp = () => {
@@ -79,6 +80,7 @@ const AuthenticatedApp = () => {
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
           <Route path="study-notes" element={<StudyNotesAdmin />} />

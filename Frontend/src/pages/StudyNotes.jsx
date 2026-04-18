@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/lib/AuthContext";
 import { fetchStudyNotes } from "@/api";
 import { loadUserProgress, saveUserProgress } from "@/lib/dashboardStorage";
+import NoteQuiz from "@/components/NoteQuiz";
 import { BookOpen, Search, ChevronRight, FileText, CheckCircle, Circle } from "lucide-react";
 
 const LEVELS = ["All", "PSLC", "JCE", "MSCE"];
@@ -13,10 +14,50 @@ const LEVEL_INFO = {
   MSCE: { label: "Form 3–4", color: "bg-purple-100 text-purple-700" },
 };
 
+const SUBJECT_COVERS = {
+  Mathematics: "linear-gradient(135deg, #2563eb 0%, #7c3aed 100%)",
+  Science: "linear-gradient(135deg, #059669 0%, #0ea5e9 100%)",
+  English: "linear-gradient(135deg, #f97316 0%, #ef4444 100%)",
+  History: "linear-gradient(135deg, #c2410c 0%, #c026d3 100%)",
+  Geography: "linear-gradient(135deg, #0f766e 0%, #164e63 100%)",
+  Computer: "linear-gradient(135deg, #0ea5e9 0%, #8b5cf6 100%)",
+  Biology: "linear-gradient(135deg, #16a34a 0%, #22c55e 100%)",
+  Chemistry: "linear-gradient(135deg, #dc2626 0%, #f97316 100%)",
+  Physics: "linear-gradient(135deg, #1d4ed8 0%, #0284c7 100%)",
+};
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+
+const getRemoteUrl = (value) => {
+  if (!value) return value;
+  return value.startsWith('/') ? `${API_BASE_URL}${value}` : value;
+};
+
+const getCoverStyle = (note) => {
+  if (note.imageUrl) {
+    const imageUrl = getRemoteUrl(note.imageUrl);
+    return {
+      backgroundImage: `linear-gradient(180deg, rgba(15,23,42,0.45), rgba(15,23,42,0.15)), url(${imageUrl})`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+    };
+  }
+  return {
+    backgroundImage: SUBJECT_COVERS[note.subject] || "linear-gradient(135deg, #334155 0%, #1e293b 100%)",
+    backgroundSize: "cover",
+    backgroundPosition: "center",
+  };
+};
+
+const truncateSummary = (summary) => {
+  if (!summary) return "No summary available yet.";
+  return summary.length > 120 ? `${summary.slice(0, 117)}...` : summary;
+};
+
 
 export default function StudyNotes() {
   const { user } = useAuth();
-  const [progress, setProgress] = useState({}); // resource_id -> Progress record
+  const [progress, setProgress] = useState({}); 
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
   const [selected, setSelected] = useState(null);
@@ -113,21 +154,29 @@ export default function StudyNotes() {
           </div>
           <h1 className="font-poppins text-2xl font-bold text-foreground mb-2">{selected.title}</h1>
           <p className="text-muted-foreground text-sm mb-6">{selected.subject}</p>
+
+          <div className="prose max-w-none text-foreground text-sm leading-relaxed whitespace-pre-wrap mb-6">
+            {selected.content || "Full notes are not available yet. Check back later for full learning materials."}
+          </div>
+
           {selected.summary && (
             <div className="bg-accent/50 border border-accent rounded-xl p-4 mb-6">
               <p className="text-sm font-medium text-accent-foreground">📌 Summary</p>
               <p className="text-sm mt-1 text-foreground">{selected.summary}</p>
             </div>
           )}
-          <div className="prose max-w-none text-foreground text-sm leading-relaxed whitespace-pre-wrap">
-            {selected.content || "Content coming soon. Check back later!"}
-          </div>
+
           {selected.fileUrl && (
-            <a href={selected.fileUrl} target="_blank" rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90">
-              <FileText className="h-4 w-4" /> Download PDF
-            </a>
+            <div className="rounded-3xl border border-border bg-card p-5">
+              <p className="text-sm font-semibold text-foreground mb-3">Additional learning materials</p>
+              <a href={getRemoteUrl(selected.fileUrl)} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-4 py-2 rounded-xl text-sm font-semibold hover:opacity-90">
+                <FileText className="h-4 w-4" /> Download supporting document
+              </a>
+            </div>
           )}
+
+          <NoteQuiz note={selected} />
         </div>
       </div>
     );
@@ -187,24 +236,48 @@ export default function StudyNotes() {
                 <span className="w-1.5 h-5 bg-primary rounded-full inline-block" />
                 {subject}
               </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {subjectNotes.map((note) => (
-                  <button
-                    key={note.id}
-                    onClick={() => setSelected(note)}
-                    className="bg-card border border-border rounded-xl p-5 text-left hover:shadow-md hover:-translate-y-0.5 transition-all group"
-                  >
-                    <div className="flex items-start justify-between mb-3">
-                      <span className={`text-xs font-semibold px-2 py-1 rounded-full ${LEVEL_INFO[note.level]?.color || "bg-muted text-muted-foreground"}`}>
-                        {note.level}
-                      </span>
-                      <ChevronRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                    </div>
-                    <h3 className="font-semibold text-foreground text-sm leading-snug mb-1">{note.title}</h3>
-                    {note.topic && <p className="text-xs text-muted-foreground">{note.topic}</p>}
-                    {note.grade && <p className="text-xs text-muted-foreground mt-1">{note.grade}</p>}
-                  </button>
-                ))}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {subjectNotes.map((note) => {
+                  const completed = progress[note.id]?.completed;
+                  return (
+                    <button
+                      key={note.id}
+                      onClick={() => setSelected(note)}
+                      className="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+                    >
+                      <div className="relative h-52 overflow-hidden" style={getCoverStyle(note)}>
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-transparent" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.15),_transparent_40%)]" />
+                        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.75))]" />
+                        <div className="absolute left-4 top-4 flex flex-col gap-2">
+                          {note.topic && (
+                            <span className="inline-flex rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900 shadow-sm">
+                              {note.topic}
+                            </span>
+                          )}
+                        </div>
+                        <div className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-900 shadow-sm">
+                          <span>{note.level || "N/A"}</span>
+                        </div>
+                        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
+                          <h3 className="text-lg font-semibold leading-tight max-h-[3.2rem] overflow-hidden">{note.title}</h3>
+                        </div>
+                      </div>
+                      <div className="p-5 bg-white">
+                        <div className="flex items-center justify-between gap-3 mb-3">
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-700">{note.grade || "General"}</span>
+                            <span>{note.fileUrl ? "Downloadable" : "Read online"}</span>
+                          </div>
+                        </div>
+                        <p className="text-sm text-slate-600 mb-4 leading-6">{truncateSummary(note.summary || note.content)}</p>
+                        <div className="text-xs uppercase tracking-[0.16em]">
+                          <span className="text-emerald-600 transition-colors group-hover:text-slate-900">View details →</span>
+                        </div>
+                      </div>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
