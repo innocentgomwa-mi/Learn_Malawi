@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+<<<<<<< HEAD
 import { createPastPaper, uploadPastPaper, updatePastPaper, createStudyNote, uploadStudyNote, updateStudyNote, createTutorial, uploadTutorial, updateTutorial } from '@/api';
+=======
+import { createPastPaper, updatePastPaper, createStudyNote, updateStudyNote, createTutorial, updateTutorial } from '@/api';
+>>>>>>> 4174fba (changes to admin dashboard)
 
 /**
  * @typedef {object} ResourceModalProps
@@ -118,12 +122,16 @@ const initialTutorial = {
  */
 export default function ResourceModal({ open, onClose, onSaved, type, existing }) {
   const [loading, setLoading] = useState(false);
+<<<<<<< HEAD
   const [file, setFile] = useState(null);
   const [markingSchemeFile, setMarkingSchemeFile] = useState(null);
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   const [resource, setResource] = useState(
     /** @type {Resource} */(type === 'studynote' ? initialStudyNote : type === 'tutorial' ? initialTutorial : initialPastPaper)
   );
 
+<<<<<<< HEAD
   const createFormData = (data) => {
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
@@ -140,6 +148,8 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
     return formData;
   };
 
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   useEffect(() => {
     if (existing) {
       if (type === 'studynote') {
@@ -172,8 +182,11 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
     } else {
       setResource(type === 'studynote' ? initialStudyNote : type === 'tutorial' ? initialTutorial : initialPastPaper);
     }
+<<<<<<< HEAD
     setFile(null);
     setMarkingSchemeFile(null);
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   }, [existing, open, type]);
 
   /**
@@ -186,6 +199,7 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
     };
   };
 
+<<<<<<< HEAD
   const handleFileChange = (event) => {
     const selectedFile = event.target.files?.[0] || null;
     setFile(selectedFile);
@@ -196,6 +210,8 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
     setMarkingSchemeFile(selectedFile);
   };
 
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
   /**
    * @param {import('react').FormEvent<HTMLFormElement>} event
    */
@@ -214,6 +230,7 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           fileUrl: studyNote.fileUrl || undefined,
         };
 
+<<<<<<< HEAD
         if (file) {
           const formData = createFormData(payload);
           if (existing?.id) {
@@ -227,6 +244,12 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           } else {
             await createStudyNote(payload);
           }
+=======
+        if (existing?.id) {
+          await updateStudyNote(existing.id, payload);
+        } else {
+          await createStudyNote(payload);
+>>>>>>> 4174fba (changes to admin dashboard)
         }
       } else if (type === 'tutorial') {
         const payload = {
@@ -235,6 +258,7 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           level: tutorial.level,
           class: tutorial.class,
           description: tutorial.description,
+<<<<<<< HEAD
           videoUrl: tutorial.videoUrl || undefined,
         };
 
@@ -251,6 +275,15 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           } else {
             await createTutorial(payload);
           }
+=======
+          videoUrl: tutorial.videoUrl,
+        };
+
+        if (existing?.id) {
+          await updateTutorial(existing.id, payload);
+        } else {
+          await createTutorial(payload);
+>>>>>>> 4174fba (changes to admin dashboard)
         }
       } else {
         const payload = {
@@ -258,6 +291,7 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           subject: pastPaper.subject,
           year: Number(pastPaper.year),
           level: pastPaper.level,
+<<<<<<< HEAD
           paperUrl: pastPaper.paperUrl || undefined,
           markingSchemeUrl: pastPaper.markingSchemeUrl || undefined,
         };
@@ -275,6 +309,16 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           } else {
             await createPastPaper(payload);
           }
+=======
+          paperUrl: pastPaper.paperUrl,
+          markingSchemeUrl: pastPaper.markingSchemeUrl,
+        };
+
+        if (existing?.id) {
+          await updatePastPaper(existing.id, payload);
+        } else {
+          await createPastPaper(payload);
+>>>>>>> 4174fba (changes to admin dashboard)
         }
       }
 
@@ -400,6 +444,7 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
             )}
           </div>
 
+<<<<<<< HEAD
           <div className={isStudyNote || isTutorial ? 'space-y-2 text-sm' : 'grid gap-4 sm:grid-cols-2'}>
             <label className="space-y-2 text-sm">
               <span>{isStudyNote ? 'Upload PDF / document' : isTutorial ? 'Upload video file' : 'Upload past paper PDF'}</span>
@@ -430,6 +475,8 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
             )}
           </div>
 
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
           {isTutorial && (
             <label className="space-y-2 text-sm">
               <span>Description</span>
@@ -446,9 +493,15 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
               {isStudyNote
+<<<<<<< HEAD
                 ? 'Provide a PDF URL or upload a file so students can download the note.'
                 : isTutorial
                   ? 'Provide a video URL or upload a video file, plus a short description for the tutorial.'
+=======
+                ? 'Provide a PDF URL so students can download the note.'
+                : isTutorial
+                  ? 'Provide a video URL and a short description for the tutorial.'
+>>>>>>> 4174fba (changes to admin dashboard)
                   : 'Provide a PDF URL and optional marking scheme link.'}
             </div>
             <div className="flex flex-wrap gap-2">

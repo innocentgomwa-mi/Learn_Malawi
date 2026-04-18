@@ -32,7 +32,11 @@
  */
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
+<<<<<<< HEAD
 import { authLogin, authLogout, fetchProfile } from '@/api';
+=======
+import { authLogin, authLogout, fetchProfile, fetchSystemSettings } from '@/api';
+>>>>>>> 4174fba (changes to admin dashboard)
 
 /** @type {import('react').Context<AuthContextValue | null>} */
 const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null));
@@ -40,14 +44,30 @@ const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null))
 const ACCESS_TOKEN_KEY = 'learnmalawi_access_token';
 const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
+<<<<<<< HEAD
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
   return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+=======
+function isValidToken(token) {
+  return typeof token === 'string' && token.trim() !== '' && token.trim().toLowerCase() !== 'undefined' && token.trim().toLowerCase() !== 'null';
+}
+
+function getStoredAccessToken() {
+  if (typeof window === 'undefined') return null;
+  const token = window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
+>>>>>>> 4174fba (changes to admin dashboard)
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
+<<<<<<< HEAD
   return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+=======
+  const token = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
+>>>>>>> 4174fba (changes to admin dashboard)
 }
 
 /**
@@ -79,8 +99,34 @@ export function AuthProvider(props) {
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [appPublicSettings, setAppPublicSettings] = useState(/** @type {any} */ (null));
 
+<<<<<<< HEAD
   useEffect(() => {
     checkAppState();
+=======
+  const refreshPublicSettings = async () => {
+    try {
+      const response = await fetchSystemSettings();
+      setAppPublicSettings(Array.isArray(response) ? response : []);
+    } catch {
+      setAppPublicSettings([]);
+    }
+  };
+
+  useEffect(() => {
+    checkAppState();
+
+    const refreshOnFocus = () => {
+      refreshPublicSettings();
+    };
+
+    const intervalId = window.setInterval(refreshPublicSettings, 15000);
+    window.addEventListener('focus', refreshOnFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshOnFocus);
+    };
+>>>>>>> 4174fba (changes to admin dashboard)
   }, []);
 
   const checkAppState = async () => {
@@ -88,6 +134,11 @@ export function AuthProvider(props) {
     setIsLoadingPublicSettings(true);
     setError(null);
 
+<<<<<<< HEAD
+=======
+    await refreshPublicSettings();
+
+>>>>>>> 4174fba (changes to admin dashboard)
     const token = getStoredAccessToken();
     if (!token) {
       setUser(null);

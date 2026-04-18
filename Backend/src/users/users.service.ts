@@ -34,16 +34,41 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
+<<<<<<< HEAD
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find({
       select: ['id', 'firstName', 'lastName', 'email', 'role', 'createdAt', 'updatedAt'],
     });
+=======
+  async findAll(role?: UserRole): Promise<User[]> {
+    const query = this.usersRepository.createQueryBuilder('user');
+
+    if (role) {
+      query.where('user.role = :role', { role });
+    }
+
+    return await query.select([
+      'user.id',
+      'user.firstName',
+      'user.lastName',
+      'user.email',
+      'user.role',
+      'user.school',
+      'user.level',
+      'user.createdAt',
+      'user.updatedAt',
+    ]).getMany();
+>>>>>>> 4174fba (changes to admin dashboard)
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
+<<<<<<< HEAD
       select: ['id', 'firstName', 'lastName', 'email', 'role', 'createdAt', 'updatedAt'],
+=======
+      select: ['id', 'firstName', 'lastName', 'email', 'role', 'school', 'level', 'createdAt', 'updatedAt'],
+>>>>>>> 4174fba (changes to admin dashboard)
     });
     
     if (!user) {

@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import { Type } from 'class-transformer';
+=======
+>>>>>>> 4174fba (changes to admin dashboard)
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, Max, IsUrl } from 'class-validator';
 import { EducationLevel } from '../entities/past-paper.entity';
