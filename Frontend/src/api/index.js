@@ -185,6 +185,29 @@ export function logActivity(data) {
   return request('/activity-log', { method: 'POST', body: JSON.stringify(data) });
 }
 
+const ACCESSIBILITY_SETTINGS_KEY = 'learnmalawi_accessibility_settings';
+
+export async function fetchAccessibilitySettings() {
+  if (typeof window === 'undefined') return {};
+  const stored = window.localStorage.getItem(ACCESSIBILITY_SETTINGS_KEY);
+  if (!stored) return {};
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return {};
+  }
+}
+
+export async function saveAccessibilitySettings(data) {
+  if (typeof window === 'undefined') return data;
+  try {
+    window.localStorage.setItem(ACCESSIBILITY_SETTINGS_KEY, JSON.stringify(data));
+  } catch {
+    // ignore storage failures
+  }
+  return data;
+}
+
 /**
  * @param {string} refreshToken
  */
