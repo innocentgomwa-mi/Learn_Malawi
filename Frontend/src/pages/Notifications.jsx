@@ -3,6 +3,7 @@ import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Bell, Calendar, Megaphone } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchAnnouncements } from '@/api';
+import { markNotificationsAsRead } from '@/lib/notificationStorage';
 
 export default function Notifications() {
   const { user, isAuthenticated } = useAuth();
@@ -51,6 +52,11 @@ export default function Notifications() {
 
     return audience === 'all';
   });
+
+  useEffect(() => {
+    if (!isAuthenticated || loading || error || filteredAnnouncements.length === 0) return;
+    markNotificationsAsRead(user?.email, filteredAnnouncements.map((announcement) => announcement.id));
+  }, [isAuthenticated, loading, error, filteredAnnouncements, user?.email]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">

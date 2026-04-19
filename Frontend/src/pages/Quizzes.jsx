@@ -17,6 +17,7 @@ import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import RequireAccount from "@/components/RequireAccount";
 import { saveUserAttempt } from "@/lib/dashboardStorage";
 import { fetchQuizzes, fetchAiChat } from "@/api";
 import Leaderboard from "../components/Leaderboard";
@@ -31,7 +32,7 @@ const LEVEL_COLORS = {
 
 
 export default function Quizzes() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState(/** @type {'All' | string} */ ("All"));
   const [activeQuiz, setActiveQuiz] = useState(/** @type {Quiz | null} */ (null));
@@ -45,9 +46,14 @@ export default function Quizzes() {
     queryFn: /** @type {() => Promise<Quiz[]>} */ (() => fetchQuizzes({ level: level === 'All' ? undefined : level, subject: search })),
     staleTime: 1000 * 60,
     retry: 1,
+    enabled: isAuthenticated,
   });
 
   const { data: quizzes = [], isLoading: loading } = /** @type {import('@tanstack/react-query').UseQueryResult<Quiz[], Error>} */ (queryResult);
+
+  if (!isAuthenticated) {
+    return <RequireAccount resourceName="Quizzes" />;
+  }
 
   const filtered = quizzes.filter((q) => {
     const matchLevel = level === "All" || q.level === level;

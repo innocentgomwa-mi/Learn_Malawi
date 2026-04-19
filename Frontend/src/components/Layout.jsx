@@ -4,9 +4,12 @@ import {
   BookOpen, FileText, Play, Brain, Briefcase, Home, Menu, X, GraduationCap, Settings, User, UserCheck, Info, Bell, ChevronDown, LogOut
 } from "lucide-react";
 import AiTutor from "./AiTutor";
+import OfflineBanner from "./OfflineBanner";
 import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
+import { fetchAnnouncements } from "@/api";
+import { getSeenNotificationIds } from "@/lib/notificationStorage";
 
 const navItems = [
   { path: "/abouts", label: "About", icon: Info, guestOnly: true },
@@ -24,11 +27,52 @@ export default function Layout() {
   const closeMenu = () => setMobileOpen(false);
   const hideTopNav = location.pathname.startsWith('/teacher');
   const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes'].some((path) => location.pathname.startsWith(path));
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  const isNotificationsPage = location.pathname === '/notifications';
 
   useEffect(() => {
     setResourcesOpen(false);
     setSettingsOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    if (isNotificationsPage) {
+      setUnreadNotificationCount(0);
+      return;
+    }
+
+    let active = true;
+    const loadUnreadCount = async () => {
+      try {
+        const announcements = await fetchAnnouncements({ published: true });
+        if (!active || !Array.isArray(announcements)) return;
+
+        const filtered = announcements.filter((announcement) => {
+          const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+
+          if (isTeacher) {
+            return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+          }
+
+          return audience === 'all' || audience === 'students';
+        });
+
+        const seenIds = getSeenNotificationIds(user?.email);
+        const unread = filtered.filter((announcement) => !seenIds.includes(String(announcement.id))).length;
+        if (active) setUnreadNotificationCount(unread);
+      } catch (error) {
+        if (active) setUnreadNotificationCount(0);
+      }
+    };
+
+    loadUnreadCount();
+    return () => { active = false; };
+  }, [isAuthenticated, isTeacher, user?.email, isNotificationsPage]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -131,8 +175,11 @@ export default function Layout() {
 
               {/* Right controls */}
               <div className="flex items-center gap-2">
-                <Link to="/notifications" className="p-2 rounded-lg hover:bg-primary-foreground/10 text-primary-foreground hidden md:block" title="Notifications">
+                <Link to="/notifications" className="relative p-2 rounded-lg hover:bg-primary-foreground/10 text-primary-foreground hidden md:block" title="Notifications">
                   <Bell className="h-5 w-5" />
+                  {unreadNotificationCount > 0 && (
+                    <span className="absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full bg-rose-500 ring-2 ring-card" />
+                  )}
                 </Link>
                 <ThemeToggle />
                 {isAuthenticated && (
@@ -331,11 +378,113 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer className="bg-primary text-primary-foreground/70 py-6 text-center text-sm mt-8">
-        <p className="font-medium text-primary-foreground">Learn Malawi</p>
-        <p className="mt-1">Empowering Malawi's Future — Learn Free, Excel Together</p>
-        <p className="mt-1 text-xs">Aligned with the Malawi National Curriculum & MIE Standards</p>
+      <footer role="contentinfo" className="bg-primary text-primary-foreground mt-8">
+        {/* Main footer links */}
+        <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
+          {/* Column 1 */}
+          <div>
+            <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Study Resources</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "Study Notes", to: "/study-notes" },
+                { label: "Past Papers", to: "/past-papers" },
+                { label: "Tutorials", to: "/tutorials" },
+                { label: "Flashcards", to: "/flashcards" },
+                { label: "Quizzes", to: "/quizzes" },
+              ].map(({ label, to }) => (
+                <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          {/* Column 2 */}
+          <div>
+            <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Exam Levels</h4>
+            <ul className="space-y-2">
+              {["PSLC (Standard 1–8)", "JCE (Form 1–2)", "MSCE (Form 3–4)", "All Subjects", "Learning Paths"].map((item) => (
+                <li key={item}><span className="text-sm text-primary-foreground/70">{item}</span></li>
+              ))}
+            </ul>
+          </div>
+          {/* Column 3 */}
+          <div>
+            <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Community</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "Study Groups", to: "/study-groups" },
+                { label: "Achievements", to: "/achievements" },
+                { label: "Leaderboard", to: "/quizzes" },
+                { label: "Parent Portal", to: "/parent-portal" },
+                { label: "Teacher Dashboard", to: "/teacher" },
+              ].map(({ label, to }) => (
+                <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          {/* Column 4 */}
+          <div>
+            <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Career</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "Career Resources", to: "/career" },
+                { label: "University Guides", to: "/career" },
+                { label: "Scholarships", to: "/career" },
+                { label: "Bursaries", to: "/career" },
+                { label: "Career Paths", to: "/career" },
+              ].map(({ label, to }) => (
+                <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+          {/* Column 5 */}
+          <div>
+            <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Platform</h4>
+            <ul className="space-y-2">
+              {[
+                { label: "Dashboard", to: "/dashboard" },
+                { label: "AI Tutor (24/7)", to: "/" },
+                { label: "Accessibility", to: "/accessibility" },
+                { label: "Onboarding", to: "/onboarding" },
+                { label: "Admin Panel", to: "/admin" },
+              ].map(({ label, to }) => (
+                <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
+              ))}
+            </ul>
+          </div>
+        </div>
+
+        {/* Bottom bar */}
+        <div className="border-t border-primary-foreground/20">
+          <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            {/* Logo + tagline */}
+            <div className="flex items-center gap-3">
+              <div className="bg-secondary rounded-lg p-1.5">
+                <GraduationCap className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <p className="font-poppins font-bold text-primary-foreground text-sm leading-none">Learn Malawi</p>
+                <p className="text-primary-foreground/60 text-xs mt-0.5">Empower Yourself</p>
+              </div>
+            </div>
+
+            {/* Center links */}
+            <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-primary-foreground/60">
+              <span>© Learn Malawi {new Date().getFullYear()}</span>
+              <Link to="/accessibility" className="hover:text-primary-foreground transition-colors">Accessibility</Link>
+              <span className="hover:text-primary-foreground transition-colors cursor-default">Privacy</span>
+              <span className="hover:text-primary-foreground transition-colors cursor-default">Terms</span>
+              <span className="text-primary-foreground/40">Aligned with MIE &amp; Malawi National Curriculum</span>
+            </div>
+
+            {/* Right: Free badge */}
+            <div className="flex items-center gap-2 bg-secondary/20 border border-secondary/40 px-3 py-1.5 rounded-full">
+              <span className="text-xs font-bold text-secondary">100% FREE</span>
+              <span className="text-xs text-primary-foreground/60">· No hidden fees · Ever</span>
+            </div>
+          </div>
+        </div>
       </footer>
+
+      <OfflineBanner />
 
       {/* AI Tutor floating widget */}
       {!isTeacher && <AiTutor />}

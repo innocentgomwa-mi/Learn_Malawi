@@ -1,6 +1,8 @@
 // @ts-nocheck
+import { useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { BookOpen, FileText, PlayCircle, HelpCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { BookOpen, FileText, PlayCircle, HelpCircle, Clock, CheckCircle, XCircle, Bell } from 'lucide-react';
+import { fetchAnnouncements } from '@/api';
 
 const resourceCards = [
   { label: 'Study Notes', key: 'notes', icon: BookOpen, color: 'bg-blue-500' },
@@ -17,6 +19,27 @@ const statusCards = [
 
 export default function TeachersDashboardOverview() {
   const { counts, statuses } = useOutletContext();
+  const [announcements, setAnnouncements] = useState([]);
+  const [announcementsLoading, setAnnouncementsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+    const loadAnnouncements = async () => {
+      setAnnouncementsLoading(true);
+      try {
+        const response = await fetchAnnouncements({ published: true });
+        if (!active) return;
+        setAnnouncements(Array.isArray(response) ? response.slice(0, 3) : []);
+      } catch {
+        if (active) setAnnouncements([]);
+      } finally {
+        if (active) setAnnouncementsLoading(false);
+      }
+    };
+
+    loadAnnouncements();
+    return () => { active = false; };
+  }, []);
 
   return (
     <>
@@ -60,6 +83,42 @@ export default function TeachersDashboardOverview() {
             </div>
           ))}
         </div>
+      </section>
+
+      <section id="section-announcements" className="space-y-4">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <div className="rounded-full bg-slate-100 p-2 text-slate-700">
+              <Bell className="w-5 h-5" />
+            </div>
+            <div>
+              <h2 className="text-base font-semibold text-foreground">Active Announcements</h2>
+              <p className="text-sm text-muted-foreground">Latest published announcements for your learners.</p>
+            </div>
+          </div>
+        </div>
+
+        {announcementsLoading ? (
+          <div className="rounded-xl border border-border bg-card p-6 text-sm text-slate-500">Loading active announcements…</div>
+        ) : announcements.length === 0 ? (
+          <div className="rounded-xl border border-border bg-card p-6 text-sm text-slate-500">No active announcements available yet.</div>
+        ) : (
+          <div className="grid gap-4">
+            {announcements.map((announcement) => (
+              <article key={announcement.id} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <div className="flex items-center justify-between gap-3 mb-3">
+                  <h3 className="text-sm font-semibold text-foreground">{announcement.title}</h3>
+                  <span className="text-xs uppercase tracking-[0.2em] text-slate-500">Published</span>
+                </div>
+                <p className="text-sm text-muted-foreground mb-3">{announcement.body || announcement.message}</p>
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span>{new Date(announcement.createdAt || announcement.created_at).toLocaleDateString()}</span>
+                  <span>{((announcement.targetAudience || announcement.target_audience) || 'all').toString()}</span>
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
       </section>
     </>
   );

@@ -11,7 +11,7 @@ export default function AdminOverview() {
   const { data: pastPapers = [] } = useQuery({ queryKey: ["past-papers"], queryFn: () => apiClient.entities.PastPaper.list() });
   const { data: teachers = [] } = useQuery({ queryKey: ["teachers"], queryFn: () => apiClient.entities.Teacher.list() });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: () => apiClient.entities.Student.list() });
-  const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => apiClient.entities.Announcement.list() });
+  const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => apiClient.entities.Announcement.list({ published: true }) });
 
   const pending = Array.isArray(posts) ? posts.filter(p => p.status === "pending").length : 0;
   const approved = Array.isArray(posts) ? posts.filter(p => p.status === "approved").length : 0;
@@ -128,11 +128,11 @@ export default function AdminOverview() {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          {announcements.filter(a => a.is_published).length === 0 ? (
+          {announcements.filter(a => (a.isPublished ?? a.is_published)).length === 0 ? (
             <p className="text-sm text-gray-400">No active announcements</p>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {announcements.filter(a => a.is_published).slice(0, 4).map(a => (
+              {announcements.filter(a => (a.isPublished ?? a.is_published)).slice(0, 4).map(a => (
                 <div key={a.id} className="p-3 bg-slate-50 rounded-lg border border-slate-100">
                   <p className="text-sm font-medium text-slate-900">{a.title}</p>
                   <p className="text-xs text-slate-600 mt-1 capitalize">{a.target_audience} · {a.priority} priority</p>
