@@ -164,7 +164,7 @@ const Student = {
 };
 
 const Announcement = {
-  list: async () => fetchJson('/announcements'),
+  list: async (query = {}) => tryFetchJson(`/announcements${toQueryString(query)}`, []),
   create: async (data) => fetchJson('/announcements', { method: 'POST', body: data }),
   update: async (id, data) => fetchJson(`/announcements/${id}`, { method: 'PATCH', body: data }),
   delete: async (id) => fetchJson(`/announcements/${id}`, { method: 'DELETE' }),

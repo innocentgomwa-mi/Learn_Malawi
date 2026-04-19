@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Search, X, BookOpen, FileText, Play, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -32,6 +32,7 @@ export default function GlobalSearch() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
+  const containerRef = useRef(null);
   const allData = useRef(null);
 
   const loadAll = async () => {
@@ -44,11 +45,9 @@ export default function GlobalSearch() {
   };
 
   useEffect(() => {
-    if (!open) return;
-    setTimeout(() => inputRef.current?.focus(), 50);
     setLoading(true);
     loadAll().then(() => setLoading(false));
-  }, [open]);
+  }, []);
 
   useEffect(() => {
     if (!query.trim() || !allData.current) { setResults([]); return; }
@@ -62,59 +61,54 @@ export default function GlobalSearch() {
     setResults(filtered);
   }, [query]);
 
-  // Keyboard shortcut Ctrl+K
   useEffect(() => {
-    const handler = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); setOpen(true); } };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close search with Escape
-  useEffect(() => {
-    if (!open) return;
-    const handleEscape = (e) => { if (e.key === "Escape") setOpen(false); };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [open]);
-
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground transition-colors"
-        aria-label="Toggle search"
-        aria-expanded={open}
-      >
-        <Search className="h-4 w-4" />
-      </button>
-
-      <div
-        className={`absolute top-full mt-2 left-1/2 z-50 w-[min(100vw-1rem,28rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 ease-out md:left-auto md:right-0 md:translate-x-0 ${open ? 'opacity-100 scale-100 max-h-[32rem] pointer-events-auto' : 'opacity-0 scale-95 max-h-0 pointer-events-none'}`}
-        aria-hidden={!open}
-      >
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search by title, subject, level or topic…"
-            className="flex-1 bg-transparent text-foreground outline-none text-sm placeholder:text-muted-foreground"
-          />
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
+    <div ref={containerRef} className="relative flex-1 min-w-0 max-w-xl z-50">
+      <div className="relative">
+        <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+        <input
+          ref={inputRef}
+          type="search"
+          value={query}
+          onChange={e => {
+            setQuery(e.target.value);
+            setOpen(true);
+          }}
+          onFocus={() => setOpen(true)}
+          placeholder="Search all resources..."
+          className="w-full rounded-full border border-border bg-card px-12 py-3 text-sm text-foreground outline-none shadow-sm transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+        />
+        {query && (
           <button
-            onClick={() => setOpen(false)}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
-            aria-label="Close search"
+            type="button"
+            onClick={() => setQuery("")}
+            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted-foreground hover:bg-muted"
+            aria-label="Clear search"
           >
             <X className="h-4 w-4" />
           </button>
-        </div>
+        )}
+      </div>
 
+      <div className={`absolute left-0 right-0 z-[60] mt-2 overflow-hidden rounded-3xl border border-border bg-card shadow-2xl transition-all duration-200 ${open ? 'opacity-100 scale-100 max-h-80' : 'opacity-0 scale-95 max-h-0 pointer-events-none'}`}>
         <div className="max-h-80 overflow-y-auto">
           {query.trim() === "" ? (
             <p className="text-muted-foreground text-sm text-center py-8">Type to search all resources…</p>
-          ) : results.length === 0 && !loading ? (
+          ) : loading ? (
+            <div className="flex items-center justify-center py-8">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : results.length === 0 ? (
             <p className="text-muted-foreground text-sm text-center py-8">No results found for "{query}"</p>
           ) : (
             <div className="py-2">

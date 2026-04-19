@@ -4,7 +4,11 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/lib/AuthContext";
 import { fetchStudyNotes } from "@/api";
 import { loadUserProgress, saveUserProgress } from "@/lib/dashboardStorage";
+import { getSavedNotes, saveNoteOffline, removeNoteOffline } from "@/lib/offlineCache";
 import NoteQuiz from "@/components/NoteQuiz";
+import RequireAccount from "@/components/RequireAccount";
+import SaveOfflineButton from "@/components/SaveOfflineButton";
+import TextToSpeech from "@/components/TextToSpeech";
 import { BookOpen, Search, ChevronRight, FileText, CheckCircle, Circle } from "lucide-react";
 
 const LEVELS = ["All", "PSLC", "JCE", "MSCE"];
@@ -56,11 +60,13 @@ const truncateSummary = (summary) => {
 
 
 export default function StudyNotes() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [progress, setProgress] = useState({}); 
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
   const [selected, setSelected] = useState(null);
+  const [savedNotes, setSavedNotes] = useState([]);
+  const [isDeviceOnline, setIsDeviceOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   useEffect(() => {
     const userKey = user?.id || user?.email;
@@ -80,12 +86,50 @@ export default function StudyNotes() {
     setProgress(progressMap);
   }, [user]);
 
+  useEffect(() => {
+    const updateStatus = () => {
+      const online = navigator.onLine;
+      setIsDeviceOnline(online);
+      if (!online) {
+        setSavedNotes(getSavedNotes());
+      }
+    };
+
+    setSavedNotes(getSavedNotes());
+    updateStatus();
+
+    window.addEventListener('offline', updateStatus);
+    window.addEventListener('online', updateStatus);
+
+    return () => {
+      window.removeEventListener('offline', updateStatus);
+      window.removeEventListener('online', updateStatus);
+    };
+  }, []);
+
   const { data: notes = [], isLoading: loading } = useQuery({
     queryKey: ['studyNotes', level, search],
     queryFn: () => fetchStudyNotes({ level: level === 'All' ? undefined : level, search }),
     staleTime: 1000 * 60,
     retry: 1,
+    enabled: isAuthenticated && isDeviceOnline,
   });
+
+  const notesToDisplay = isDeviceOnline ? notes : savedNotes;
+
+  const saveOfflineNote = (note) => {
+    saveNoteOffline(note);
+    setSavedNotes(getSavedNotes());
+  };
+
+  const removeOfflineNote = (noteId) => {
+    removeNoteOffline(noteId);
+    setSavedNotes(getSavedNotes());
+  };
+
+  const isSavedNote = (noteId) => {
+    return savedNotes.some((n) => n.id === noteId);
+  };
 
   const toggleComplete = (note) => {
     const existing = progress[note.id];
@@ -109,7 +153,11 @@ export default function StudyNotes() {
     });
   };
 
-  const filtered = notes.filter((n) => {
+  if (!isAuthenticated) {
+    return <RequireAccount resourceName="Study Notes" />;
+  }
+
+  const filtered = notesToDisplay.filter((n) => {
     const matchLevel = level === "All" || n.level === level;
     const matchSearch = !search || n.title.toLowerCase().includes(search.toLowerCase()) || n.subject?.toLowerCase().includes(search.toLowerCase());
     return matchLevel && matchSearch;
@@ -130,7 +178,7 @@ export default function StudyNotes() {
           ← Back to Study Notes
         </button>
         <div className="bg-card border border-border rounded-2xl p-6 md:p-8">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-4">
             <div className="flex flex-wrap gap-2">
               <span className={`text-xs font-semibold px-2 py-1 rounded-full ${LEVEL_INFO[selected.level]?.color || "bg-muted text-muted-foreground"}`}>
                 {selected.level}
@@ -138,22 +186,34 @@ export default function StudyNotes() {
               {selected.grade && <span className="text-xs bg-muted text-muted-foreground px-2 py-1 rounded-full">{selected.grade}</span>}
               {selected.topic && <span className="text-xs bg-accent text-accent-foreground px-2 py-1 rounded-full">{selected.topic}</span>}
             </div>
-            <button
-              onClick={() => toggleComplete(selected)}
-              className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all ${
-                progress[selected.id]?.completed
-                  ? "bg-emerald-50 border-emerald-300 text-emerald-700"
-                  : "border-border text-muted-foreground hover:border-primary hover:text-primary"
-              }`}
-            >
-              {progress[selected.id]?.completed
-                ? <><CheckCircle className="h-4 w-4" /> Completed</>
-                : <><Circle className="h-4 w-4" /> Mark Complete</>
-              }
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => toggleComplete(selected)}
+                className={`flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-xl border transition-all ${
+                  progress[selected.id]?.completed
+                    ? "bg-emerald-50 border-emerald-300 text-emerald-700"
+                    : "border-border text-muted-foreground hover:border-primary hover:text-primary"
+                }`}
+              >
+                {progress[selected.id]?.completed
+                  ? <><CheckCircle className="h-4 w-4" /> Completed</>
+                  : <><Circle className="h-4 w-4" /> Mark Complete</>
+                }
+              </button>
+              <div onClick={(event) => event.stopPropagation()}>
+                <SaveOfflineButton
+                  isSaved={isSavedNote(selected.id)}
+                  onSave={() => saveOfflineNote(selected)}
+                  onRemove={() => removeOfflineNote(selected.id)}
+                />
+              </div>
+            </div>
           </div>
           <h1 className="font-poppins text-2xl font-bold text-foreground mb-2">{selected.title}</h1>
-          <p className="text-muted-foreground text-sm mb-6">{selected.subject}</p>
+          <p className="text-muted-foreground text-sm mb-2">{selected.subject}</p>
+          <div className="mb-4">
+            <TextToSpeech text={`${selected.title}. ${selected.content || selected.summary || ''}`} />
+          </div>
 
           <div className="prose max-w-none text-foreground text-sm leading-relaxed whitespace-pre-wrap mb-6">
             {selected.content || "Full notes are not available yet. Check back later for full learning materials."}
@@ -240,10 +300,10 @@ export default function StudyNotes() {
                 {subjectNotes.map((note) => {
                   const completed = progress[note.id]?.completed;
                   return (
-                    <button
+                    <div
                       key={note.id}
                       onClick={() => setSelected(note)}
-                      className="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl"
+                      className="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
                     >
                       <div className="relative h-52 overflow-hidden" style={getCoverStyle(note)}>
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-transparent" />
@@ -271,11 +331,18 @@ export default function StudyNotes() {
                           </div>
                         </div>
                         <p className="text-sm text-slate-600 mb-4 leading-6">{truncateSummary(note.summary || note.content)}</p>
-                        <div className="text-xs uppercase tracking-[0.16em]">
-                          <span className="text-emerald-600 transition-colors group-hover:text-slate-900">View details →</span>
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="text-xs uppercase tracking-[0.16em] text-emerald-600 transition-colors group-hover:text-slate-900">View details →</span>
+                          <div onClick={(event) => event.stopPropagation()}>
+                            <SaveOfflineButton
+                              isSaved={isSavedNote(note.id)}
+                              onSave={() => saveOfflineNote(note)}
+                              onRemove={() => removeOfflineNote(note.id)}
+                            />
+                          </div>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>

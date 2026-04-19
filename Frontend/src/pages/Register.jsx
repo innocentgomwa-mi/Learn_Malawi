@@ -8,6 +8,7 @@ const Register = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [school, setSchool] = useState('');
   const [level, setLevel] = useState('PSLC');
   const { login } = useAuth();
@@ -25,8 +26,13 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
-    if (!firstName || !lastName || !email || !password || !school || !level) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !school || !level) {
       setError('Please complete all required fields.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please double-check and try again.');
       return;
     }
 
@@ -109,6 +115,17 @@ const Register = () => {
                 type="password"
                 value={password}
                 onChange={(event) => setPassword(event.target.value)}
+                required
+                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+
+            <label className="block text-sm font-medium text-foreground">
+              Confirm password
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
                 required
                 className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
               />

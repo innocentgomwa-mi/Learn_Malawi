@@ -35,7 +35,11 @@ const TYPE_COLORS = {
 
 /** @type {Tutorial[]} */
 
+import { useAuth } from "@/lib/AuthContext";
+import RequireAccount from "@/components/RequireAccount";
+
 export default function Tutorials() {
+  const { isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState(/** @type { 'All' | TutorialLevel } */ ("All"));
   const [type, setType] = useState(/** @type { 'All' | TutorialType } */ ("All"));
@@ -45,7 +49,12 @@ export default function Tutorials() {
     queryFn: fetchTutorials,
     staleTime: 1000 * 60,
     retry: 1,
+    enabled: isAuthenticated,
   });
+
+  if (!isAuthenticated) {
+    return <RequireAccount resourceName="Tutorials" />;
+  }
 
   const filtered = tutorials.filter((t) => {
     const matchLevel = level === "All" || t.level === level;
