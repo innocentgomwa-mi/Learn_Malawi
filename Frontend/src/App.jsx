@@ -33,8 +33,10 @@ import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics'
 import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussions';
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
+import Insight from './pages/Insight';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import Achievements from './pages/Achievements';
 import Accessibility from './pages/Accessibility';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -85,6 +87,7 @@ const AuthenticatedApp = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/achievements" element={<Achievements />} />
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
@@ -94,6 +97,7 @@ const AuthenticatedApp = () => {
           <Route path="quizzes" element={<QuizzesAdmin />} />
           <Route path="students" element={<TeachersStudents />} />
           <Route path="attendance" element={<TeachersAttendance />} />
+          <Route path="insights" element={<Insight />} />
           <Route path="analytics" element={<TeachersAnalytics />} />
           <Route path="discussions" element={<TeachersDiscussions />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />

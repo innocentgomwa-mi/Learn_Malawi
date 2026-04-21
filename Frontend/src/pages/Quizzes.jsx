@@ -19,7 +19,7 @@ import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy } from 
 import { useAuth } from "@/lib/AuthContext";
 import RequireAccount from "@/components/RequireAccount";
 import { saveUserAttempt } from "@/lib/dashboardStorage";
-import { fetchQuizzes, fetchAiChat } from "@/api";
+import { fetchQuizzes, fetchAiChat, recordStudentProgress } from "@/api";
 import Leaderboard from "../components/Leaderboard";
 
 /** @type {Array<'All' | string>} */
@@ -93,6 +93,8 @@ export default function Quizzes() {
     const score = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
     const attempt = {
       id: `${activeQuiz.id}-${Date.now()}`,
+      student_email: user?.email,
+      entry_type: 'quiz',
       quiz_id: activeQuiz.id,
       quiz_title: activeQuiz.title,
       subject: activeQuiz.subject,
@@ -100,12 +102,21 @@ export default function Quizzes() {
       score,
       total_questions: questions.length,
       correct_answers: correct,
+      topics_failed: wrongTopics,
       completed_at: new Date().toISOString(),
     };
 
     const userKey = user?.id || user?.email;
     if (userKey) {
       saveUserAttempt(userKey, attempt);
+    }
+
+    if (user?.email) {
+      try {
+        await recordStudentProgress(attempt);
+      } catch (error) {
+        console.error('Unable to save quiz attempt to backend:', error);
+      }
     }
 
     setFeedbackLoading(true);

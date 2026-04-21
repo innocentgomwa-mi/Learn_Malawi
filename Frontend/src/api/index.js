@@ -185,6 +185,25 @@ export function logActivity(data) {
   return request('/activity-log', { method: 'POST', body: JSON.stringify(data) });
 }
 
+export function fetchActivityLogs({ limit, action, level, subject } = {}) {
+  const params = new URLSearchParams();
+  if (limit) params.set('limit', String(limit));
+  if (action) params.set('action', action);
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/activity-log${query}`);
+}
+
+export function fetchInsights({ level, subject, limit } = {}) {
+  const params = new URLSearchParams();
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (limit) params.set('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/insights${query}`);
+}
+
 const ACCESSIBILITY_SETTINGS_KEY = 'learnmalawi_accessibility_settings';
 
 export async function fetchAccessibilitySettings() {
@@ -255,6 +274,21 @@ export function fetchTutorials({ teacherEmail, level, subject, classFilter } = {
   if (classFilter) params.set('class', classFilter);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/tutorials${query}`);
+}
+
+export function fetchStudentProgress({ studentEmail, entryType } = {}) {
+  const params = new URLSearchParams();
+  if (studentEmail) params.set('student_email', studentEmail);
+  if (entryType) params.set('entry_type', entryType);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/student-progress${query}`);
+}
+
+export function recordStudentProgress(data) {
+  return request('/student-progress', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
 export function fetchCareerResources() {

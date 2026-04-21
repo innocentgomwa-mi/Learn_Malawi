@@ -16,7 +16,7 @@ export class ActivityLogService {
     return this.activityLogRepository.save(entry);
   }
 
-  findAll(limit?: number, action?: string) {
+  findAll(limit?: number, action?: string, level?: string, subject?: string) {
     const query = this.activityLogRepository.createQueryBuilder('activity_log')
       .orderBy('activity_log.created_date', 'DESC');
 
@@ -25,6 +25,12 @@ export class ActivityLogService {
     }
     if (action) {
       query.andWhere('activity_log.action = :action', { action });
+    }
+    if (level) {
+      query.andWhere('activity_log.level = :level', { level });
+    }
+    if (subject) {
+      query.andWhere('activity_log.subject = :subject', { subject });
     }
 
     return query.getMany();

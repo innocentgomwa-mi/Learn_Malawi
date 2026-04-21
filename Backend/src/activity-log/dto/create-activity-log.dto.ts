@@ -39,6 +39,16 @@ export class CreateActivityLogDto {
   @ApiProperty({ required: false })
   @IsOptional()
   @IsNumber()
+  duration_seconds?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  page_section?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsNumber()
   score?: number;
 
   @ApiProperty({ required: false })

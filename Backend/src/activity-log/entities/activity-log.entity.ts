@@ -29,6 +29,12 @@ export class ActivityLog {
   @Column({ type: 'float', nullable: true })
   score?: number;
 
+  @Column({ type: 'int', nullable: true })
+  duration_seconds?: number;
+
+  @Column({ nullable: true })
+  page_section?: string;
+
   @Column({ type: 'text', nullable: true })
   metadata?: string;
 
