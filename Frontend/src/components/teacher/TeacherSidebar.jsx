@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, FileText, HelpCircle, Users, BarChart2,
   MessageSquare, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
-  GraduationCap, PlayCircle, CalendarCheck
+  GraduationCap, PlayCircle, CalendarCheck, TrendingUp
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -30,6 +30,7 @@ const groups = [
     items: [
       { path: '/teacher/students', icon: Users, label: 'Students' },
       { path: '/teacher/attendance', icon: CalendarCheck, label: 'Attendance' },
+      { path: '/teacher/insights', icon: TrendingUp, label: 'Insights' },
       { path: '/teacher/analytics', icon: BarChart2, label: 'Analytics & Reports' },
     ]
   },
@@ -56,18 +57,18 @@ export default function TeacherSidebar() {
 
   return (
     <aside className={cn(
-      'min-h-screen bg-[hsl(220,28%,14%)] flex flex-col transition-all duration-300 ease-in-out',
+      'min-h-screen bg-slate-950 text-slate-200 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
       collapsed ? 'w-[68px]' : 'w-64'
     )}>
       {/* Logo */}
-      <div className={cn('flex items-center border-b border-white/10 h-16', collapsed ? 'justify-center px-3' : 'px-5 gap-3')}>
-        <div className="w-8 h-8 rounded-lg bg-emerald-500 flex items-center justify-center shrink-0">
-          <BookOpen className="w-4 h-4 text-white" />
+      <div className={cn('flex items-center border-b border-slate-800/80 h-16', collapsed ? 'justify-center px-3' : 'px-5 gap-3')}>
+        <div className="w-10 h-10 rounded-3xl bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+          <BookOpen className="w-5 h-5 text-white" />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
-            <p className="text-white font-bold text-sm leading-tight whitespace-nowrap">Learn Malawi</p>
-            <p className="text-emerald-400 text-xs whitespace-nowrap">Teacher Portal</p>
+            <p className="text-white font-semibold text-sm leading-tight whitespace-nowrap">Learn Malawi</p>
+            <p className="text-cyan-300 text-xs whitespace-nowrap">Teacher Portal</p>
           </div>
         )}
       </div>
@@ -90,11 +91,11 @@ export default function TeacherSidebar() {
                     to={path}
                     title={collapsed ? label : undefined}
                     className={cn(
-                      'flex items-center gap-3 rounded-lg text-sm font-medium transition-all group',
+                      'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all group',
                       collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
                       active
-                        ? 'bg-emerald-600 text-white'
-                        : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                        ? 'bg-gradient-to-r from-cyan-600 to-emerald-500 text-white shadow-[0_8px_24px_rgba(16,185,129,0.18)]'
+                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
                     )}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -113,9 +114,11 @@ export default function TeacherSidebar() {
           to="/teacher/settings"
           title={collapsed ? 'Settings' : undefined}
           className={cn(
-            'flex items-center gap-3 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all',
+            'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all',
             collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
-            location.pathname === '/teacher/settings' && 'bg-emerald-600 text-white'
+            location.pathname === '/teacher/settings'
+              ? 'bg-gradient-to-r from-cyan-600 to-emerald-500 text-white shadow-[0_8px_24px_rgba(16,185,129,0.18)]'
+              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
           )}
         >
           <Settings className="w-4 h-4 shrink-0" />
@@ -125,8 +128,9 @@ export default function TeacherSidebar() {
           onClick={logout}
           title={collapsed ? 'Sign Out' : undefined}
           className={cn(
-            'flex items-center gap-3 w-full rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/5 transition-all',
-            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5'
+            'flex items-center gap-3 w-full rounded-2xl text-sm font-medium transition-all',
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+            'text-slate-300 hover:bg-slate-800 hover:text-white'
           )}
         >
           <LogOut className="w-4 h-4 shrink-0" />
@@ -137,8 +141,9 @@ export default function TeacherSidebar() {
         <button
           onClick={() => setCollapsed(c => !c)}
           className={cn(
-            'flex items-center gap-3 w-full rounded-lg text-sm text-slate-500 hover:text-white hover:bg-white/5 transition-all mt-2',
-            collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2'
+            'flex items-center gap-3 w-full rounded-2xl text-sm transition-all mt-2',
+            collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2',
+            'text-slate-400 hover:text-white hover:bg-slate-800'
           )}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}

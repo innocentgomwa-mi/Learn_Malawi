@@ -3,8 +3,9 @@ import { useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchStudyNotes, fetchPastPapers, fetchTutorials, fetchQuizzes } from '@/api';
-import { filterByTeacher, hasTeacherField } from './teacherUtils';
+import { filterByTeacher } from './teacherUtils';
 import TeacherSidebar from '@/components/teacher/TeacherSidebar';
+import TeachersTopBar from '@/components/teacher/TeachersTopBar';
 
 export default function TeachersDashboard() {
   const { user } = useAuth();
@@ -63,11 +64,12 @@ export default function TeachersDashboard() {
   return (
     <div className="flex min-h-screen bg-slate-50">
       <TeacherSidebar />
-      <main className="flex-1 p-8 animate-fade-in">
-        <div className="space-y-6">
+      <div className="flex-1 flex flex-col">
+        <TeachersTopBar />
+        <main className="flex-1 p-8 animate-fade-in">
           <Outlet context={{ counts, statuses }} />
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

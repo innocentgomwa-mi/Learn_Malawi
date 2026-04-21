@@ -14,8 +14,13 @@ export class ActivityLogController {
   }
 
   @Get()
-  findAll(@Query('limit') limit?: string, @Query('action') action?: string) {
-    return this.activityLogService.findAll(limit ? Number(limit) : undefined, action);
+  findAll(
+    @Query('limit') limit?: string,
+    @Query('action') action?: string,
+    @Query('level') level?: string,
+    @Query('subject') subject?: string,
+  ) {
+    return this.activityLogService.findAll(limit ? Number(limit) : undefined, action, level, subject);
   }
 
   @Get(':id')

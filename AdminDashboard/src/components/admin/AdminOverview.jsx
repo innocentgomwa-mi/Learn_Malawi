@@ -6,6 +6,9 @@ import { apiClient } from "@/api/apiClient";
 
 export default function AdminOverview() {
   const { data: posts = [] } = useQuery({ queryKey: ["posts"], queryFn: () => apiClient.entities.TeacherPost.list() });
+  const { data: pendingPosts = [] } = useQuery({ queryKey: ["teacher-posts", "pending"], queryFn: () => apiClient.entities.TeacherPost.list({ status: 'pending' }) });
+  const { data: approvedPosts = [] } = useQuery({ queryKey: ["teacher-posts", "approved"], queryFn: () => apiClient.entities.TeacherPost.list({ status: 'approved' }) });
+  const { data: rejectedPosts = [] } = useQuery({ queryKey: ["teacher-posts", "rejected"], queryFn: () => apiClient.entities.TeacherPost.list({ status: 'rejected' }) });
   const { data: studyNotes = [] } = useQuery({ queryKey: ["study-notes"], queryFn: () => apiClient.entities.StudyNote.list() });
   const { data: tutorials = [] } = useQuery({ queryKey: ["tutorials"], queryFn: () => apiClient.entities.Tutorial.list() });
   const { data: pastPapers = [] } = useQuery({ queryKey: ["past-papers"], queryFn: () => apiClient.entities.PastPaper.list() });
@@ -13,9 +16,9 @@ export default function AdminOverview() {
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: () => apiClient.entities.Student.list() });
   const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => apiClient.entities.Announcement.list({ published: true }) });
 
-  const pending = Array.isArray(posts) ? posts.filter(p => p.status === "pending").length : 0;
-  const approved = Array.isArray(posts) ? posts.filter(p => p.status === "approved").length : 0;
-  const rejected = Array.isArray(posts) ? posts.filter(p => p.status === "rejected").length : 0;
+  const pending = Array.isArray(pendingPosts) ? pendingPosts.length : 0;
+  const approved = Array.isArray(approvedPosts) ? approvedPosts.length : 0;
+  const rejected = Array.isArray(rejectedPosts) ? rejectedPosts.length : 0;
   const publishedResources = approved + (Array.isArray(studyNotes) ? studyNotes.length : 0) + (Array.isArray(tutorials) ? tutorials.length : 0) + (Array.isArray(pastPapers) ? pastPapers.length : 0);
 
   const stats = [

@@ -26,6 +26,7 @@ export default function Layout() {
 
   const closeMenu = () => setMobileOpen(false);
   const hideTopNav = location.pathname.startsWith('/teacher');
+  const hideFooter = isTeacher && location.pathname.startsWith('/teacher');
   const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes'].some((path) => location.pathname.startsWith(path));
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const isNotificationsPage = location.pathname === '/notifications';
@@ -210,6 +211,13 @@ export default function Layout() {
                         My Dashboard
                       </Link>
                       <Link
+                        to="/achievements"
+                        onClick={() => setSettingsOpen(false)}
+                        className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/achievements' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                      >
+                        Achievements
+                      </Link>
+                      <Link
                         to="/accessibility"
                         onClick={() => setSettingsOpen(false)}
                         className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/accessibility' ? 'bg-secondary text-secondary-foreground' : ''}`}
@@ -329,6 +337,13 @@ export default function Layout() {
                       My Dashboard
                     </Link>
                     <Link
+                      to="/achievements"
+                      onClick={closeMenu}
+                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/achievements' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                    >
+                      Achievements
+                    </Link>
+                    <Link
                       to="/accessibility"
                       onClick={closeMenu}
                       className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/accessibility' ? 'bg-secondary text-secondary-foreground' : ''}`}
@@ -378,9 +393,10 @@ export default function Layout() {
       </main>
 
       {/* Footer */}
-      <footer role="contentinfo" className="bg-primary text-primary-foreground mt-8">
-        {/* Main footer links */}
-        <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
+      {!hideFooter && (
+        <footer role="contentinfo" className="bg-primary text-primary-foreground mt-8">
+          {/* Main footer links */}
+          <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
           {/* Column 1 */}
           <div>
             <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Study Resources</h4>
@@ -483,6 +499,7 @@ export default function Layout() {
           </div>
         </div>
       </footer>
+      )}
 
       <OfflineBanner />
 

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/lib/AuthContext";
-import { fetchStudyNotes } from "@/api";
+import { fetchStudyNotes, fetchStudentProgress, recordStudentProgress } from "@/api";
 import { loadUserProgress, saveUserProgress } from "@/lib/dashboardStorage";
 import { getSavedNotes, saveNoteOffline, removeNoteOffline } from "@/lib/offlineCache";
 import NoteQuiz from "@/components/NoteQuiz";
@@ -84,7 +84,25 @@ export default function StudyNotes() {
     }, {});
 
     setProgress(progressMap);
-  }, [user]);
+
+    if (isDeviceOnline && user?.email) {
+      fetchStudentProgress({ studentEmail: user.email, entryType: 'study' })
+        .then((entries) => {
+          if (Array.isArray(entries) && entries.length > 0) {
+            const backendProgress = entries.reduce((acc, entry) => {
+              if (entry?.resource_id) {
+                acc[entry.resource_id] = entry;
+              }
+              return acc;
+            }, {});
+            setProgress((prev) => ({ ...prev, ...backendProgress }));
+          }
+        })
+        .catch((error) => {
+          console.error('Unable to load study progress from backend:', error);
+        });
+    }
+  }, [user, isDeviceOnline]);
 
   useEffect(() => {
     const updateStatus = () => {
@@ -131,14 +149,16 @@ export default function StudyNotes() {
     return savedNotes.some((n) => n.id === noteId);
   };
 
-  const toggleComplete = (note) => {
+  const toggleComplete = async (note) => {
     const existing = progress[note.id];
     const updated = {
       id: note.id,
+      student_email: user?.email,
+      entry_type: 'study',
       resource_id: note.id,
-      completed: !existing?.completed,
       resource_type: "study_note",
       resource_title: note.title,
+      completed: !existing?.completed,
       subject: note.subject,
       level: note.level,
     };
@@ -151,6 +171,14 @@ export default function StudyNotes() {
       }
       return next;
     });
+
+    if (user?.email) {
+      try {
+        await recordStudentProgress(updated);
+      } catch (error) {
+        console.error('Unable to save study progress to backend:', error);
+      }
+    }
   };
 
   if (!isAuthenticated) {

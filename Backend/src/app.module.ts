@@ -29,6 +29,7 @@ import { SystemSettingsModule } from './system-settings/system-settings.module';
 import { ActivityLogModule } from './activity-log/activity-log.module';
 import { DataChangeHistoryModule } from './data-change-history/data-change-history.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
+import { InsightsModule } from './insights/insights.module';
 import { ResourceRatingsModule } from './resource-ratings/resource-ratings.module';
 import { Announcement } from './announcements/entities/announcement.entity';
 import { Discussion } from './discussions/entities/discussion.entity';
@@ -104,6 +105,7 @@ import { ResourceRating } from './resource-ratings/entities/resource-rating.enti
     ActivityLogModule,
     DataChangeHistoryModule,
     StudentProgressModule,
+    InsightsModule,
     ResourceRatingsModule,
   ],
   controllers: [],
