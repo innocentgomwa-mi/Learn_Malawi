@@ -126,6 +126,9 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
   const [imageFile, setImageFile] = useState(null);
+  const [paperFile, setPaperFile] = useState(null);
+  const [markingSchemeFile, setMarkingSchemeFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const [resource, setResource] = useState(
     /** @type {Resource} */(type === 'studynote' ? initialStudyNote : type === 'tutorial' ? initialTutorial : initialPastPaper)
   );
@@ -133,6 +136,9 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
   useEffect(() => {
     setFile(null);
     setImageFile(null);
+    setPaperFile(null);
+    setMarkingSchemeFile(null);
+    setVideoFile(null);
     if (existing) {
       if (type === 'studynote') {
         setResource({
@@ -155,6 +161,7 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           description: existing.description || '',
           videoUrl: existing.videoUrl || existing.video_url || '',
         });
+        setVideoFile(null);
       } else {
         setResource({
           title: existing.title || '',
@@ -193,6 +200,30 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
     setImageFile(selectedImage);
     if (selectedImage) {
       setResource((prev) => ({ ...prev, imageUrl: '' }));
+    }
+  };
+
+  const handlePaperFileChange = (event) => {
+    const selectedPaper = event.target.files?.[0] ?? null;
+    setPaperFile(selectedPaper);
+    if (selectedPaper) {
+      setResource((prev) => ({ ...prev, paperUrl: '' }));
+    }
+  };
+
+  const handleVideoFileChange = (event) => {
+    const selectedVideo = event.target.files?.[0] ?? null;
+    setVideoFile(selectedVideo);
+    if (selectedVideo) {
+      setResource((prev) => ({ ...prev, videoUrl: '' }));
+    }
+  };
+
+  const handleMarkingSchemeFileChange = (event) => {
+    const selectedFile = event.target.files?.[0] ?? null;
+    setMarkingSchemeFile(selectedFile);
+    if (selectedFile) {
+      setResource((prev) => ({ ...prev, markingSchemeUrl: '' }));
     }
   };
 
@@ -253,19 +284,36 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           }
         }
       } else if (type === 'tutorial') {
+        const videoUrl = tutorial.videoUrl?.trim() || undefined;
         const payload = {
           title: tutorial.title,
           subject: tutorial.subject,
           level: tutorial.level,
           class: tutorial.class,
           description: tutorial.description,
-          videoUrl: tutorial.videoUrl,
+          videoUrl,
         };
 
-        if (existing?.id) {
-          await updateTutorial(existing.id, payload);
+        if (videoFile) {
+          const formData = new FormData();
+          Object.entries(payload).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              formData.append(key, String(value));
+            }
+          });
+          formData.append('video', videoFile);
+
+          if (existing?.id) {
+            await updateTutorial(existing.id, formData);
+          } else {
+            await createTutorial(formData);
+          }
         } else {
-          await createTutorial(payload);
+          if (existing?.id) {
+            await updateTutorial(existing.id, payload);
+          } else {
+            await createTutorial(payload);
+          }
         }
       } else {
         const payload = {
@@ -277,10 +325,27 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
           markingSchemeUrl: pastPaper.markingSchemeUrl,
         };
 
-        if (existing?.id) {
-          await updatePastPaper(existing.id, payload);
+        if (paperFile || markingSchemeFile) {
+          const formData = new FormData();
+          Object.entries(payload).forEach(([key, value]) => {
+            if (value !== undefined && value !== null && value !== '') {
+              formData.append(key, String(value));
+            }
+          });
+          if (paperFile) formData.append('paper', paperFile);
+          if (markingSchemeFile) formData.append('markingScheme', markingSchemeFile);
+
+          if (existing?.id) {
+            await updatePastPaper(existing.id, formData);
+          } else {
+            await createPastPaper(formData);
+          }
         } else {
-          await createPastPaper(payload);
+          if (existing?.id) {
+            await updatePastPaper(existing.id, payload);
+          } else {
+            await createPastPaper(payload);
+          }
         }
       }
 
@@ -397,14 +462,52 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
                     <div className="text-xs text-slate-500">Selected file: {file.name}</div>
                   ) : null}
                 </>
+              ) : isTutorial ? (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={tutorial.videoUrl}
+                      onChange={handleChange('videoUrl')}
+                      placeholder="https://..."
+                      className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="video/*"
+                      onChange={handleVideoFileChange}
+                      className="w-full text-sm text-slate-700"
+                    />
+                    {videoFile ? (
+                      <div className="text-xs text-slate-500">Selected file: {videoFile.name}</div>
+                    ) : null}
+                  </div>
+                </div>
               ) : (
-                <input
-                  type="text"
-                  value={tutorial.videoUrl}
-                  onChange={handleChange('videoUrl')}
-                  placeholder="https://..."
-                  className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-                />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={pastPaper.paperUrl}
+                      onChange={handleChange('paperUrl')}
+                      placeholder="https://..."
+                      className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handlePaperFileChange}
+                      className="w-full text-sm text-slate-700"
+                    />
+                    {paperFile ? (
+                      <div className="text-xs text-slate-500">Selected file: {paperFile.name}</div>
+                    ) : null}
+                  </div>
+                </div>
               )}
             </label>
             {isStudyNote ? (
@@ -429,14 +532,29 @@ export default function ResourceModal({ open, onClose, onSaved, type, existing }
               </label>
             ) : isTutorial ? null : (
               <label className="space-y-2 text-sm">
-                <span>Marking Scheme URL</span>
-                <input
-                  type="text"
-                  value={pastPaper.markingSchemeUrl}
-                  onChange={handleChange('markingSchemeUrl')}
-                  placeholder="https://..."
-                  className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
-                />
+                <span>Marking Scheme URL or upload PDF</span>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={pastPaper.markingSchemeUrl}
+                      onChange={handleChange('markingSchemeUrl')}
+                      placeholder="https://..."
+                      className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm outline-none focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <input
+                      type="file"
+                      accept="application/pdf"
+                      onChange={handleMarkingSchemeFileChange}
+                      className="w-full text-sm text-slate-700"
+                    />
+                    {markingSchemeFile ? (
+                      <div className="text-xs text-slate-500">Selected file: {markingSchemeFile.name}</div>
+                    ) : null}
+                  </div>
+                </div>
               </label>
             )}
           </div>

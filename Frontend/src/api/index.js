@@ -348,15 +348,15 @@ export function deleteStudyNote(id) {
  * @param {JsonObject} data
  */
 export function createTutorial(data) {
-  return request('/tutorials', { method: 'POST', body: JSON.stringify(data) });
+  return request('/tutorials', { method: 'POST', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
  * @param {string} id
- * @param {JsonObject} data
+ * @param {JsonObject|FormData} data
  */
 export function updateTutorial(id, data) {
-  return request(`/tutorials/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  return request(`/tutorials/${id}`, { method: 'PATCH', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
@@ -472,15 +472,15 @@ export function deleteCareerResource(id) {
  * @param {JsonObject} data
  */
 export function createPastPaper(data) {
-  return request('/past-papers', { method: 'POST', body: JSON.stringify(data) });
+  return request('/past-papers', { method: 'POST', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
  * @param {string} id
- * @param {JsonObject} data
+ * @param {JsonObject|FormData} data
  */
 export function updatePastPaper(id, data) {
-  return request(`/past-papers/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  return request(`/past-papers/${id}`, { method: 'PATCH', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**

@@ -12,8 +12,12 @@ import {
   HttpStatus,
   ClassSerializerInterceptor,
   UseInterceptors,
+  UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { join } from 'path';
 import { PastPapersService } from './past-papers.service';
 import { CreatePastPaperDto } from './dto/create-past-paper.dto';
 import { UpdatePastPaperDto } from './dto/update-past-paper.dto';
@@ -26,6 +30,23 @@ import { User } from '../common/decorators/user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { EducationLevel } from './entities/past-paper.entity';
+
+const uploadDir = join(__dirname, '..', '..', 'uploads');
+const pastPaperStorage = diskStorage({
+  destination: uploadDir,
+  filename: (_req, file, callback) => {
+    const safeName = `${Date.now()}-${file.originalname.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    callback(null, safeName);
+  },
+});
+
+const pastPaperFileFilter = (_req, file, callback) => {
+  const allowedTypes = ['application/pdf'];
+  if (!allowedTypes.includes(file.mimetype)) {
+    return callback(new BadRequestException('Only PDF files are allowed for past papers.'), false);
+  }
+  callback(null, true);
+};
 
 @Controller('past-papers')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -101,14 +122,32 @@ export class PastPapersController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @UseInterceptors(FileFieldsInterceptor(
+    [
+      { name: 'paper', maxCount: 1 },
+      { name: 'markingScheme', maxCount: 1 },
+    ],
+    { storage: pastPaperStorage, fileFilter: pastPaperFileFilter },
+  ))
   async create(
     @User() user: any,
+    @UploadedFiles() files: { paper?: Express.Multer.File[]; markingScheme?: Express.Multer.File[] },
     @Body() createPastPaperDto: CreatePastPaperDto,
   ): Promise<PastPaperResponseDto> {
     const payload = {
       ...createPastPaperDto,
       teacherEmail: user?.email,
+      paperUrl: createPastPaperDto.paperUrl,
+      markingSchemeUrl: createPastPaperDto.markingSchemeUrl,
     };
+
+    if (files?.paper?.[0]) {
+      payload.paperUrl = `/uploads/${files.paper[0].filename}`;
+    }
+    if (files?.markingScheme?.[0]) {
+      payload.markingSchemeUrl = `/uploads/${files.markingScheme[0].filename}`;
+    }
+
     const pastPaper = await this.pastPapersService.create(payload as any);
     return this.toResponseDto(pastPaper);
   }
@@ -116,11 +155,32 @@ export class PastPapersController {
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  @UseInterceptors(FileFieldsInterceptor(
+    [
+      { name: 'paper', maxCount: 1 },
+      { name: 'markingScheme', maxCount: 1 },
+    ],
+    { storage: pastPaperStorage, fileFilter: pastPaperFileFilter },
+  ))
   async update(
     @Param('id') id: string,
+    @UploadedFiles() files: { paper?: Express.Multer.File[]; markingScheme?: Express.Multer.File[] },
     @Body() updatePastPaperDto: UpdatePastPaperDto,
   ): Promise<PastPaperResponseDto> {
-    const pastPaper = await this.pastPapersService.update(id, updatePastPaperDto);
+    const payload = {
+      ...updatePastPaperDto,
+      paperUrl: updatePastPaperDto.paperUrl,
+      markingSchemeUrl: updatePastPaperDto.markingSchemeUrl,
+    };
+
+    if (files?.paper?.[0]) {
+      payload.paperUrl = `/uploads/${files.paper[0].filename}`;
+    }
+    if (files?.markingScheme?.[0]) {
+      payload.markingSchemeUrl = `/uploads/${files.markingScheme[0].filename}`;
+    }
+
+    const pastPaper = await this.pastPapersService.update(id, payload);
     return this.toResponseDto(pastPaper);
   }
 
