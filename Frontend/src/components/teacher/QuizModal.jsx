@@ -215,25 +215,25 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
             <label className="space-y-2 text-sm">
               <span className="font-medium">Title</span>
               <input value={quiz.title} onChange={(e) => handleField('title', e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                 placeholder="Quiz title" />
             </label>
             <label className="space-y-2 text-sm">
               <span className="font-medium">Subject / Topic</span>
               <input value={quiz.subject} onChange={(e) => handleField('subject', e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                 placeholder="e.g. Photosynthesis, Algebra, Chichewa" />
             </label>
             <label className="space-y-2 text-sm">
               <span className="font-medium">Class</span>
               <input value={quiz.class} onChange={(e) => handleField('class', e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                 placeholder="e.g. Form 3, Standard 7" />
             </label>
             <label className="space-y-2 text-sm">
               <span className="font-medium">Total Time (minutes)</span>
               <input type="number" value={quiz.totalTime} onChange={(e) => handleField('totalTime', Number(e.target.value))}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                 placeholder="0" min="0" />
             </label>
           </div>
@@ -242,14 +242,14 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
             <label className="space-y-2 text-sm">
               <span className="font-medium">Level</span>
               <select value={quiz.level} onChange={(e) => handleField('level', e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400">
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400">
                 {levels.map((l) => <option key={l} value={l}>{l}</option>)}
               </select>
             </label>
             <label className="space-y-2 text-sm">
               <span className="font-medium">Difficulty</span>
               <select value={quiz.difficulty} onChange={(e) => handleField('difficulty', e.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400">
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400">
                 {difficulties.map((d) => <option key={d} value={d}>{d}</option>)}
               </select>
             </label>
@@ -258,7 +258,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
           <label className="space-y-2 text-sm">
             <span className="font-medium">Description</span>
             <textarea value={quiz.description} onChange={(e) => handleField('description', e.target.value)}
-              className="w-full min-h-[80px] rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full min-h-[80px] rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
               placeholder="Optional quiz description" />
           </label>
 
@@ -275,7 +275,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
               <label className="flex items-center gap-2 text-sm text-emerald-800">
                 Number of questions:
                 <select value={numQuestions} onChange={(e) => setNumQuestions(Number(e.target.value))}
-                  className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-emerald-400">
+                  className="rounded-lg border border-emerald-300 bg-white px-3 py-1.5 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400">
                   {[3, 5, 8, 10, 15].map((n) => <option key={n} value={n}>{n}</option>)}
                 </select>
               </label>
@@ -306,7 +306,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                 <label className="space-y-2 text-sm">
                   <span>Question</span>
                   <input value={q.question} onChange={(e) => handleQuestionChange(index, 'question', e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                     placeholder="Enter the question prompt" />
                 </label>
                 <div className="grid gap-3 sm:grid-cols-2 mt-4">
@@ -314,7 +314,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                     <label key={oi} className="space-y-2 text-sm">
                       <span>Option {String.fromCharCode(65 + oi)}</span>
                       <input value={opt} onChange={(e) => handleOptionChange(index, oi, e.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400"
                         placeholder={`Option ${String.fromCharCode(65 + oi)}`} />
                     </label>
                   ))}
@@ -323,14 +323,14 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                   <label className="space-y-2 text-sm">
                     <span>Correct answer</span>
                     <select value={q.answer} onChange={(e) => handleQuestionChange(index, 'answer', e.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400">
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400">
                       {['A', 'B', 'C', 'D'].map((l) => <option key={l} value={l}>{l}</option>)}
                     </select>
                   </label>
                   <label className="space-y-2 text-sm">
                     <span>Time limit (seconds)</span>
                     <input type="number" value={q.timeLimit} onChange={(e) => handleQuestionChange(index, 'timeLimit', Number(e.target.value))}
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400" min="5" />
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-emerald-400" min="5" />
                   </label>
                 </div>
               </div>

@@ -413,7 +413,9 @@ export function deleteQuiz(id) {
  */
 export function fetchQuizzes({ level, subject, difficulty, classFilter } = {}) {
   const params = new URLSearchParams();
-  if (level && level !== 'All') params.set('level', level);
+  // Backend only accepts 'primary' or 'secondary' — skip PSLC/JCE/MSCE filters
+  const validLevels = ['primary', 'secondary'];
+  if (level && validLevels.includes(level)) params.set('level', level);
   if (subject) params.set('subject', subject);
   if (difficulty && difficulty !== 'All') params.set('difficulty', difficulty);
   if (classFilter) params.set('class', classFilter);
