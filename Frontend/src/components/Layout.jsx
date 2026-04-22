@@ -8,6 +8,7 @@ import OfflineBanner from "./OfflineBanner";
 import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
+import { useAccessibility } from '@/lib/AccessibilityContext';
 import { fetchAnnouncements } from "@/api";
 import { getSeenNotificationIds } from "@/lib/notificationStorage";
 
@@ -21,7 +22,9 @@ export default function Layout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState('');
   const { user, isAuthenticated, logout } = useAuth();
+  const { settings } = useAccessibility();
   const isTeacher = user?.role?.toLowerCase() === 'teacher';
 
   const closeMenu = () => setMobileOpen(false);
@@ -75,8 +78,55 @@ export default function Layout() {
     return () => { active = false; };
   }, [isAuthenticated, isTeacher, user?.email, isNotificationsPage]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || !settings?.screenReader || !('speechSynthesis' in window)) return;
+
+    const speak = (message) => {
+      if (!message) return;
+      setScreenReaderAnnouncement(message);
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(message);
+      utterance.lang = 'en-US';
+      utterance.rate = 1;
+      utterance.pitch = 1;
+      window.speechSynthesis.speak(utterance);
+    };
+
+    const announcePage = () => {
+      const pageTitle = document.title || location.pathname.replace('/', '') || 'Home';
+      const heading = document.querySelector('main h1')?.textContent?.trim() || document.querySelector('h1')?.textContent?.trim() || '';
+      const description = document.querySelector('main p')?.textContent?.trim() || '';
+      const intro = heading ? `Navigated to ${heading}` : `Navigated to ${pageTitle}`;
+      speak([intro, description].filter(Boolean).join('. '));
+    };
+
+    const handleFocus = (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const ariaLabel = target.getAttribute('aria-label') || '';
+      const labelledById = target.getAttribute('aria-labelledby');
+      const labelledByText = labelledById ? document.getElementById(labelledById)?.textContent?.trim() : '';
+      const textContent = target.textContent?.trim() || '';
+      const titleText = target.getAttribute('title') || '';
+      const role = target.getAttribute('role') || target.tagName.toLowerCase();
+      const message = [ariaLabel, labelledByText, textContent, titleText]
+        .filter((text) => text && text.length > 0)
+        .join(', ');
+      if (!message) return;
+      speak(`${message}. ${role}`);
+    };
+
+    announcePage();
+    window.addEventListener('focusin', handleFocus);
+    return () => {
+      window.speechSynthesis.cancel();
+      window.removeEventListener('focusin', handleFocus);
+    };
+  }, [settings?.screenReader, location.pathname]);
+
   return (
     <div className="min-h-screen flex flex-col">
+      <div aria-live="polite" className="sr-only">{screenReaderAnnouncement}</div>
       {!hideTopNav && (
         <>
           {/* Top Nav */}
