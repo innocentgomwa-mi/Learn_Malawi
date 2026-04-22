@@ -11,7 +11,7 @@ import { saveUserAttempt } from "@/lib/dashboardStorage";
 import { fetchQuizzes, fetchAiChat, fetchAiGenerateQuiz } from "@/api";
 import Leaderboard from "../components/Leaderboard";
 
-const LEVELS = ["All", "PSLC", "JCE", "MSCE"];
+const LEVELS = ["All", "primary", "secondary"];
 const LEVEL_COLORS = { PSLC: "bg-emerald-100 text-emerald-700", JCE: "bg-blue-100 text-blue-700", MSCE: "bg-purple-100 text-purple-700" };
 
 export default function Quizzes() {
@@ -71,7 +71,7 @@ export default function Quizzes() {
         };
       });
       setGeneratorOpen(false);
-      startQuiz({ id: "ai-" + Date.now(), title: "Practice: " + genTopic.trim(), subject: genTopic.trim(), level: "JCE", difficulty: genDifficulty, questions });
+      startQuiz({ id: String("ai-" + Date.now()), title: "Practice: " + genTopic.trim(), subject: genTopic.trim(), level: "JCE", difficulty: genDifficulty, questions });
     } catch (err) {
       console.error(err); setGenError("Failed to generate quiz. Make sure the backend is running.");
     } finally { setGenLoading(false); }
@@ -84,7 +84,7 @@ export default function Quizzes() {
     let correct = 0; const wrongTopics = [];
     questions.forEach((q, i) => { if (answers[i] === q.answer) { correct++; } else { const s = q.question?.slice(0, 60); if (s) wrongTopics.push(s); } });
     const score = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
-    if (!activeQuiz.id.startsWith("ai-")) {
+    if (!String(activeQuiz.id).startsWith("ai-")) {
       const attempt = { id: activeQuiz.id + "-" + Date.now(), quiz_id: activeQuiz.id, quiz_title: activeQuiz.title, subject: activeQuiz.subject, level: activeQuiz.level, score, total_questions: questions.length, correct_answers: correct, completed_at: new Date().toISOString() };
       const userKey = user?.id || user?.email;
       if (userKey) saveUserAttempt(userKey, attempt);
@@ -104,7 +104,7 @@ export default function Quizzes() {
     const questions = activeQuiz.questions || [];
     const totalCorrect = submitted ? questions.filter((q, i) => answers[i] === q.answer).length : 0;
     const score = submitted && questions.length > 0 ? Math.round((totalCorrect / questions.length) * 100) : 0;
-    const isAI = activeQuiz.id.startsWith("ai-");
+    const isAI = String(activeQuiz.id).startsWith("ai-");
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
         <button onClick={() => setActiveQuiz(null)} className="text-sm text-primary flex items-center gap-1 mb-6 hover:underline">← Back to Quizzes</button>
