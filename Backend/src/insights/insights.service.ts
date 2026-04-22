@@ -31,9 +31,7 @@ export class InsightsService {
           ? Math.round((entry.correct_answers / entry.total_questions) * 100)
           : 0;
 
-      const passedValue = typeof entry.passed === 'boolean'
-        ? entry.passed
-        : scoreValue >= 50;
+      const passedValue = scoreValue >= 50;
 
       return {
         ...entry,
