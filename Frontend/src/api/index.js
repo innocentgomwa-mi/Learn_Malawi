@@ -8,30 +8,14 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const ACCESS_TOKEN_KEY = 'learnmalawi_access_token';
 const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
-<<<<<<< HEAD
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
   return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
-=======
-function isValidToken(token) {
-  return typeof token === 'string' && token.trim() !== '' && token.trim().toLowerCase() !== 'undefined' && token.trim().toLowerCase() !== 'null';
-}
-
-function getStoredAccessToken() {
-  if (typeof window === 'undefined') return null;
-  const token = window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
-  return isValidToken(token) ? token : null;
->>>>>>> 4174fba (changes to admin dashboard)
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
-<<<<<<< HEAD
   return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
-=======
-  const token = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
-  return isValidToken(token) ? token : null;
->>>>>>> 4174fba (changes to admin dashboard)
 }
 
 /**
@@ -97,27 +81,16 @@ function cleanRequestBody(body) {
  */
 async function request(path, options = {}) {
   const headers = /** @type {Record<string, string>} */ ({
-<<<<<<< HEAD
     'Content-Type': 'application/json',
     ...(options.headers || {}),
   });
 
-=======
-    ...(options.headers || {}),
-  });
-
-  if (options.body !== undefined && options.body !== null && !headers['Content-Type'] && !headers['content-type']) {
-    headers['Content-Type'] = 'application/json';
-  }
-
->>>>>>> 4174fba (changes to admin dashboard)
   const accessToken = getStoredAccessToken();
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
   const body = options.body;
-<<<<<<< HEAD
   
   // For FormData, don't set Content-Type header (browser will set it with boundary)
   if (body instanceof FormData) {
@@ -125,18 +98,11 @@ async function request(path, options = {}) {
   }
   
   const requestBody = body instanceof FormData ? body : (body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body));
-=======
-  const requestBody = body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body);
->>>>>>> 4174fba (changes to admin dashboard)
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
-<<<<<<< HEAD
     body: requestBody instanceof FormData ? requestBody : (typeof requestBody === 'object' ? JSON.stringify(requestBody) : requestBody),
-=======
-    body: typeof requestBody === 'object' ? JSON.stringify(requestBody) : requestBody,
->>>>>>> 4174fba (changes to admin dashboard)
   });
 
   if (response.ok) {
@@ -193,13 +159,7 @@ export async function authRegister(data) {
 export function fetchProfile() {
   return request('/auth/profile');
 }
-<<<<<<< HEAD
 
-=======
-export function fetchSystemSettings() {
-  return request('/system-settings');
-}
->>>>>>> 4174fba (changes to admin dashboard)
 /**
  * @param {JsonObject} data
  */
@@ -208,16 +168,6 @@ export function updateProfile(data) {
 }
 
 /**
-<<<<<<< HEAD
-=======
- * @param {JsonObject} data
- */
-export function logActivity(data) {
-  return request('/activity-log', { method: 'POST', body: JSON.stringify(data) });
-}
-
-/**
->>>>>>> 4174fba (changes to admin dashboard)
  * @param {string} refreshToken
  */
 export function authLogout(refreshToken) {
@@ -230,57 +180,24 @@ export function authLogout(refreshToken) {
 /**
  * @param {StudyNotesParams} [params]
  */
-<<<<<<< HEAD
 export function fetchStudyNotes({ level, subject, search } = {}) {
-=======
-export function fetchStudyNotes({ level, subject, search, teacherEmail } = {}) {
->>>>>>> 4174fba (changes to admin dashboard)
   const params = new URLSearchParams();
   if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
   if (search) params.set('search', search);
-<<<<<<< HEAD
-=======
-  if (teacherEmail) params.set('teacher_email', teacherEmail);
->>>>>>> 4174fba (changes to admin dashboard)
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/study-notes${query}`);
 }
 
-<<<<<<< HEAD
 export function fetchPastPapers() {
   return request('/past-papers').then((response) => {
-=======
-export function fetchPastPapers({ teacherEmail, level, subject, year, search, page, limit } = {}) {
-  const params = new URLSearchParams();
-  if (teacherEmail) params.set('teacher_email', teacherEmail);
-  if (level) params.set('level', level);
-  if (subject) params.set('subject', subject);
-  if (year) params.set('year', String(year));
-  if (search) params.set('search', search);
-  if (page) params.set('page', String(page));
-  if (limit) params.set('limit', String(limit));
-  const query = params.toString() ? `?${params.toString()}` : '';
-  return request(`/past-papers${query}`).then((response) => {
->>>>>>> 4174fba (changes to admin dashboard)
     if (Array.isArray(response)) return response;
     return response?.data ?? [];
   });
 }
 
-<<<<<<< HEAD
 export function fetchTutorials() {
   return request('/tutorials');
-=======
-export function fetchTutorials({ teacherEmail, level, subject, classFilter } = {}) {
-  const params = new URLSearchParams();
-  if (teacherEmail) params.set('teacher_email', teacherEmail);
-  if (level) params.set('level', level);
-  if (subject) params.set('subject', subject);
-  if (classFilter) params.set('class', classFilter);
-  const query = params.toString() ? `?${params.toString()}` : '';
-  return request(`/tutorials${query}`);
->>>>>>> 4174fba (changes to admin dashboard)
 }
 
 export function fetchCareerResources() {
@@ -288,15 +205,9 @@ export function fetchCareerResources() {
 }
 
 export function fetchAiChat(prompt) {
-<<<<<<< HEAD
   return request('/ai/ask', {
     method: 'POST',
     body: JSON.stringify({ question: prompt }),
-=======
-  return request('/ai/chat', {
-    method: 'POST',
-    body: JSON.stringify({ prompt }),
->>>>>>> 4174fba (changes to admin dashboard)
   });
 }
 
@@ -312,13 +223,10 @@ export function createStudyNote(data) {
  * @param {JsonObject} data
  */
 export function updateStudyNote(id, data) {
-<<<<<<< HEAD
   if (data instanceof FormData) {
     return request(`/study-notes/${id}`, { method: 'PATCH', headers: {}, body: data });
   }
 
-=======
->>>>>>> 4174fba (changes to admin dashboard)
   return request(`/study-notes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 }
 
@@ -341,13 +249,10 @@ export function createTutorial(data) {
  * @param {JsonObject} data
  */
 export function updateTutorial(id, data) {
-<<<<<<< HEAD
   if (data instanceof FormData) {
     return request(`/tutorials/${id}`, { method: 'PATCH', headers: {}, body: data });
   }
 
-=======
->>>>>>> 4174fba (changes to admin dashboard)
   return request(`/tutorials/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 }
 
@@ -506,20 +411,12 @@ export function deleteQuiz(id) {
 /**
  * @param {QuizzesParams} [params]
  */
-<<<<<<< HEAD
 export function fetchQuizzes({ level, subject, difficulty, classFilter } = {}) {
-=======
-export function fetchQuizzes({ level, subject, difficulty, classFilter, teacherEmail } = {}) {
->>>>>>> 4174fba (changes to admin dashboard)
   const params = new URLSearchParams();
   if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
   if (difficulty && difficulty !== 'All') params.set('difficulty', difficulty);
   if (classFilter) params.set('class', classFilter);
-<<<<<<< HEAD
-=======
-  if (teacherEmail) params.set('teacher_email', teacherEmail);
->>>>>>> 4174fba (changes to admin dashboard)
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/quizzes${query}`);
 }
@@ -544,7 +441,6 @@ export function createAttendance(data) {
 export function updateAttendance(id, data) {
   return request(`/attendance/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
 }
-<<<<<<< HEAD
 
 export function fetchAiGenerateQuiz({ topic, numQuestions = 5, difficulty }) {
   return request('/ai/generate-quiz', {
@@ -590,5 +486,3 @@ export function uploadStudyNote(formData) {
     body: formData,
   });
 }
-=======
->>>>>>> 4174fba (changes to admin dashboard)

@@ -1,7 +1,6 @@
 import React from "react";
 import "../styles/abouts.css";
 import { FaUsers, FaBullseye, FaLightbulb, FaChalkboardTeacher, FaBookOpen, FaClock, FaProjectDiagram } from "react-icons/fa";
-<<<<<<< HEAD
 import inno from "../images/inno.jpg";
 import willard from "../images/willard.JPG";
 
@@ -12,10 +11,6 @@ const About = () => {
     { name: "Innocent Frank Gomwa", role: "Developer", bio: "Builds the Learn Malawi platform.", image: inno },
   ];
 
-=======
-
-const About = () => {
->>>>>>> 4174fba (changes to admin dashboard)
   const missionVision = [
     {
       title: "Mission",
@@ -47,7 +42,6 @@ const About = () => {
 
   return (
     <div className="about-wrapper">
-<<<<<<< HEAD
       <section className="story-section">
         <h2>Our Story</h2>
         <p>
@@ -77,38 +71,6 @@ const About = () => {
       </section>
 
       
-=======
-      <div className="about-hero">
-        <section className="story-section">
-          <span className="section-label">About Learn Malawi</span>
-          <h2>Free education for every Malawian student.</h2>
-          <p>
-            Learn Malawi is a free digital education platform dedicated to one
-            powerful goal: free, quality education for every secondary school
-            student in Malawi. We provide curriculum-aligned resources for JCE
-            and MSCE learners, with accessible, engaging content built for real
-            classroom success.
-          </p>
-        </section>
-
-        <section className="mission-vision">
-          <h2>Mission & Vision</h2>
-          <div className="mv-grid">
-            {missionVision.map((mv, index) => {
-              const Icon = mv.icon;
-              return (
-                <div key={index} className="mv-card">
-                  <Icon className="mv-icon" />
-                  <h3>{mv.title}</h3>
-                  <p>{mv.description}</p>
-                </div>
-              );
-            })}
-          </div>
-        </section>
-      </div>
-
->>>>>>> 4174fba (changes to admin dashboard)
       <section className="values-section">
         <h2>Our Values</h2>
         <div className="values-grid">
@@ -125,10 +87,7 @@ const About = () => {
         </div>
       </section>
 
-<<<<<<< HEAD
       
-=======
->>>>>>> 4174fba (changes to admin dashboard)
       <section className="philosophy-section">
         <h2>Our Educational Philosophy</h2>
         <ul className="philosophy-list">
@@ -136,19 +95,13 @@ const About = () => {
             const Icon = point.icon;
             return (
               <li key={index}>
-<<<<<<< HEAD
                 <Icon className="philosophy-icon" /> {point.text}
-=======
-                <Icon className="philosophy-icon" />
-                <span>{point.text}</span>
->>>>>>> 4174fba (changes to admin dashboard)
               </li>
             );
           })}
         </ul>
       </section>
 
-<<<<<<< HEAD
       
       <section className="team-section">
         <h2>Meet Our Team</h2>
@@ -173,22 +126,6 @@ const About = () => {
           <input type="text" name="name" placeholder="Your Name" required />
           <input type="email" name="email" placeholder="Your Email" required />
           <textarea name="message" rows="5" placeholder="Your Message" required></textarea>
-=======
-      <section className="contact-section">
-        <div className="contact-copy">
-          <h2>Contact Us</h2>
-          <p>If you have any questions or suggestions, feel free to reach out.</p>
-          <p>
-            Mr Willard Zimba: +265 997 67 47 58
-            <br />
-            Mr Innocent Gomwa: +265 883 36 08 44
-          </p>
-        </div>
-        <form className="contact-form">
-          <input type="text" name="name" placeholder="Your Name" required />
-          <input type="email" name="email" placeholder="Your Email" required />
-          <textarea name="message" rows={5} placeholder="Your Message" required />
->>>>>>> 4174fba (changes to admin dashboard)
           <button type="submit">Send Message</button>
         </form>
       </section>

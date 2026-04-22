@@ -12,11 +12,7 @@ export class TutorialsService {
     private tutorialsRepository: Repository<Tutorial>,
   ) {}
 
-<<<<<<< HEAD
   async create(createTutorialDto: CreateTutorialDto): Promise<Tutorial> {
-=======
-  async create(createTutorialDto: CreateTutorialDto & { teacherEmail?: string }): Promise<Tutorial> {
->>>>>>> 4174fba (changes to admin dashboard)
     const tutorial = this.tutorialsRepository.create(createTutorialDto);
     return await this.tutorialsRepository.save(tutorial);
   }
@@ -25,10 +21,6 @@ export class TutorialsService {
     level?: string,
     subject?: string,
     classFilter?: string,
-<<<<<<< HEAD
-=======
-    teacherEmail?: string,
->>>>>>> 4174fba (changes to admin dashboard)
   ): Promise<Tutorial[]> {
     const query = this.tutorialsRepository.createQueryBuilder('tutorial');
 
@@ -44,13 +36,6 @@ export class TutorialsService {
       query.andWhere('tutorial.class = :classFilter', { classFilter });
     }
 
-<<<<<<< HEAD
-=======
-    if (teacherEmail) {
-      query.andWhere('tutorial.teacherEmail = :teacherEmail', { teacherEmail });
-    }
-
->>>>>>> 4174fba (changes to admin dashboard)
     query.orderBy('tutorial.id', 'ASC');
 
     return await query.getMany();

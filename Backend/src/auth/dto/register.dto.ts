@@ -32,17 +32,4 @@ export class RegisterDto {
   })
   @IsIn([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])
   role: UserRole;
-<<<<<<< HEAD
-=======
-
-  @IsString()
-  @IsNotEmpty()
-  @MaxLength(150)
-  school: string;
-
-  @IsString()
-  @IsNotEmpty()
-  @IsIn(['PSLC', 'JCE', 'MSCE'])
-  level: string;
->>>>>>> 4174fba (changes to admin dashboard)
 }
