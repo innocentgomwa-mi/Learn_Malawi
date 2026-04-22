@@ -9,6 +9,7 @@ const DEFAULT_ACCESSIBILITY_SETTINGS = {
   dyslexiaFont: false,
   lineSpacing: false,
   reducedMotion: false,
+  screenReader: false,
 };
 
 const ACCESSIBILITY_CLASSES = {

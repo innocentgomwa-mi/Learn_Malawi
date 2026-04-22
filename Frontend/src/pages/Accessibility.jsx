@@ -1,5 +1,5 @@
 import { useAccessibility } from '@/lib/AccessibilityContext';
-import { Eye, Type, Zap, BookOpen, AlignLeft, RotateCcw, CheckCircle, Info } from 'lucide-react';
+import { Eye, Type, Zap, BookOpen, AlignLeft, RotateCcw, CheckCircle, Info, Volume2 } from 'lucide-react';
 import { useLocation, Navigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -48,6 +48,15 @@ const SETTINGS = [
       'Disables or minimises animations and transitions for users sensitive to motion, including those with vestibular disorders.',
     preview: '✦',
     previewClass: 'text-2xl text-muted-foreground',
+  },
+  {
+    key: 'screenReader',
+    icon: Volume2,
+    label: 'Screen Reader Guidance',
+    description:
+      'Enables automatic spoken announcements of page headings, focus changes, and navigation cues to help you move through the site more easily.',
+    preview: '🔊',
+    previewClass: 'text-2xl text-foreground',
   },
 ];
 
