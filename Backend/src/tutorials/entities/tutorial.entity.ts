@@ -38,12 +38,6 @@ export class Tutorial {
   @Column({ type: 'varchar', length: 500 })
   videoUrl!: string;
 
-<<<<<<< HEAD
-=======
-  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
-  teacherEmail?: string;
-
->>>>>>> 4174fba (changes to admin dashboard)
   @CreateDateColumn()
   createdAt!: Date;
 

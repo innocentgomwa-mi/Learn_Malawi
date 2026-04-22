@@ -1,11 +1,7 @@
 // src/quizzes/dto/quiz-response.dto.ts
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-<<<<<<< HEAD
 import { EducationLevel, Difficulty, QuizStatus } from '../entities/quiz.entity';
-=======
-import { EducationLevel, Difficulty } from '../entities/quiz.entity';
->>>>>>> 4174fba (changes to admin dashboard)
 
 class QuestionResponseDto {
   @ApiProperty()
@@ -44,11 +40,7 @@ export class QuizResponseDto {
 
   @ApiProperty({ required: false })
   @Expose()
-<<<<<<< HEAD
   description?: string;
-=======
-  description?: string; // ADD THIS LINE
->>>>>>> 4174fba (changes to admin dashboard)
 
   @ApiProperty({ enum: EducationLevel })
   @Expose()
@@ -66,13 +58,10 @@ export class QuizResponseDto {
   @Expose()
   class: string;
 
-<<<<<<< HEAD
   @ApiProperty({ example: 'uploaded', enum: QuizStatus })
   @Expose()
   status: QuizStatus;
 
-=======
->>>>>>> 4174fba (changes to admin dashboard)
   @ApiProperty({ type: [QuestionResponseDto] })
   @Expose()
   @Type(() => QuestionResponseDto)

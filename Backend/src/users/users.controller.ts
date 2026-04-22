@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
-=======
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
->>>>>>> 4174fba (changes to admin dashboard)
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -36,13 +32,8 @@ export class UsersController {
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN)
-<<<<<<< HEAD
   async findAll(): Promise<UserResponseDto[]> {
     const users = await this.usersService.findAll();
-=======
-  async findAll(@Query('role') role?: UserRole): Promise<UserResponseDto[]> {
-    const users = await this.usersService.findAll(role as UserRole);
->>>>>>> 4174fba (changes to admin dashboard)
     return users.map(user => this.toResponseDto(user));
   }
 

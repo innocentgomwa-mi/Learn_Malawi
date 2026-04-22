@@ -12,15 +12,11 @@ import {
   ClassSerializerInterceptor,
   HttpCode,
   HttpStatus,
-<<<<<<< HEAD
   Req,
   UploadedFile,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
-=======
-} from '@nestjs/common';
->>>>>>> 4174fba (changes to admin dashboard)
 import { StudyNotesService } from './study-notes.service';
 import { CreateStudyNoteDto } from './dto/create-study-note.dto';
 import { UpdateStudyNoteDto } from './dto/update-study-note.dto';
@@ -29,15 +25,9 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-<<<<<<< HEAD
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { buildFileUrl, fileStorageOptions } from '../common/file-upload.util';
-=======
-import { User } from '../common/decorators/user.decorator';
-import { UserRole } from '../users/entities/user.entity';
-import { plainToInstance } from 'class-transformer';
->>>>>>> 4174fba (changes to admin dashboard)
 
 @Controller('study-notes')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -53,7 +43,6 @@ export class StudyNotesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-<<<<<<< HEAD
   @UseInterceptors(FileInterceptor('file', fileStorageOptions('study-notes', 'documents')))
   async create(
     @Req() req: Request,
@@ -81,17 +70,6 @@ export class StudyNotesController {
       updateStudyNoteDto.fileUrl = buildFileUrl(req, 'study-notes', file.filename);
     }
     const note = await this.studyNotesService.update(id, updateStudyNoteDto);
-=======
-  async create(
-    @User() user: any,
-    @Body() createStudyNoteDto: CreateStudyNoteDto,
-  ): Promise<StudyNoteResponseDto> {
-    const payload = {
-      ...createStudyNoteDto,
-      teacherEmail: user?.email,
-    };
-    const note = await this.studyNotesService.create(payload as any);
->>>>>>> 4174fba (changes to admin dashboard)
     return this.toResponseDto(note);
   }
 
@@ -101,14 +79,8 @@ export class StudyNotesController {
     @Query('level') level?: string,
     @Query('subject') subject?: string,
     @Query('search') search?: string,
-<<<<<<< HEAD
   ): Promise<StudyNoteResponseDto[]> {
     const notes = await this.studyNotesService.findAll(level, subject, search);
-=======
-    @Query('teacher_email') teacherEmail?: string,
-  ): Promise<StudyNoteResponseDto[]> {
-    const notes = await this.studyNotesService.findAll(level, subject, search, teacherEmail);
->>>>>>> 4174fba (changes to admin dashboard)
     return notes.map((note) => this.toResponseDto(note));
   }
 
@@ -119,19 +91,6 @@ export class StudyNotesController {
     return this.toResponseDto(note);
   }
 
-<<<<<<< HEAD
-=======
-  @Patch(':id')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN, UserRole.TEACHER)
-  async update(
-    @Param('id') id: string,
-    @Body() updateStudyNoteDto: UpdateStudyNoteDto,
-  ): Promise<StudyNoteResponseDto> {
-    const note = await this.studyNotesService.update(id, updateStudyNoteDto);
-    return this.toResponseDto(note);
-  }
->>>>>>> 4174fba (changes to admin dashboard)
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)

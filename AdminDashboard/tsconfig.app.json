@@ -4,10 +4,6 @@
     "target": "es2023",
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "module": "esnext",
-<<<<<<< HEAD
-    "types": ["vite/client"],
-    "skipLibCheck": true,
-=======
     "allowJs": true,
     "baseUrl": ".",
     "paths": {
@@ -16,7 +12,6 @@
     "types": ["vite/client"],
     "skipLibCheck": true,
     "ignoreDeprecations": "6.0",
->>>>>>> 4174fba (changes to admin dashboard)
 
     /* Bundler mode */
     "moduleResolution": "bundler",

@@ -24,10 +24,6 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-<<<<<<< HEAD
-=======
-import { User } from '../common/decorators/user.decorator';
->>>>>>> 4174fba (changes to admin dashboard)
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 
@@ -45,20 +41,8 @@ export class QuizzesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-<<<<<<< HEAD
   async create(@Body() createQuizDto: CreateQuizDto): Promise<QuizResponseDto> {
     const quiz = await this.quizzesService.create(createQuizDto);
-=======
-  async create(
-    @User() user: any,
-    @Body() createQuizDto: CreateQuizDto,
-  ): Promise<QuizResponseDto> {
-    const payload = {
-      ...createQuizDto,
-      teacherEmail: user?.email,
-    };
-    const quiz = await this.quizzesService.create(payload as any);
->>>>>>> 4174fba (changes to admin dashboard)
     return this.toResponseDto(quiz);
   }
 
@@ -69,10 +53,6 @@ export class QuizzesController {
     @Query('subject') subject?: string,
     @Query('difficulty') difficulty?: string,
     @Query('class') classFilter?: string,
-<<<<<<< HEAD
-=======
-    @Query('teacher_email') teacherEmail?: string,
->>>>>>> 4174fba (changes to admin dashboard)
   ): Promise<QuizResponseDto[]> {
     // Validate level parameter if provided
     if (level && level !== 'all' && level !== 'primary' && level !== 'secondary') {
@@ -85,11 +65,7 @@ export class QuizzesController {
       throw new BadRequestException('Difficulty must be either "easy", "medium", "hard", or "all"');
     }
 
-<<<<<<< HEAD
     const quizzes = await this.quizzesService.findAll(level, subject, difficulty, classFilter);
-=======
-    const quizzes = await this.quizzesService.findAll(level, subject, difficulty, classFilter, teacherEmail);
->>>>>>> 4174fba (changes to admin dashboard)
     return quizzes.map(quiz => this.toResponseDto(quiz));
   }
 

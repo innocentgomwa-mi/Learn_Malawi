@@ -1,8 +1,5 @@
 ﻿import { useEffect, useState } from 'react';
-<<<<<<< HEAD
 import { useOutletContext } from 'react-router-dom';
-=======
->>>>>>> 4174fba (changes to admin dashboard)
 import { useAuth } from '@/lib/AuthContext';
 import { fetchTutorials, deleteTutorial } from '@/api';
 import { Button } from '@/components/ui/button';
@@ -13,10 +10,7 @@ import { filterByTeacher, sortByLatest } from './teacherUtils';
 
 export default function TutorialsAdmin() {
   const { user } = useAuth();
-<<<<<<< HEAD
   const { refreshDashboard } = useOutletContext() || {};
-=======
->>>>>>> 4174fba (changes to admin dashboard)
   const [tutorials, setTutorials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState({ open: false, existing: null });
@@ -24,11 +18,7 @@ export default function TutorialsAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-<<<<<<< HEAD
       const data = await fetchTutorials();
-=======
-      const data = await fetchTutorials({ teacherEmail: user?.email });
->>>>>>> 4174fba (changes to admin dashboard)
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 
@@ -49,10 +39,7 @@ export default function TutorialsAdmin() {
     if (!confirm('Delete this tutorial?')) return;
     await deleteTutorial(id);
     load();
-<<<<<<< HEAD
     refreshDashboard?.();
-=======
->>>>>>> 4174fba (changes to admin dashboard)
   };
 
   return (
@@ -114,11 +101,7 @@ export default function TutorialsAdmin() {
       <ResourceModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}
-<<<<<<< HEAD
         onSaved={() => { setModal({ open: false, existing: null }); load(); refreshDashboard?.(); }}
-=======
-        onSaved={() => { setModal({ open: false, existing: null }); load(); }}
->>>>>>> 4174fba (changes to admin dashboard)
         type="tutorial"
         existing={modal.existing}
       />

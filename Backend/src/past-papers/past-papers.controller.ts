@@ -12,17 +12,12 @@ import {
   HttpStatus,
   ClassSerializerInterceptor,
   UseInterceptors,
-<<<<<<< HEAD
   Req,
   UploadedFiles,
   BadRequestException,
 } from '@nestjs/common';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import type { Request } from 'express';
-=======
-  BadRequestException,
-} from '@nestjs/common';
->>>>>>> 4174fba (changes to admin dashboard)
 import { PastPapersService } from './past-papers.service';
 import { CreatePastPaperDto } from './dto/create-past-paper.dto';
 import { UpdatePastPaperDto } from './dto/update-past-paper.dto';
@@ -31,17 +26,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { Public } from '../auth/decorators/public.decorator';
-<<<<<<< HEAD
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
 import { EducationLevel } from './entities/past-paper.entity';
 import { buildFileUrl, fileStorageOptions } from '../common/file-upload.util';
-=======
-import { User } from '../common/decorators/user.decorator';
-import { UserRole } from '../users/entities/user.entity';
-import { plainToInstance } from 'class-transformer';
-import { EducationLevel } from './entities/past-paper.entity';
->>>>>>> 4174fba (changes to admin dashboard)
 
 @Controller('past-papers')
 @UseInterceptors(ClassSerializerInterceptor)
@@ -63,14 +51,8 @@ export class PastPapersController {
     @Query('subject') subject?: string,
     @Query('year') year?: number,
     @Query('search') search?: string,
-<<<<<<< HEAD
   ) {
     const result = await this.pastPapersService.findAll(page, limit, level, subject, year, search);
-=======
-    @Query('teacher_email') teacherEmail?: string,
-  ) {
-    const result = await this.pastPapersService.findAll(page, limit, level, subject, year, search, teacherEmail);
->>>>>>> 4174fba (changes to admin dashboard)
     return {
       ...result,
       data: result.data.map((pastPaper) => this.toResponseDto(pastPaper)),
@@ -122,7 +104,6 @@ export class PastPapersController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-<<<<<<< HEAD
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -144,24 +125,12 @@ export class PastPapersController {
       createPastPaperDto.markingSchemeUrl = buildFileUrl(req, 'past-papers', files.markingSchemeFile[0].filename);
     }
     const pastPaper = await this.pastPapersService.create(createPastPaperDto);
-=======
-  async create(
-    @User() user: any,
-    @Body() createPastPaperDto: CreatePastPaperDto,
-  ): Promise<PastPaperResponseDto> {
-    const payload = {
-      ...createPastPaperDto,
-      teacherEmail: user?.email,
-    };
-    const pastPaper = await this.pastPapersService.create(payload as any);
->>>>>>> 4174fba (changes to admin dashboard)
     return this.toResponseDto(pastPaper);
   }
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.ADMIN, UserRole.TEACHER)
-<<<<<<< HEAD
   @UseInterceptors(
     FileFieldsInterceptor(
       [
@@ -183,12 +152,6 @@ export class PastPapersController {
     if (files?.markingSchemeFile?.[0]) {
       updatePastPaperDto.markingSchemeUrl = buildFileUrl(req, 'past-papers', files.markingSchemeFile[0].filename);
     }
-=======
-  async update(
-    @Param('id') id: string,
-    @Body() updatePastPaperDto: UpdatePastPaperDto,
-  ): Promise<PastPaperResponseDto> {
->>>>>>> 4174fba (changes to admin dashboard)
     const pastPaper = await this.pastPapersService.update(id, updatePastPaperDto);
     return this.toResponseDto(pastPaper);
   }

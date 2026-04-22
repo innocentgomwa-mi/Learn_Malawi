@@ -1,11 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-<<<<<<< HEAD
 import { Quiz, QuizStatus } from './entities/quiz.entity';
-=======
-import { Quiz } from './entities/quiz.entity';
->>>>>>> 4174fba (changes to admin dashboard)
 import { Question } from './entities/question.entity';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
@@ -21,16 +17,10 @@ export class QuizzesService {
     private questionsRepository: Repository<Question>,
   ) {}
 
-<<<<<<< HEAD
   async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
     const quiz = this.quizzesRepository.create({
       ...createQuizDto,
       status: QuizStatus.UPLOADED,
-=======
-  async create(createQuizDto: CreateQuizDto & { teacherEmail?: string }): Promise<Quiz> {
-    const quiz = this.quizzesRepository.create({
-      ...createQuizDto,
->>>>>>> 4174fba (changes to admin dashboard)
       questions: createQuizDto.questions.map(q => this.questionsRepository.create(q))
     });
     
@@ -42,10 +32,6 @@ export class QuizzesService {
     subject?: string,
     difficulty?: string,
     classFilter?: string,
-<<<<<<< HEAD
-=======
-    teacherEmail?: string,
->>>>>>> 4174fba (changes to admin dashboard)
   ): Promise<Quiz[]> {
     const query = this.quizzesRepository.createQueryBuilder('quiz')
       .leftJoinAndSelect('quiz.questions', 'questions');
@@ -67,13 +53,6 @@ export class QuizzesService {
       query.andWhere('quiz.class = :classFilter', { classFilter });
     }
 
-<<<<<<< HEAD
-=======
-    if (teacherEmail) {
-      query.andWhere('quiz.teacherEmail = :teacherEmail', { teacherEmail });
-    }
-
->>>>>>> 4174fba (changes to admin dashboard)
     query.orderBy('quiz.id', 'ASC');
 
     return await query.getMany();
