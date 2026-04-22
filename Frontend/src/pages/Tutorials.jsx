@@ -7,10 +7,13 @@
  *   subject: string,
  *   level: TutorialLevel,
  *   type: TutorialType,
- *   duration_minutes: number,
- *   description: string,
- *   url: string,
+ *   duration_minutes?: number,
+ *   durationMinutes?: number,
+ *   description?: string,
+ *   url?: string,
+ *   videoUrl?: string,
  *   thumbnail_url?: string,
+ *   thumbnailUrl?: string,
  *   topic?: string
  * }} Tutorial
  */
@@ -18,6 +21,7 @@
 import { useState } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { fetchTutorials } from "@/api";
+import { Dialog, DialogClose, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Play, Search, Clock, Film, Volume2, Zap } from "lucide-react";
 
 /** @type {Array<'All' | TutorialLevel>} */
@@ -44,6 +48,8 @@ export default function Tutorials() {
   const [level, setLevel] = useState(/** @type { 'All' | TutorialLevel } */ ("All"));
   const [type, setType] = useState(/** @type { 'All' | TutorialType } */ ("All"));
 
+  const [selectedTutorial, setSelectedTutorial] = useState(null);
+
   const { data: tutorials = [], isLoading: loading } = useQuery({
     queryKey: ['tutorials'],
     queryFn: fetchTutorials,
@@ -51,6 +57,20 @@ export default function Tutorials() {
     retry: 1,
     enabled: isAuthenticated,
   });
+
+  const getVideoUrl = (tutorial) => tutorial?.videoUrl || tutorial?.url || '';
+  const getThumbnailUrl = (tutorial) => tutorial?.thumbnailUrl || tutorial?.thumbnail_url || '';
+  const getDurationMinutes = (tutorial) => tutorial?.durationMinutes || tutorial?.duration_minutes;
+  const isYouTubeUrl = (url) => /(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)/.test(url);
+  const buildEmbedUrl = (url) => {
+    if (!url) return '';
+    const shortMatch = url.match(/youtu\.be\/([^?&/]+)/);
+    if (shortMatch) return `https://www.youtube.com/embed/${shortMatch[1]}`;
+    const watchMatch = url.match(/[?&]v=([^&]+)/);
+    if (watchMatch) return `https://www.youtube.com/embed/${watchMatch[1]}`;
+    return url;
+  };
+  const isDirectVideoFile = (url) => /\.(mp4|webm|ogg|mov|mkv)(\?.*)?$/.test(url) || /\/uploads\//.test(url);
 
   if (!isAuthenticated) {
     return <RequireAccount resourceName="Tutorials" />;
@@ -114,49 +134,87 @@ export default function Tutorials() {
           <p className="text-muted-foreground text-sm mt-1">Video and animated lessons coming soon!</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map((tut) => {
-            const typeValue = tut.type || 'video';
-            const TypeIcon = TYPE_ICONS[typeValue] || Play;
-            return (
-              <div key={tut.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-shadow">
-                {tut.thumbnailUrl ? (
-                  <img src={tut.thumbnailUrl} alt={tut.title} className="w-full h-40 object-cover" />
-                ) : (
-                  <div className="w-full h-40 bg-muted flex items-center justify-center">
-                    <Play className="h-12 w-12 text-muted-foreground/40" />
-                  </div>
-                )}
-                <div className="p-4">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${TYPE_COLORS[typeValue] || "bg-muted text-muted-foreground"}`}>
-                      <TypeIcon className="h-3 w-3" /> {typeValue}
-                    </span>
-                    <span className="text-xs text-muted-foreground">{tut.level}</span>
-                  </div>
-                  <h3 className="font-semibold text-foreground text-sm mb-1">{tut.title}</h3>
-                  <p className="text-xs text-muted-foreground mb-3">{tut.subject}</p>
-                  {tut.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{tut.description}</p>}
-                  <div className="flex items-center justify-between">
-                    {tut.durationMinutes && (
-                      <span className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="h-3 w-3" /> {tut.durationMinutes} min
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {filtered.map((tut) => {
+              const typeValue = tut.type || 'video';
+              const TypeIcon = TYPE_ICONS[typeValue] || Play;
+              const videoUrl = getVideoUrl(tut);
+              const thumbnailUrl = getThumbnailUrl(tut);
+              return (
+                <div key={tut.id} className="bg-card border border-border rounded-2xl overflow-hidden hover:shadow-lg transition-shadow">
+                  {thumbnailUrl ? (
+                    <img src={thumbnailUrl} alt={tut.title} className="w-full h-40 object-cover" />
+                  ) : (
+                    <div className="w-full h-40 bg-muted flex items-center justify-center">
+                      <Play className="h-12 w-12 text-muted-foreground/40" />
+                    </div>
+                  )}
+                  <div className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className={`text-xs font-semibold px-2 py-0.5 rounded-full flex items-center gap-1 ${TYPE_COLORS[typeValue] || "bg-muted text-muted-foreground"}`}>
+                        <TypeIcon className="h-3 w-3" /> {typeValue}
                       </span>
-                    )}
-                    {tut.videoUrl ? (
-                      <a href={tut.videoUrl} target="_blank" rel="noopener noreferrer"
-                        className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:opacity-90 flex items-center gap-1">
-                        <Play className="h-3 w-3" /> Watch
-                      </a>
+                      <span className="text-xs text-muted-foreground">{tut.level}</span>
+                    </div>
+                    <h3 className="font-semibold text-foreground text-sm mb-1">{tut.title}</h3>
+                    <p className="text-xs text-muted-foreground mb-3">{tut.subject}</p>
+                    {tut.description && <p className="text-xs text-muted-foreground line-clamp-2 mb-3">{tut.description}</p>}
+                    <div className="flex items-center justify-between">
+                      {getDurationMinutes(tut) && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="h-3 w-3" /> {getDurationMinutes(tut)} min
+                        </span>
+                      )}
+                      {videoUrl ? (
+                        <button type="button" onClick={() => setSelectedTutorial(tut)}
+                          className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:opacity-90 flex items-center gap-1">
+                          <Play className="h-3 w-3" /> Watch
+                        </button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground italic">Coming soon</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <Dialog open={Boolean(selectedTutorial)} onOpenChange={(open) => { if (!open) setSelectedTutorial(null); }}>
+            <DialogContent className="max-w-6xl max-h-[90vh] overflow-hidden p-0">
+              {selectedTutorial && (
+                <div className="flex flex-col h-full bg-background">
+                  <div className="flex items-start justify-between gap-4 p-4 border-b border-border">
+                    <div>
+                      <DialogTitle className="text-lg font-semibold">{selectedTutorial.title}</DialogTitle>
+                      <DialogDescription className="text-sm text-muted-foreground">{selectedTutorial.subject}</DialogDescription>
+                    </div>
+                    <DialogClose className="rounded-lg bg-card px-3 py-2 text-sm font-medium hover:bg-muted">Close</DialogClose>
+                  </div>
+                  <div className="flex-1 bg-black">
+                    {isYouTubeUrl(getVideoUrl(selectedTutorial)) ? (
+                      <iframe
+                        title={selectedTutorial.title}
+                        src={buildEmbedUrl(getVideoUrl(selectedTutorial))}
+                        className="w-full h-full"
+                        allow="autoplay; fullscreen; picture-in-picture"
+                        allowFullScreen
+                      />
                     ) : (
-                      <span className="text-xs text-muted-foreground italic">Coming soon</span>
+                      <video
+                        src={getVideoUrl(selectedTutorial)}
+                        controls
+                        className="w-full h-full object-contain"
+                        playsInline
+                      />
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              )}
+            </DialogContent>
+          </Dialog>
+        </>
       )}
     </div>
   );

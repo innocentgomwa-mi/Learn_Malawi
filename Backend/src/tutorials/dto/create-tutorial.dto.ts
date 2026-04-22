@@ -1,4 +1,5 @@
-import { IsString, IsEnum, IsNotEmpty, IsUrl, MaxLength } from 'class-validator';
+import { Transform } from 'class-transformer';
+import { IsString, IsEnum, IsNotEmpty, IsUrl, MaxLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 import { EducationLevel } from '../entities/tutorial.entity';
 
@@ -30,10 +31,11 @@ export class CreateTutorialDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: 'https://www.youtube.com/embed/5gEWOh630b8' })
+  @ApiProperty({ example: 'https://www.youtube.com/embed/5gEWOh630b8', required: false })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() || undefined : value))
   @IsString()
   @IsUrl()
-  @IsNotEmpty()
+  @IsOptional()
   @MaxLength(500)
-  videoUrl: string;
+  videoUrl?: string;
 }
