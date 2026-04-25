@@ -57,18 +57,18 @@ export default function TeacherSidebar() {
 
   return (
     <aside className={cn(
-      'min-h-screen bg-slate-950 text-slate-200 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
+      'min-h-screen bg-blue-950 text-blue-100 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
       collapsed ? 'w-[68px]' : 'w-64'
     )}>
       {/* Logo */}
-      <div className={cn('flex items-center border-b border-slate-800/80 h-16', collapsed ? 'justify-center px-3' : 'px-5 gap-3')}>
-        <div className="w-10 h-10 rounded-3xl bg-gradient-to-br from-cyan-500 to-emerald-500 flex items-center justify-center shadow-lg shadow-cyan-500/20 shrink-0">
+      <div className={cn('flex items-center border-b border-blue-900/80 h-16', collapsed ? 'justify-center px-3' : 'px-5 gap-3')}>
+        <div className="w-10 h-10 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
           <BookOpen className="w-5 h-5 text-white" />
         </div>
         {!collapsed && (
           <div className="overflow-hidden">
             <p className="text-white font-semibold text-sm leading-tight whitespace-nowrap">Learn Malawi</p>
-            <p className="text-cyan-300 text-xs whitespace-nowrap">Teacher Portal</p>
+            <p className="text-blue-300 text-xs whitespace-nowrap">Teacher Portal</p>
           </div>
         )}
       </div>
@@ -78,7 +78,7 @@ export default function TeacherSidebar() {
         {groups.map(group => (
           <div key={group.label}>
             {!collapsed && (
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 px-2 mb-1.5">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-400 px-2 mb-1.5">
                 {group.label}
               </p>
             )}
@@ -94,8 +94,8 @@ export default function TeacherSidebar() {
                       'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all group',
                       collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
                       active
-                        ? 'bg-gradient-to-r from-cyan-600 to-emerald-500 text-white shadow-[0_8px_24px_rgba(16,185,129,0.18)]'
-                        : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_8px_24px_rgba(59,130,246,0.18)]'
+                        : 'text-blue-300 hover:bg-blue-900 hover:text-white'
                     )}
                   >
                     <Icon className="w-4 h-4 shrink-0" />
@@ -117,8 +117,8 @@ export default function TeacherSidebar() {
             'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all',
             collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
             location.pathname === '/teacher/settings'
-              ? 'bg-gradient-to-r from-cyan-600 to-emerald-500 text-white shadow-[0_8px_24px_rgba(16,185,129,0.18)]'
-              : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_8px_24px_rgba(59,130,246,0.18)]'
+              : 'text-blue-300 hover:bg-blue-900 hover:text-white'
           )}
         >
           <Settings className="w-4 h-4 shrink-0" />
@@ -130,7 +130,7 @@ export default function TeacherSidebar() {
           className={cn(
             'flex items-center gap-3 w-full rounded-2xl text-sm font-medium transition-all',
             collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
-            'text-slate-300 hover:bg-slate-800 hover:text-white'
+            'text-blue-200 hover:bg-blue-800 hover:text-white'
           )}
         >
           <LogOut className="w-4 h-4 shrink-0" />
@@ -143,7 +143,7 @@ export default function TeacherSidebar() {
           className={cn(
             'flex items-center gap-3 w-full rounded-2xl text-sm transition-all mt-2',
             collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2',
-            'text-slate-400 hover:text-white hover:bg-slate-800'
+            'text-blue-300 hover:text-white hover:bg-blue-800'
           )}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}

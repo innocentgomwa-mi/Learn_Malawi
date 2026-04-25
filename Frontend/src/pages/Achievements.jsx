@@ -72,15 +72,13 @@ export default function Achievements() {
   const userKey = user?.email || user?.id || 'anonymous';
   const localData = loadDashboardData(userKey);
 
-  const { data: entries = [], isLoading, error } = useQuery(
-    ['studentProgress', user?.email, isOnline],
-    () => fetchStudentProgress({ studentEmail: user?.email }),
-    {
-      enabled: Boolean(user?.email && isOnline),
-      retry: 1,
-      staleTime: 1000 * 60,
-    },
-  );
+  const { data: entries = [], isLoading, error } = useQuery({
+    queryKey: ['studentProgress', user?.email, isOnline],
+    queryFn: () => fetchStudentProgress({ studentEmail: user?.email }),
+    enabled: Boolean(user?.email && isOnline),
+    retry: 1,
+    staleTime: 1000 * 60,
+  });
 
   const useRemoteData = isOnline && !error && Array.isArray(entries);
   const progress = useRemoteData

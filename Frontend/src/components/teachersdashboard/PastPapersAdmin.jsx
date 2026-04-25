@@ -60,13 +60,13 @@ export default function TeacherPastPapers() {
           <h1 className="text-2xl font-jakarta font-bold">Past Papers</h1>
           <p className="text-muted-foreground text-sm mt-1">Upload PSLC, JCE and MSCE past papers with marking schemes</p>
         </div>
-        <Button onClick={() => setModal({ open: true, existing: null })}>
+        <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600" onClick={() => setModal({ open: true, existing: null })}>
           <Plus className="w-4 h-4 mr-2" /> Upload Paper
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
       ) : papers.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <FileText className="w-12 h-12 mx-auto mb-4 opacity-30" />

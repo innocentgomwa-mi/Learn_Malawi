@@ -25,7 +25,7 @@ export default function TeacherTopBar() {
   const title = PAGE_TITLES[/** @type {keyof typeof PAGE_TITLES} */ (location.pathname)] || 'Teacher Portal';
 
   return (
-    <header className="h-16 bg-white border-b border-slate-100 flex items-center gap-4 px-6 shrink-0">
+    <header className="h-16 bg-white border-b border-blue-100 flex items-center gap-4 px-6 shrink-0">
       {/* Page title */}
       <h1 className="text-base font-semibold text-slate-800 mr-4 hidden sm:block">{title}</h1>
 
@@ -35,23 +35,23 @@ export default function TeacherTopBar() {
         <input
           type="text"
           placeholder="Search..."
-          className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400/40 focus:border-emerald-400 transition-all"
+          className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition-all"
         />
       </div>
 
       {/* Right actions */}
       <div className="ml-auto flex items-center gap-2">
-        <button className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors">
+        <button className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-colors">
           <Mail className="w-4 h-4" />
         </button>
-        <button className="w-9 h-9 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-100 transition-colors relative">
+        <button className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-colors relative">
           <Bell className="w-4 h-4" />
-          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" />
         </button>
 
         {/* Avatar */}
         <div className="flex items-center gap-2.5 ml-2 pl-3 border-l border-slate-200">
-          <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white text-sm font-bold">
+          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm font-bold">
             {user?.full_name?.charAt(0) || '?'}
           </div>
           <div className="hidden sm:block">

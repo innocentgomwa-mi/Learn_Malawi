@@ -13,7 +13,7 @@ const CLASS_LEVELS = ['Standard 1','Standard 2','Standard 3','Standard 4','Stand
 const STATUS_OPTIONS = ['Present', 'Absent', 'Late'];
 
 const statusStyles = {
-  Present: 'bg-emerald-100 text-emerald-700 border-emerald-300',
+  Present: 'bg-blue-100 text-blue-700 border-blue-300',
   Absent: 'bg-red-100 text-red-700 border-red-300',
   Late: 'bg-amber-100 text-amber-700 border-amber-300',
 };
@@ -244,7 +244,7 @@ export default function TeacherAttendance() {
       {activeTab === 'history' && (
         <div>
           {loadingLogs ? (
-            <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+            <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
           ) : logs.length === 0 ? (
             <div className="text-center py-20 text-muted-foreground">
               <History className="w-12 h-12 mx-auto mb-4 opacity-25" />
@@ -265,13 +265,13 @@ export default function TeacherAttendance() {
                         <p className="text-xs text-muted-foreground">{log.date} · {total} students</p>
                       </div>
                       <div className="flex gap-2 text-xs">
-                        <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full">{present} Present</span>
+                        <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{present} Present</span>
                         <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{absent} Absent</span>
                         {late > 0 && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{late} Late</span>}
                       </div>
                     </div>
                     <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">
-                      <div className="bg-emerald-500 h-full" style={{ width: total > 0 ? `${(present / total) * 100}%` : '0%' }} />
+                      <div className="bg-blue-500 h-full" style={{ width: total > 0 ? `${(present / total) * 100}%` : '0%' }} />
                     </div>
                     <p className="text-xs text-muted-foreground mt-1">{total > 0 ? Math.round((present / total) * 100) : 0}% attendance rate</p>
                   </div>

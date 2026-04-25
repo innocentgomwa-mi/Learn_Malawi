@@ -44,7 +44,7 @@ function Toggle({ checked, onChange, label, description }) {
     <label className="flex items-start gap-3 cursor-pointer group">
       <div className="relative mt-0.5 shrink-0">
         <input type="checkbox" className="sr-only" checked={checked} onChange={e => onChange(e.target.checked)} />
-        <div className={cn('w-10 h-5.5 rounded-full transition-colors', checked ? 'bg-emerald-500' : 'bg-slate-200')} style={{ height: '1.375rem' }}>
+        <div className={cn('w-10 h-5.5 rounded-full transition-colors', checked ? 'bg-blue-600' : 'bg-slate-200')} style={{ height: '1.375rem' }}>
           <div className={cn('absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow transition-transform', checked ? 'translate-x-5' : 'translate-x-0.5')} style={{ width: '1.125rem', height: '1.125rem' }} />
         </div>
       </div>
@@ -60,8 +60,8 @@ function SectionCard({ title, icon: Icon, children }) {
   return (
     <div className="bg-card border border-border rounded-xl p-6 space-y-5">
       <div className="flex items-center gap-2.5 pb-3 border-b border-border">
-        <div className="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
-          <Icon className="w-4 h-4 text-emerald-600" />
+        <div className="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+          <Icon className="w-4 h-4 text-blue-600" />
         </div>
         <h2 className="font-semibold text-base">{title}</h2>
       </div>
@@ -117,7 +117,7 @@ export default function TeacherSettings() {
             onClick={() => setActiveSection(id)}
             className={cn('flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all -mb-px',
               activeSection === id
-                ? 'border-emerald-600 text-emerald-600'
+                ? 'border-blue-600 text-blue-600'
                 : 'border-transparent text-muted-foreground hover:text-foreground hover:border-slate-300')}
           >
             <Icon className="w-4 h-4 shrink-0" />
@@ -125,7 +125,7 @@ export default function TeacherSettings() {
           </button>
         ))}
         <div className="ml-auto pl-4 pb-1 shrink-0">
-          <Button onClick={handleSave} disabled={saving}>
+          <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white" onClick={handleSave} disabled={saving}>
             {saving ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving...</> : saved ? '✓ Saved!' : 'Save All'}</Button>
         </div>
       </div>
@@ -135,13 +135,13 @@ export default function TeacherSettings() {
         {activeSection === 'profile' && (
           <SectionCard title="Profile" icon={BookOpen}>
             <div className="flex items-center gap-4 pb-4 border-b border-border">
-              <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 text-2xl font-bold">
+              <div className="w-14 h-14 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-2xl font-bold">
                 {user?.full_name?.charAt(0) || '?'}
               </div>
               <div>
                 <p className="font-semibold">{user?.full_name}</p>
                 <p className="text-sm text-muted-foreground">{user?.email}</p>
-                <span className="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full capitalize">{user?.role || 'teacher'}</span>
+                <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full capitalize">{user?.role || 'teacher'}</span>
               </div>
             </div>
             <div className="space-y-1.5">
