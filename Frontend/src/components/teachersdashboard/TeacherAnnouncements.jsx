@@ -105,7 +105,7 @@ export default function TeacherAnnouncements() {
               />
             </div>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            <Button onClick={handleCreateAnnouncement} disabled={saving}>
+            <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white" onClick={handleCreateAnnouncement} disabled={saving}>
               <Plus className="mr-2 h-4 w-4" />
               {saving ? 'Posting...' : 'Post announcement'}
             </Button>
@@ -118,11 +118,10 @@ export default function TeacherAnnouncements() {
               <h2 className="text-lg font-semibold">Published announcements</h2>
               <p className="text-sm text-slate-500">These announcements were posted by you.</p>
             </div>
-            <Button variant="secondary" onClick={loadAnnouncements} disabled={loading}>
+            <Button variant="default" className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100" onClick={loadAnnouncements} disabled={loading}>
               Refresh
             </Button>
           </div>
-
           {loading ? (
             <div className="py-16 text-center text-slate-500">Loading announcements…</div>
           ) : announcements.length === 0 ? (

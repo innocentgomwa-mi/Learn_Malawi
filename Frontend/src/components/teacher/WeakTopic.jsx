@@ -15,7 +15,7 @@ export default function WeakTopics({ quizAttempts }) {
 
   const topics = Object.values(topicCounts).sort((a, b) => b.count - a.count);
 
-  const levelColors = { MSCE: "bg-purple-100 text-purple-700", JCE: "bg-blue-100 text-blue-700", PSLC: "bg-green-100 text-green-700", "Standard 1-8": "bg-teal-100 text-teal-700" };
+  const levelColors = { MSCE: "bg-purple-100 text-purple-700", JCE: "bg-blue-100 text-blue-700", PSLC: "bg-blue-100 text-blue-700", "Standard 1-8": "bg-blue-100 text-blue-700" };
 
   return (
     <Card className="border-red-100">

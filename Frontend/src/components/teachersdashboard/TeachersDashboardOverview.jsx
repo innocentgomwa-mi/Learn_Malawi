@@ -9,12 +9,12 @@ const resourceCards = [
   { label: 'Study Notes', key: 'notes', icon: BookOpen, gradient: 'from-sky-500 to-blue-600', path: '/teacher/study-notes' },
   { label: 'Past Papers', key: 'papers', icon: FileText, gradient: 'from-violet-500 to-fuchsia-600', path: '/teacher/past-papers' },
   { label: 'Tutorials', key: 'tutorials', icon: PlayCircle, gradient: 'from-orange-400 to-orange-500', path: '/teacher/tutorials' },
-  { label: 'Quizzes', key: 'quizzes', icon: HelpCircle, gradient: 'from-emerald-500 to-emerald-600', path: '/teacher/quizzes' },
+  { label: 'Quizzes', key: 'quizzes', icon: HelpCircle, gradient: 'from-sky-500 to-blue-600', path: '/teacher/quizzes' },
 ];
 
 const statusCards = [
   { label: 'Pending Review', key: 'pending', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-  { label: 'Approved', key: 'approved', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+  { label: 'Approved', key: 'approved', icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
   { label: 'Rejected', key: 'rejected', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
 ];
 
@@ -50,33 +50,33 @@ export default function TeachersDashboardOverview() {
 
   return (
     <div className="space-y-6">
-      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-teal-500 p-8 text-white shadow-xl">
+      <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-sky-600 via-blue-600 to-indigo-700 p-8 text-white shadow-xl">
         <div className="pointer-events-none absolute inset-0 opacity-15">
           <div className="absolute -right-10 -top-10 h-56 w-56 rounded-full bg-white/20" />
           <div className="absolute right-24 -bottom-8 h-36 w-36 rounded-full bg-white/15" />
         </div>
         <div className="relative grid gap-4 lg:grid-cols-[1.4fr_0.9fr] items-center">
           <div>
-            <p className="text-sm uppercase tracking-[0.24em] text-emerald-100/80 mb-2">Teacher Portal</p>
+            <p className="text-sm uppercase tracking-[0.24em] text-sky-100/80 mb-2">Teacher Portal</p>
             <h1 className="text-3xl font-semibold tracking-tight">{greeting}, {firstName},</h1>
-            <p className="mt-3 max-w-xl text-sm leading-6 text-emerald-100/85">Manage your teacher resources from one place. Upload materials, track submissions, and keep students engaged with fresh content.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-sky-100/85">Manage your teacher resources from one place. Upload materials, track submissions, and keep students engaged with fresh content.</p>
             <Link
               to="/teacher/study-notes"
-              className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-emerald-700 shadow-lg shadow-black/5 transition hover:bg-emerald-50"
+              className="mt-5 inline-flex items-center gap-2 rounded-full bg-white px-5 py-3 text-sm font-semibold text-blue-700 shadow-lg shadow-black/5 transition hover:bg-blue-50"
             >
               Upload Resource <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="rounded-3xl bg-white/10 p-5 backdrop-blur-sm border border-white/10">
-              <p className="text-sm uppercase tracking-[0.24em] text-emerald-100/80">Resources</p>
+              <p className="text-sm uppercase tracking-[0.24em] text-sky-100/80">Resources</p>
               <p className="mt-3 text-3xl font-semibold">{counts.notes + counts.papers + counts.tutorials + counts.quizzes}</p>
-              <p className="mt-1 text-sm text-emerald-100/85">Total teaching resources under your profile</p>
+              <p className="mt-1 text-sm text-sky-100/85">Total teaching resources under your profile</p>
             </div>
             <div className="rounded-3xl bg-white/10 p-5 backdrop-blur-sm border border-white/10">
-              <p className="text-sm uppercase tracking-[0.24em] text-emerald-100/80">Active approvals</p>
+              <p className="text-sm uppercase tracking-[0.24em] text-sky-100/80">Active approvals</p>
               <p className="mt-3 text-3xl font-semibold">{statuses.approved}</p>
-              <p className="mt-1 text-sm text-emerald-100/85">Approved items visible to students</p>
+              <p className="mt-1 text-sm text-sky-100/85">Approved items visible to students</p>
             </div>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function TeachersDashboardOverview() {
             </div>
             <p className="text-3xl font-semibold text-slate-900">{counts[key]}</p>
             <p className="mt-2 text-sm text-slate-500">{label}</p>
-            <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-emerald-600 transition group-hover:underline">View all <ArrowRight className="h-4 w-4" /></p>
+            <p className="mt-4 inline-flex items-center gap-1 text-sm font-medium text-blue-600 transition group-hover:underline">View all <ArrowRight className="h-4 w-4" /></p>
           </Link>
         ))}
       </section>

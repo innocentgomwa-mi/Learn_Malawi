@@ -135,7 +135,7 @@ export default function TeacherDiscussions() {
                 type="button"
                 onClick={handleCreateThread}
                 disabled={saving}
-                className="inline-flex items-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 {saving ? 'Creating...' : 'Create thread'}
@@ -153,7 +153,7 @@ export default function TeacherDiscussions() {
                 type="button"
                 onClick={loadThreads}
                 disabled={loading}
-                className="inline-flex items-center rounded-md border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+                className="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Refresh
               </button>

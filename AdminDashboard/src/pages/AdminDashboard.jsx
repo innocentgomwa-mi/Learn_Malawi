@@ -13,13 +13,13 @@ import MaintenanceMode from "@/components/admin/MaintenanceMode";
 import RolesPermissions from "@/components/admin/RolesPermissions";
 import SessionsViewer from "@/components/admin/SessionsViewer";
 import ReportsAnalytics from "@/components/admin/ReportsAnalytics";
-import { Menu, X } from "lucide-react";
+import { Menu } from "lucide-react";
 import { usePageLogger } from "@/hooks/usePageLogger";
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   usePageLogger("login", { resource_title: "Admin Dashboard" });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarExpanded, setSidebarExpanded] = useState(false);
 
   const renderSection = () => {
     switch (activeSection) {
@@ -40,30 +40,34 @@ export default function AdminDashboard() {
     }
   };
 
+  const contentMarginClass = sidebarExpanded ? 'lg:ml-64' : 'lg:ml-[68px]';
+
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* Mobile overlay */}
-      {sidebarOpen && (
+      {sidebarExpanded && (
         <div
           className="fixed inset-0 bg-black/50 z-20 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
+          onClick={() => setSidebarExpanded(false)}
         />
       )}
 
       {/* Sidebar */}
-      <div className={`fixed lg:static inset-y-0 left-0 z-30 transform transition-transform duration-300
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
+      <div className={`fixed inset-y-0 left-0 z-30 transform transition-transform duration-300
+        ${sidebarExpanded ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}`}>
         <AdminSidebar
           activeSection={activeSection}
-          onNavigate={(section) => { setActiveSection(section); setSidebarOpen(false); }}
+          collapsed={!sidebarExpanded}
+          onNavigate={(section) => { setActiveSection(section); setSidebarExpanded(false); }}
+          onToggle={() => setSidebarExpanded((expanded) => !expanded)}
         />
       </div>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className={`flex-1 flex flex-col overflow-hidden ${contentMarginClass}`}>
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3 lg:hidden">
-          <button onClick={() => setSidebarOpen(true)} className="p-1 rounded-md hover:bg-gray-100">
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
+          <button onClick={() => setSidebarExpanded(true)} className="p-1 rounded-md hover:bg-gray-100">
             <Menu className="w-5 h-5" />
           </button>
           <span className="font-semibold text-gray-800">Learn Malawi Admin</span>

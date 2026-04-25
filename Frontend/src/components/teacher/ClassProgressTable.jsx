@@ -31,7 +31,7 @@ export default function ClassProgressTable({ quizAttempts, activities, onSelectS
     return { ...s, avg, trend, subjects: [...s.subjects] };
   }).sort((a, b) => a.avg - b.avg);
 
-  const getScoreColor = (avg) => avg >= 70 ? "text-green-600" : avg >= 50 ? "text-orange-500" : "text-red-500";
+  const getScoreColor = (avg) => avg >= 70 ? "text-blue-600" : avg >= 50 ? "text-orange-500" : "text-red-500";
   const getStatusBadge = (avg) => avg >= 70 ? ["On Track", "default"] : avg >= 50 ? ["Needs Attention", "secondary"] : ["At Risk", "destructive"];
 
   return (
@@ -75,7 +75,7 @@ export default function ClassProgressTable({ quizAttempts, activities, onSelectS
                   <span className={`font-bold text-sm ${getScoreColor(s.avg)}`}>{s.avg.toFixed(0)}%</span>
                 </TableCell>
                 <TableCell>
-                  {s.trend > 0 ? <TrendingUp className="w-4 h-4 text-green-500" /> :
+                  {s.trend > 0 ? <TrendingUp className="w-4 h-4 text-blue-500" /> :
                    s.trend < 0 ? <TrendingDown className="w-4 h-4 text-red-500" /> :
                    <Minus className="w-4 h-4 text-gray-400" />}
                 </TableCell>

@@ -189,7 +189,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
 
   return (
     <Dialog open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
-      <DialogContent className="max-w-4xl">
+      <DialogContent className="max-w-4xl max-h-[calc(100vh-6rem)] overflow-y-auto">
         <DialogTitle>{existing ? 'Edit Quiz' : 'Create Quiz'}</DialogTitle>
         <DialogDescription>{existing ? 'Update the quiz content and questions.' : 'Set up a new quiz with multiple-choice questions.'}</DialogDescription>
 
@@ -200,7 +200,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
               <input
                 value={quiz.title}
                 onChange={(event) => handleField('title', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="Quiz title"
               />
             </label>
@@ -209,7 +209,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
               <input
                 value={quiz.subject}
                 onChange={(event) => handleField('subject', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="Subject or topic"
               />
             </label>
@@ -218,7 +218,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
               <input
                 value={quiz.class}
                 onChange={(event) => handleField('class', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="Class level"
               />
             </label>
@@ -228,7 +228,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                 type="number"
                 value={quiz.totalTime}
                 onChange={(event) => handleField('totalTime', Number(event.target.value))}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                 placeholder="0"
                 min="0"
               />
@@ -241,7 +241,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
               <select
                 value={quiz.level}
                 onChange={(event) => handleField('level', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
               >
                 {levels.map((level) => (
                   <option key={level} value={level}>{level}</option>
@@ -253,7 +253,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
               <select
                 value={quiz.difficulty}
                 onChange={(event) => handleField('difficulty', event.target.value)}
-                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
               >
                 {difficulties.map((difficulty) => (
                   <option key={difficulty} value={difficulty}>{difficulty}</option>
@@ -267,7 +267,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
             <textarea
               value={quiz.description}
               onChange={(event) => handleField('description', event.target.value)}
-              className="w-full min-h-[100px] rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+              className="w-full min-h-[100px] rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
               placeholder="Optional quiz description"
             />
           </label>
@@ -293,7 +293,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                   <input
                     value={question.question}
                     onChange={(event) => handleQuestionChange(index, 'question', event.target.value)}
-                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                    className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                     placeholder="Enter the question prompt"
                   />
                 </label>
@@ -304,7 +304,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                       <input
                         value={option}
                         onChange={(event) => handleOptionChange(index, optIndex, event.target.value)}
-                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                        className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                         placeholder={`Option ${String.fromCharCode(65 + optIndex)}`}
                       />
                     </label>
@@ -316,7 +316,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                     <select
                       value={question.answer}
                       onChange={(event) => handleQuestionChange(index, 'answer', event.target.value)}
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                     >
                       {['A', 'B', 'C', 'D'].map((optionLabel) => (
                         <option key={optionLabel} value={optionLabel}>{optionLabel}</option>
@@ -329,7 +329,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
                       type="number"
                       value={question.timeLimit}
                       onChange={(event) => handleQuestionChange(index, 'timeLimit', Number(event.target.value))}
-                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-emerald-400"
+                      className="w-full rounded-xl border border-slate-300 bg-slate-50 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-blue-400"
                       min="5"
                     />
                   </label>
