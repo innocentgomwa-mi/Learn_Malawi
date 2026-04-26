@@ -9,17 +9,18 @@
  *   level: 'PSLC' | 'JCE' | 'MSCE',
  *   difficulty: string,
  *   topic?: string,
+ *   teacherEmail?: string,
  *   questions: QuizQuestion[]
  * }} Quiz
  */
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import RequireAccount from "@/components/RequireAccount";
 import { saveUserAttempt } from "@/lib/dashboardStorage";
-import { fetchQuizzes, fetchAiChat, recordStudentProgress } from "@/api";
+import { fetchQuizzes, fetchStudentProgress, fetchAiChat, recordStudentProgress } from "@/api";
 import Leaderboard from "../components/Leaderboard";
 
 /** @type {Array<'All' | string>} */
@@ -51,6 +52,19 @@ export default function Quizzes() {
 
   const { data: quizzes = [], isLoading: loading } = /** @type {import('@tanstack/react-query').UseQueryResult<Quiz[], Error>} */ (queryResult);
 
+  const progressQuery = useQuery({
+    queryKey: ['quizProgress', user?.email],
+    queryFn: () => fetchStudentProgress({ studentEmail: user?.email, entryType: 'quiz' }),
+    staleTime: 1000 * 60,
+    enabled: isAuthenticated && !!user?.email,
+  });
+
+  const completedQuizProgress = progressQuery.data || [];
+  const completedQuizIds = useMemo(
+    () => new Set((completedQuizProgress || []).map((entry) => String(entry.quiz_id))),
+    [completedQuizProgress],
+  );
+
   if (!isAuthenticated) {
     return <RequireAccount resourceName="Quizzes" />;
   }
@@ -71,6 +85,22 @@ export default function Quizzes() {
     setAiFeedback("");
   };
 
+  const getNormalizedAnswer = (question, selected) => {
+    const answerValue = String(question.answer || '').trim();
+    const selectedValue = String(selected || '').trim();
+
+    if (!answerValue || !selectedValue) return false;
+
+    if (selectedValue === answerValue) return true;
+
+    const letterIndex = ['A', 'B', 'C', 'D'].indexOf(answerValue.toUpperCase());
+    if (letterIndex !== -1 && Array.isArray(question.options) && question.options[letterIndex]) {
+      return selectedValue === String(question.options[letterIndex]).trim();
+    }
+
+    return selectedValue.toLowerCase() === answerValue.toLowerCase();
+  };
+
   const submitQuiz = async () => {
     if (!activeQuiz) return;
     setSubmitted(true);
@@ -80,7 +110,7 @@ export default function Quizzes() {
     const wrongTopics = [];
 
     questions.forEach((q, i) => {
-      if (answers[i] === q.answer) {
+      if (getNormalizedAnswer(q, answers[i])) {
         correct++;
       } else {
         const snippet = q.question?.slice(0, 50);
@@ -95,14 +125,15 @@ export default function Quizzes() {
       id: `${activeQuiz.id}-${Date.now()}`,
       student_email: user?.email,
       entry_type: 'quiz',
-      quiz_id: activeQuiz.id,
+      quiz_id: String(activeQuiz.id),
       quiz_title: activeQuiz.title,
       subject: activeQuiz.subject,
-      level: activeQuiz.level,
+      level: String(activeQuiz.level || ''),
       score,
       total_questions: questions.length,
       correct_answers: correct,
       topics_failed: wrongTopics,
+      completed: true,
       completed_at: new Date().toISOString(),
     };
 
@@ -113,7 +144,19 @@ export default function Quizzes() {
 
     if (user?.email) {
       try {
-        await recordStudentProgress(attempt);
+        await recordStudentProgress({
+          student_email: attempt.student_email,
+          entry_type: attempt.entry_type,
+          quiz_id: attempt.quiz_id,
+          quiz_title: attempt.quiz_title,
+          subject: attempt.subject,
+          level: attempt.level,
+          score: attempt.score,
+          total_questions: attempt.total_questions,
+          correct_answers: attempt.correct_answers,
+          topics_failed: attempt.topics_failed,
+          completed_at: attempt.completed_at,
+        });
       } catch (error) {
         console.error('Unable to save quiz attempt to backend:', error);
       }
@@ -121,13 +164,16 @@ export default function Quizzes() {
 
     setFeedbackLoading(true);
     try {
-      const wrongList = wrongTopics.length > 0 ? wrongTopics.join(', ') : 'core concepts';
-      const prompt = `You are a friendly Malawi curriculum study tutor. A student completed the quiz titled "${activeQuiz.title}" in ${activeQuiz.subject} at ${activeQuiz.level} level and scored ${score}%. The questions they answered incorrectly are: ${wrongList}. Provide encouraging feedback, explain what to review next, and suggest one or two study tips.`;
-      const response = await fetchAiChat(prompt);
-      const feedbackText = typeof response === 'string' ? response : response?.text;
-      setAiFeedback(feedbackText || `Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongList}. You are making good progress!`);
-    } catch (error) {
-      console.error(error);
+      if (activeQuiz.teacherEmail) {
+        setAiFeedback(`Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongTopics.length ? wrongTopics.join(', ') : 'core concepts'}. You are making good progress!`);
+      } else {
+        const wrongList = wrongTopics.length > 0 ? wrongTopics.join(', ') : 'core concepts';
+        const prompt = `You are a friendly Malawi curriculum study tutor. A student completed the quiz titled "${activeQuiz.title}" in ${activeQuiz.subject} at ${activeQuiz.level} level and scored ${score}%. The questions they answered incorrectly are: ${wrongList}. Provide encouraging feedback, explain what to review next, and suggest one or two study tips.`;
+        const response = await fetchAiChat(prompt);
+        const feedbackText = typeof response === 'string' ? response : response?.text;
+        setAiFeedback(feedbackText || `Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongList}. You are making good progress!`);
+      }
+    } catch {
       setAiFeedback(`Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongTopics.length ? wrongTopics.join(', ') : 'core concepts'}. You are making good progress!`);
     } finally {
       setFeedbackLoading(false);
@@ -136,8 +182,11 @@ export default function Quizzes() {
 
   if (activeQuiz) {
     const questions = activeQuiz.questions || [];
-    const totalCorrect = submitted ? questions.filter((q, i) => answers[i] === q.answer).length : 0;
+    const totalCorrect = submitted
+      ? questions.filter((q, i) => getNormalizedAnswer(q, answers[i])).length
+      : 0;
     const score = submitted && questions.length > 0 ? Math.round((totalCorrect / questions.length) * 100) : 0;
+    const alreadyCompleted = completedQuizIds.has(String(activeQuiz.id));
 
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
@@ -148,6 +197,9 @@ export default function Quizzes() {
         <div className="bg-card border border-border rounded-2xl p-6">
           <div className="flex items-center justify-between mb-2">
             <span className={`text-xs font-semibold px-2 py-1 rounded-full ${LEVEL_COLORS[activeQuiz.level] || "bg-muted"}`}>{activeQuiz.level}</span>
+            {alreadyCompleted && (
+              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Completed</span>
+            )}
             {submitted && (
               <div className="flex items-center gap-2">
                 <Trophy className="h-5 w-5 text-secondary" />
@@ -181,8 +233,8 @@ export default function Quizzes() {
                 <div className="space-y-2">
                   {(q.options || []).map((opt, j) => {
                     const isSelected = answers[i] === opt;
-                    const isCorrect = submitted && opt === q.answer;
-                    const isWrong = submitted && isSelected && opt !== q.answer;
+                    const isCorrect = submitted && getNormalizedAnswer(q, opt);
+                    const isWrong = submitted && isSelected && !getNormalizedAnswer(q, opt);
                     return (
                       <button
                         key={j}
@@ -292,6 +344,9 @@ export default function Quizzes() {
                 <h3 className="font-semibold text-foreground mb-1">{quiz.title}</h3>
                 <p className="text-xs text-muted-foreground mb-1">{quiz.subject}</p>
                 {quiz.topic && <p className="text-xs text-muted-foreground mb-4">Topic: {quiz.topic}</p>}
+                {completedQuizIds.has(String(quiz.id)) && (
+                  <p className="text-xs inline-flex items-center font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 mb-3">Completed</p>
+                )}
                 <p className="text-xs text-muted-foreground mb-4">{(quiz.questions || []).length} questions</p>
                 <button
                   onClick={() => startQuiz(quiz)}

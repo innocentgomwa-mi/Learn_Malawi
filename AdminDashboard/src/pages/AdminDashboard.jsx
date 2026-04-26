@@ -15,28 +15,31 @@ import SessionsViewer from "@/components/admin/SessionsViewer";
 import ReportsAnalytics from "@/components/admin/ReportsAnalytics";
 import { Menu } from "lucide-react";
 import { usePageLogger } from "@/hooks/usePageLogger";
+import { useRefreshRate } from '@/lib/RefreshRateContext';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   usePageLogger("login", { resource_title: "Admin Dashboard" });
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
+  const { refreshSeconds, setRefreshSeconds, refreshOptions } = useRefreshRate();
 
   const renderSection = () => {
     switch (activeSection) {
-      case "overview": return <AdminOverview />;
+      case "overview": return <AdminOverview refreshSeconds={refreshSeconds} />;
       case "approvals": return <PostApprovals />;
       case "teachers": return <ManageTeachers />;
       case "students": return <ManageStudents />;
       case "announcements": return <ManageAnnouncements />;
-      case "logs": return <ActivityLogViewer />;
+      case "logs": return <ActivityLogViewer refreshSeconds={refreshSeconds} />;
       case "security": return <SecurityCenter />;
       case "health": return <SystemHealth />;
       case "backups": return <BackupRestore />;
       case "maintenance": return <MaintenanceMode />;
       case "roles": return <RolesPermissions />;
-      case "sessions": return <SessionsViewer />;
+      case "sessions": return <SessionsViewer refreshSeconds={refreshSeconds} />;
       case "reports": return <ReportsAnalytics />;
-      default: return <AdminOverview />;
+      default: return <AdminOverview refreshSeconds={refreshSeconds} />;
     }
   };
 
@@ -66,11 +69,28 @@ export default function AdminDashboard() {
       {/* Main content */}
       <div className={`flex-1 flex flex-col overflow-hidden ${contentMarginClass}`}>
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center gap-3">
-          <button onClick={() => setSidebarExpanded(true)} className="p-1 rounded-md hover:bg-gray-100">
-            <Menu className="w-5 h-5" />
-          </button>
-          <span className="font-semibold text-gray-800">Learn Malawi Admin</span>
+        <header className="bg-white border-b border-gray-200 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex items-center gap-3">
+            <button onClick={() => setSidebarExpanded(true)} className="p-1 rounded-md hover:bg-gray-100">
+              <Menu className="w-5 h-5" />
+            </button>
+            <span className="font-semibold text-gray-800">Learn Malawi Admin</span>
+          </div>
+          <div className="flex items-center gap-3">
+            <div className="text-sm text-slate-500">Auto refresh</div>
+            <Select value={String(refreshSeconds)} onValueChange={(value) => setRefreshSeconds(Number(value))}>
+              <SelectTrigger className="h-9 min-w-[12rem] text-sm">
+                <SelectValue placeholder="Off" />
+              </SelectTrigger>
+              <SelectContent>
+                {refreshOptions.map((option) => (
+                  <SelectItem key={option.value} value={String(option.value)}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
         </header>
 
         <main className="flex-1 overflow-y-auto p-4 lg:p-6">

@@ -22,6 +22,7 @@ const groups = [
       { path: '/teacher/study-notes', icon: BookOpen, label: 'Study Materials' },
       { path: '/teacher/past-papers', icon: FileText, label: 'Past Papers' },
       { path: '/teacher/tutorials', icon: PlayCircle, label: 'Tutorials' },
+      { path: '/teacher/study-groups', icon: Users, label: 'Study Groups' },
       { path: '/teacher/quizzes', icon: HelpCircle, label: 'Assignments & Quizzes' },
     ]
   },
@@ -45,7 +46,7 @@ const groups = [
 
 export default function TeacherSidebar() {
   const location = useLocation();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const { logout } = useAuth();
 
   /**

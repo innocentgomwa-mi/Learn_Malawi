@@ -39,6 +39,9 @@ import { ActivityLog } from './activity-log/entities/activity-log.entity';
 import { DataChangeHistory } from './data-change-history/entities/data-change-history.entity';
 import { StudentProgress } from './student-progress/entities/student-progress.entity';
 import { ResourceRating } from './resource-ratings/entities/resource-rating.entity';
+import { StudyGroupsModule } from './study-groups/study-groups.module';
+import { StudyGroup } from './study-groups/entities/study-group.entity';
+import { StudyGroupMessage } from './study-groups/entities/study-group-message.entity';
 
 @Module({
   imports: [
@@ -83,6 +86,8 @@ import { ResourceRating } from './resource-ratings/entities/resource-rating.enti
           DataChangeHistory,
           StudentProgress,
           ResourceRating,
+          StudyGroup,
+          StudyGroupMessage,
         ],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
@@ -107,6 +112,7 @@ import { ResourceRating } from './resource-ratings/entities/resource-rating.enti
     StudentProgressModule,
     InsightsModule,
     ResourceRatingsModule,
+    StudyGroupsModule,
   ],
   controllers: [],
   providers: [

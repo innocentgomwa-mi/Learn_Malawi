@@ -1,10 +1,9 @@
 import React, { useState } from "react";
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { CheckCircle, XCircle, Eye, FileText, Filter } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { Eye, FileText, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
@@ -27,57 +26,39 @@ const TYPE_LABELS = {
 };
 
 export default function PostApprovals() {
-  const [filterStatus, setFilterStatus] = useState("pending");
+  const [filterType, setFilterType] = useState("all");
   const [selectedPost, setSelectedPost] = useState(null);
-  const [rejectDialogPost, setRejectDialogPost] = useState(null);
-  const [rejectionReason, setRejectionReason] = useState("");
-  const qc = useQueryClient();
 
-  const { data: posts = [], isLoading } = useQuery({
-    queryKey: ["posts"],
-    queryFn: () => apiClient.entities.TeacherPost.list("-created_date", 100),
+  const { data: resources = [], isLoading } = useQuery({
+    queryKey: ["published-resources"],
+    queryFn: () => apiClient.entities.TeacherPost.filter({ status: "approved" }),
   });
 
-  const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => apiClient.entities.TeacherPost.update(id, data),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["posts"] }),
-  });
-
-  const handleApprove = (post) => {
-    updateMutation.mutate({ id: post.id, data: { status: "approved" } });
-  };
-
-  const handleReject = () => {
-    if (!rejectDialogPost) return;
-    updateMutation.mutate({
-      id: rejectDialogPost.id,
-      data: { status: "rejected", rejection_reason: rejectionReason },
-    });
-    setRejectDialogPost(null);
-    setRejectionReason("");
-  };
-
-  const filtered = filterStatus === "all" ? posts : posts.filter(p => p.status === filterStatus);
+  const filtered = filterType === "all"
+    ? resources
+    : resources.filter((resource) => resource.content_type === filterType);
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Post Approvals</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Review and approve teacher-submitted content</p>
+          <h2 className="text-xl font-bold text-gray-900">Published Resources</h2>
+          <p className="text-sm text-gray-500 mt-0.5">All approved resources published by teachers, with author attribution.</p>
         </div>
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-400" />
-          <Select value={filterStatus} onValueChange={setFilterStatus}>
+          <Select value={filterType} onValueChange={setFilterType}>
             <SelectTrigger className="w-40">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Posts</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="all">All Resources</SelectItem>
+              <SelectItem value="study_notes">Study Notes</SelectItem>
+              <SelectItem value="past_paper">Past Papers</SelectItem>
+              <SelectItem value="tutorial">Tutorials</SelectItem>
+              <SelectItem value="quiz">Quizzes</SelectItem>
+              <SelectItem value="career_resource">Career Resources</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -85,20 +66,21 @@ export default function PostApprovals() {
 
       {/* Count chips */}
       <div className="flex gap-2 flex-wrap">
-        {["pending", "approved", "rejected"].map(s => (
-          <span key={s} className={`text-xs px-3 py-1 rounded-full font-medium border ${STATUS_COLORS[s]}`}>
-            {posts.filter(p => p.status === s).length} {s}
-          </span>
-        ))}
+        <span className="text-xs px-3 py-1 rounded-full font-medium border border-slate-200 bg-slate-50 text-slate-700">
+          {resources.length} published resource{resources.length === 1 ? '' : 's'}
+        </span>
+        <span className="text-xs px-3 py-1 rounded-full font-medium border border-slate-200 bg-slate-50 text-slate-700">
+          {Array.from(new Set(resources.map((post) => post.author_email || post.teacher_email))).length} teachers
+        </span>
       </div>
 
       {/* Posts list */}
       {isLoading ? (
-        <div className="text-center py-12 text-gray-400">Loading submissions...</div>
+        <div className="text-center py-12 text-gray-400">Loading published resources...</div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <FileText className="w-10 h-10 mx-auto mb-2 opacity-40" />
-          <p>No {filterStatus} posts found</p>
+          <p>No published resources found for this filter</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -109,8 +91,8 @@ export default function PostApprovals() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 flex-wrap">
                       <h3 className="font-semibold text-gray-900 text-sm">{post.title}</h3>
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium border ${STATUS_COLORS[post.status]}`}>
-                        {post.status}
+                      <span className="text-xs px-2 py-0.5 rounded-full font-medium border border-emerald-200 bg-emerald-100 text-emerald-700">
+                        Published
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-2 mt-2">
@@ -119,11 +101,9 @@ export default function PostApprovals() {
                       <Badge variant="outline" className="text-xs">{TYPE_LABELS[post.content_type] || post.content_type}</Badge>
                       {post.form_standard && <Badge variant="outline" className="text-xs">{post.form_standard}</Badge>}
                     </div>
-                    {post.teacher_name && (
-                      <p className="text-xs text-gray-500 mt-2">By: <span className="font-medium">{post.teacher_name}</span> · {post.teacher_email}</p>
-                    )}
-                    {post.rejection_reason && (
-                      <p className="text-xs text-red-500 mt-1">Reason: {post.rejection_reason}</p>
+                    <p className="text-xs text-gray-500 mt-2">Published by <span className="font-medium">{post.author_name || post.teacher_name || post.author_email || post.teacher_email || 'Unknown'}</span></p>
+                    {(post.author_email || post.teacher_email) && (
+                      <p className="text-xs text-gray-500">{post.author_email || post.teacher_email}</p>
                     )}
                   </div>
 
@@ -131,25 +111,6 @@ export default function PostApprovals() {
                     <Button size="sm" variant="outline" onClick={() => setSelectedPost(post)}>
                       <Eye className="w-3.5 h-3.5 mr-1" /> View
                     </Button>
-                    {post.status === "pending" && (
-                      <>
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white"
-                          onClick={() => handleApprove(post)}
-                          disabled={updateMutation.isPending}
-                        >
-                          <CheckCircle className="w-3.5 h-3.5 mr-1" /> Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="destructive"
-                          onClick={() => setRejectDialogPost(post)}
-                        >
-                          <XCircle className="w-3.5 h-3.5 mr-1" /> Reject
-                        </Button>
-                      </>
-                    )}
                   </div>
                 </div>
               </CardContent>
@@ -192,39 +153,7 @@ export default function PostApprovals() {
             </div>
           )}
           <DialogFooter className="gap-2">
-            {selectedPost?.status === "pending" && (
-              <>
-                <Button className="bg-green-600 hover:bg-green-700" onClick={() => { handleApprove(selectedPost); setSelectedPost(null); }}>
-                  <CheckCircle className="w-4 h-4 mr-1" /> Approve
-                </Button>
-                <Button variant="destructive" onClick={() => { setRejectDialogPost(selectedPost); setSelectedPost(null); }}>
-                  <XCircle className="w-4 h-4 mr-1" /> Reject
-                </Button>
-              </>
-            )}
             <Button variant="outline" onClick={() => setSelectedPost(null)}>Close</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Reject Dialog */}
-      <Dialog open={!!rejectDialogPost} onOpenChange={() => setRejectDialogPost(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Reject Post</DialogTitle>
-          </DialogHeader>
-          <p className="text-sm text-gray-600">Please provide a reason for rejecting <strong>{rejectDialogPost?.title}</strong>.</p>
-          <Textarea
-            placeholder="Reason for rejection..."
-            value={rejectionReason}
-            onChange={e => setRejectionReason(e.target.value)}
-            rows={3}
-          />
-          <DialogFooter className="gap-2">
-            <Button variant="destructive" onClick={handleReject} disabled={!rejectionReason.trim()}>
-              Confirm Rejection
-            </Button>
-            <Button variant="outline" onClick={() => setRejectDialogPost(null)}>Cancel</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

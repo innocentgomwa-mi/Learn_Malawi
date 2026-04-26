@@ -5,6 +5,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import PageNotFound from './lib/PageNotFound';
 import { AccessibilityProvider } from '@/lib/AccessibilityContext';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { RefreshRateProvider } from '@/lib/RefreshRateContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import Layout from './components/Layout';
 import MaintenancePage from './components/MaintenancePage';
@@ -15,6 +16,8 @@ import PastPapers from './pages/PastPapers';
 import Tutorials from './pages/Tutorials';
 import Quizzes from './pages/Quizzes';
 import Career from './pages/Career';
+import StudyGroups from './pages/StudyGroups';
+import Discussions from './pages/Discussions';
 import Abouts from './pages/Abouts';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
@@ -33,6 +36,7 @@ import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics'
 import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussions';
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
+import StudyGroupsAdmin from './components/teacher/StudyGroupsAdmin';
 import Insight from './pages/Insight';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
@@ -81,6 +85,8 @@ const AuthenticatedApp = () => {
         <Route path="/study-notes" element={<StudyNotes />} />
         <Route path="/past-papers" element={<PastPapers />} />
         <Route path="/tutorials" element={<Tutorials />} />
+        <Route path="/study-groups" element={<StudyGroups />} />
+        <Route path="/discussions" element={<Discussions />} />
         <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
@@ -94,6 +100,7 @@ const AuthenticatedApp = () => {
           <Route path="study-notes" element={<StudyNotesAdmin />} />
           <Route path="past-papers" element={<PastPapersAdmin />} />
           <Route path="tutorials" element={<TutorialsAdmin />} />
+          <Route path="study-groups" element={<StudyGroupsAdmin />} />
           <Route path="quizzes" element={<QuizzesAdmin />} />
           <Route path="students" element={<TeachersStudents />} />
           <Route path="attendance" element={<TeachersAttendance />} />
@@ -120,12 +127,14 @@ function App() {
   return (
     <AuthProvider>
       <AccessibilityProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-        </QueryClientProvider>
+        <RefreshRateProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+              <AuthenticatedApp />
+            </Router>
+            <Toaster />
+          </QueryClientProvider>
+        </RefreshRateProvider>
       </AccessibilityProvider>
     </AuthProvider>
   )

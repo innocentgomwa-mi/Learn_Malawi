@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/compone
 import { createQuiz, updateQuiz } from '@/api';
 
 /**
- * @typedef {{ question: string; options: string[]; answer: string; timeLimit: number; completionTime: number }} QuizQuestion
+ * @typedef {{ question: string; options: string[]; answer: string; timeLimit: number; completionTimePerQuestion: number }} QuizQuestion
  * @typedef {{ title: string; description: string; level: string; subject: string; difficulty: string; class: string; totalTime: number; questions: QuizQuestion[] }} QuizFormData
  * @typedef {{
  *   id?: string;
@@ -28,7 +28,7 @@ import { createQuiz, updateQuiz } from '@/api';
  *     correct_answer?: string;
  *     timeLimit?: number;
  *     time_limit?: number;
- *     completionTime?: number;
+ *     completionTimePerQuestion?: number;
  *     completion_time?: number;
  *   }>;
  * }} QuizExisting
@@ -40,7 +40,7 @@ const defaultQuestion = () => ({
   options: ['', '', '', ''],
   answer: 'A',
   timeLimit: 30,
-  completionTime: 10,
+  completionTimePerQuestion: 10,
 });
 
 const defaultQuiz = {
@@ -86,7 +86,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
             options: question.options || [question.option_a || '', question.option_b || '', question.option_c || '', question.option_d || ''],
             answer: question.answer || question.correct_answer || 'A',
             timeLimit: question.timeLimit || question.time_limit || 30,
-            completionTime: question.completionTime || question.completion_time || 10,
+            completionTimePerQuestion: question.completionTimePerQuestion || question.completion_time || 10,
           }))
         : [defaultQuestion()],
     });
@@ -168,7 +168,7 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
           options: question.options,
           answer: question.answer,
           timeLimit: Number(question.timeLimit) || 30,
-          completionTime: Number(question.completionTime) || 10,
+          completionTimePerQuestion: Number(question.completionTimePerQuestion) || 10,
         })),
       };
 

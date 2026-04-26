@@ -1,5 +1,5 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   BookOpen, FileText, Play, Brain, Briefcase, Home, Menu, X, GraduationCap, Settings, User, UserCheck, Info, Bell, ChevronDown, LogOut
 } from "lucide-react";
@@ -7,6 +7,7 @@ import AiTutor from "./AiTutor";
 import OfflineBanner from "./OfflineBanner";
 import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
+import RefreshRateSelector from '@/components/RefreshRateSelector';
 import { useAuth } from "@/lib/AuthContext";
 import { useAccessibility } from '@/lib/AccessibilityContext';
 import { fetchAnnouncements } from "@/api";
@@ -21,8 +22,12 @@ export default function Layout() {
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [resourcesOpen, setResourcesOpen] = useState(false);
+  const [communityOpen, setCommunityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState('');
+  const resourcesRef = useRef(null);
+  const communityRef = useRef(null);
+  const settingsRef = useRef(null);
   const { user, isAuthenticated, logout } = useAuth();
   const { settings } = useAccessibility();
   const isTeacher = user?.role?.toLowerCase() === 'teacher';
@@ -31,13 +36,42 @@ export default function Layout() {
   const hideTopNav = location.pathname.startsWith('/teacher');
   const hideFooter = isTeacher && location.pathname.startsWith('/teacher');
   const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes'].some((path) => location.pathname.startsWith(path));
+  const communityActive = ['/achievements', '/study-groups', '/discussions'].some((path) => location.pathname.startsWith(path));
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const isNotificationsPage = location.pathname === '/notifications';
+  const isTeacherAnnouncementsPage = location.pathname === '/teacher/announcements';
 
   useEffect(() => {
     setResourcesOpen(false);
+    setCommunityOpen(false);
     setSettingsOpen(false);
   }, [location.pathname]);
+
+  useEffect(() => {
+    if (!resourcesOpen && !communityOpen && !settingsOpen) return;
+
+    const handleClickAway = (event) => {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+
+      if (resourcesOpen && resourcesRef.current && !resourcesRef.current.contains(target)) {
+        setResourcesOpen(false);
+      }
+
+      if (communityOpen && communityRef.current && !communityRef.current.contains(target)) {
+        setCommunityOpen(false);
+      }
+
+      if (settingsOpen && settingsRef.current && !settingsRef.current.contains(target)) {
+        setSettingsOpen(false);
+      }
+    };
+
+    window.addEventListener('pointerdown', handleClickAway);
+    return () => {
+      window.removeEventListener('pointerdown', handleClickAway);
+    };
+  }, [resourcesOpen, communityOpen]);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -45,7 +79,7 @@ export default function Layout() {
       return;
     }
 
-    if (isNotificationsPage) {
+    if (isNotificationsPage || isTeacherAnnouncementsPage) {
       setUnreadNotificationCount(0);
       return;
     }
@@ -156,7 +190,7 @@ export default function Layout() {
                   <Home className="h-4 w-4" />
                   Home
                 </Link>
-                <div className="relative">
+                <div className="relative" ref={resourcesRef}>
                   <button
                     type="button"
                     onClick={() => setResourcesOpen((current) => !current)}
@@ -205,6 +239,48 @@ export default function Layout() {
                     </Link>
                   </div>
                 </div>
+                <div className="relative" ref={communityRef}>
+                  <button
+                    type="button"
+                    onClick={() => setCommunityOpen((current) => !current)}
+                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      communityActive
+                        ? 'bg-secondary text-secondary-foreground'
+                        : 'text-primary-foreground/80 hover:bg-primary-foreground/10'
+                    }`}
+                  >
+                    <User className="h-4 w-4" />
+                    Community catalog
+                    <ChevronDown className="h-4 w-4" />
+                  </button>
+                  <div
+                    className={`absolute left-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-border bg-primary text-foreground shadow-lg transition-all duration-200 ${
+                      communityOpen ? 'max-h-60 opacity-100 visible' : 'max-h-0 opacity-0 invisible'
+                    }`}
+                  >
+                    <Link
+                      to="/achievements"
+                      onClick={() => setCommunityOpen(false)}
+                      className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      Achievements
+                    </Link>
+                    <Link
+                      to="/study-groups"
+                      onClick={() => setCommunityOpen(false)}
+                      className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      Study Groups
+                    </Link>
+                    <Link
+                      to="/discussions"
+                      onClick={() => setCommunityOpen(false)}
+                      className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      Discussions
+                    </Link>
+                  </div>
+                </div>
                 {navItems
                   .filter((item) => (!item.authRequired || isAuthenticated) && (!item.guestOnly || !isAuthenticated))
                   .map(({ path, label, icon: Icon }) => (
@@ -234,7 +310,7 @@ export default function Layout() {
                 </Link>
                 <ThemeToggle />
                 {isAuthenticated && (
-                  <div className="relative">
+                  <div className="relative" ref={settingsRef}>
                     <button
                       type="button"
                       onClick={() => setSettingsOpen((current) => !current)}
@@ -274,6 +350,9 @@ export default function Layout() {
                       >
                         Accessibility
                       </Link>
+                      <div className="px-4 py-3 border-t border-primary-foreground/10">
+                        <RefreshRateSelector />
+                      </div>
                       <button
                         type="button"
                         onClick={async () => {
@@ -369,6 +448,30 @@ export default function Layout() {
                     Quizzes
                   </Link>
                 </div>
+                <div className="mt-4 border-t border-primary-foreground/20 pt-4">
+                  <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/70 mb-2">Community catalog</p>
+                  <Link
+                    to="/achievements"
+                    onClick={closeMenu}
+                    className={`block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/achievements' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
+                  >
+                    Achievements
+                  </Link>
+                  <Link
+                    to="/study-groups"
+                    onClick={closeMenu}
+                    className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/study-groups' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
+                  >
+                    Study Groups
+                  </Link>
+                  <Link
+                    to="/discussions"
+                    onClick={closeMenu}
+                    className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/discussions' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
+                  >
+                    Discussions
+                  </Link>
+                </div>
                 {isAuthenticated && (
                   <div className="mt-4 border-t border-primary-foreground/20 pt-4">
                     <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/70 mb-2">Settings</p>
@@ -400,6 +503,9 @@ export default function Layout() {
                     >
                       Accessibility
                     </Link>
+                    <div className="mt-4 rounded-2xl border border-border bg-primary px-3 py-3">
+                      <RefreshRateSelector />
+                    </div>
                     <button
                       type="button"
                       onClick={async () => {
@@ -407,7 +513,7 @@ export default function Layout() {
                         await logout();
                         window.location.assign('/');
                       }}
-                      className="mt-1 w-full rounded-lg px-3 py-3 text-left text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10"
+                      className="mt-3 w-full rounded-lg px-3 py-3 text-left text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10"
                     >
                       Logout
                     </button>

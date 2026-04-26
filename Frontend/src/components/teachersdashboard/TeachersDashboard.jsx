@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
+import { useRefreshRate } from '@/lib/RefreshRateContext';
 import { fetchStudyNotes, fetchPastPapers, fetchTutorials, fetchQuizzes } from '@/api';
 import { filterByTeacher } from './teacherUtils';
 import TeacherSidebar from '@/components/teacher/TeacherSidebar';
@@ -9,14 +10,19 @@ import TeachersTopBar from '@/components/teacher/TeachersTopBar';
 
 export default function TeachersDashboard() {
   const { user } = useAuth();
+  const { refreshSeconds } = useRefreshRate();
   const [loading, setLoading] = useState(true);
   const [counts, setCounts] = useState({ notes: 0, papers: 0, tutorials: 0, quizzes: 0 });
   const [statuses, setStatuses] = useState({ pending: 0, approved: 0, rejected: 0 });
 
-  useEffect(() => {
-    const load = async () => {
+  const loadCounts = useCallback(async ({ background } = { background: false }) => {
+    if (!background) {
       setLoading(true);
-      const email = user?.email || '';
+    }
+
+    const email = user?.email || '';
+
+    try {
       const [notes, papers, tutorials, quizzes] = await Promise.all([
         fetchStudyNotes({ teacherEmail: email }),
         fetchPastPapers({ teacherEmail: email }),
@@ -47,11 +53,33 @@ export default function TeachersDashboard() {
         approved: all.filter((r) => r?.status === 'approved').length,
         rejected: all.filter((r) => r?.status === 'rejected').length,
       });
-      setLoading(false);
-    };
-
-    load();
+    } finally {
+      if (!background) {
+        setLoading(false);
+      }
+    }
   }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setLoading(false);
+      return;
+    }
+
+    loadCounts();
+  }, [user, loadCounts]);
+
+  useEffect(() => {
+    if (!refreshSeconds || !user) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      loadCounts({ background: true });
+    }, refreshSeconds * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [refreshSeconds, user, loadCounts]);
 
   if (loading) {
     return (

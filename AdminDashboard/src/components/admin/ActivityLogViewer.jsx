@@ -31,7 +31,7 @@ const ACTION_CONFIG = {
 
 const ROLE_COLORS = { student: "bg-blue-100 text-blue-700", teacher: "bg-emerald-100 text-emerald-700", admin: "bg-purple-100 text-purple-700" };
 
-export default function ActivityLogViewer() {
+export default function ActivityLogViewer({ refreshSeconds = 30 }) {
   const [filterAction, setFilterAction] = useState("all");
   const [filterDay, setFilterDay] = useState("all");
   const [expandedDay, setExpandedDay] = useState(null);
@@ -39,10 +39,11 @@ export default function ActivityLogViewer() {
   const [filterRole, setFilterRole] = useState("all");
   const [searchUser, setSearchUser] = useState("");
 
+  const intervalMs = refreshSeconds > 0 ? refreshSeconds * 1000 : false;
   const { data: logs = [], isLoading, refetch, isFetching } = useQuery({
     queryKey: ["activity-logs-admin"],
     queryFn: () => apiClient.entities.ActivityLog.list("-created_date", 500),
-    refetchInterval: 30000,
+    refetchInterval: intervalMs,
   });
 
   const parseLogDate = (value) => {

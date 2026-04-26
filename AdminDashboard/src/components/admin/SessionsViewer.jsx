@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Users, Clock, Activity, Globe } from "lucide-react";
 import { formatDistanceToNow, format, subHours, subMinutes } from "date-fns";
 
-export default function SessionsViewer() {
+export default function SessionsViewer({ refreshSeconds = 15 }) {
+  const intervalMs = refreshSeconds > 0 ? refreshSeconds * 1000 : false;
   const { data: logs = [] } = useQuery({
     queryKey: ["sessions-logs"],
     queryFn: () => apiClient.entities.ActivityLog.list("-created_date", 500),
-    refetchInterval: 15000,
+    refetchInterval: intervalMs,
   });
 
   // Derive active sessions: users with activity in last 30 min

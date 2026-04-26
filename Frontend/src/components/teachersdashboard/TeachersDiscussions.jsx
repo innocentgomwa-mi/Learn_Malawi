@@ -9,18 +9,22 @@
  */
 
 import { useEffect, useState } from 'react';
-import { MessageSquare, Plus, UploadCloud } from 'lucide-react';
-import { fetchDiscussions, createDiscussion } from '@/api';
+import { MessageSquare, Plus, UploadCloud, Send, RefreshCcw } from 'lucide-react';
+import { fetchDiscussions, fetchDiscussion, createDiscussion, addDiscussionComment } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function TeacherDiscussions() {
   const { user } = useAuth();
   const [threads, setThreads] = useState(/** @type {DiscussionThread[]} */ ([]));
+  const [selectedThread, setSelectedThread] = useState(/** @type {DiscussionThread | null} */ (null));
   const [newTitle, setNewTitle] = useState('');
   const [newBody, setNewBody] = useState('');
+  const [commentText, setCommentText] = useState('');
+  const [threadLoading, setThreadLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(/** @type {string | null} */ (null));
+  const [commentError, setCommentError] = useState(/** @type {string | null} */ (null));
 
   const loadThreads = async () => {
     setLoading(true);
@@ -44,6 +48,57 @@ export default function TeacherDiscussions() {
   useEffect(() => {
     loadThreads();
   }, [user?.email]);
+
+  const loadThread = async (id) => {
+    setThreadLoading(true);
+    setCommentError(null);
+
+    try {
+      const response = await fetchDiscussion(id);
+      setSelectedThread(response?.data ?? response ?? null);
+    } catch (fetchError) {
+      setCommentError(fetchError instanceof Error ? fetchError.message : String(fetchError));
+    } finally {
+      setThreadLoading(false);
+    }
+  };
+
+  const handleSelectThread = async (thread) => {
+    setSelectedThread(thread);
+    await loadThread(thread.id);
+  };
+
+  const handleSubmitComment = async (event) => {
+    event.preventDefault();
+    setCommentError(null);
+
+    if (!selectedThread) {
+      setCommentError('Select a discussion thread first.');
+      return;
+    }
+
+    if (!commentText.trim()) {
+      setCommentError('Please enter a comment to reply.');
+      return;
+    }
+
+    if (!user?.email) {
+      setCommentError('You need to be signed in to reply.');
+      return;
+    }
+
+    try {
+      await addDiscussionComment(selectedThread.id, {
+        author: user.full_name || user.email.split('@')[0],
+        message: commentText.trim(),
+      });
+      setCommentText('');
+      await loadThread(selectedThread.id);
+      await loadThreads();
+    } catch (submitError) {
+      setCommentError(submitError instanceof Error ? submitError.message : String(submitError));
+    }
+  };
 
   const handleCreateThread = async () => {
     if (!newTitle.trim() || !newBody.trim()) {
@@ -168,23 +223,103 @@ export default function TeacherDiscussions() {
                 <p className="text-sm">Create the first thread to start the conversation.</p>
               </div>
             ) : (
-              <ul className="space-y-4">
+              <ul className="space-y-3">
                 {threads.map((thread) => (
-                  <li key={thread.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                      <div>
-                        <h3 className="text-base font-semibold">{thread.title}</h3>
-                        <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{thread.comments?.length ?? 0} comments</p>
+                  <li key={thread.id}>
+                    <button
+                      type="button"
+                      onClick={() => handleSelectThread(thread)}
+                      className={`w-full rounded-2xl border px-4 py-4 text-left transition ${selectedThread?.id === thread.id ? 'border-blue-500 bg-blue-50' : 'border-slate-200 bg-white hover:border-slate-400'}`}
+                    >
+                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <h3 className="text-base font-semibold text-slate-900">{thread.title}</h3>
+                          <p className="text-xs uppercase tracking-[0.2em] text-slate-500">{thread.comments?.length ?? 0} comments</p>
+                        </div>
+                        <span className="text-xs text-slate-500">{new Date(thread.createdAt).toLocaleDateString()}</span>
                       </div>
-                      <span className="text-xs text-slate-500">{new Date(thread.createdAt).toLocaleDateString()}</span>
-                    </div>
-                    <p className="mt-3 text-sm leading-6 text-slate-700">{thread.body}</p>
+                      <p className="mt-3 text-sm leading-6 text-slate-700 line-clamp-3">{thread.body}</p>
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
           </div>
         </section>
+
+        <aside className="space-y-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Selected discussion</h2>
+                <p className="text-sm text-slate-500">Open a thread to review comments and reply.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => selectedThread && loadThread(selectedThread.id)}
+                disabled={!selectedThread}
+                className="inline-flex items-center rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <RefreshCcw className="mr-2 h-4 w-4" />
+                Refresh
+              </button>
+            </div>
+
+            {selectedThread ? (
+              <div className="space-y-4">
+                <div>
+                  <h3 className="text-xl font-semibold text-slate-900">{selectedThread.title}</h3>
+                  <p className="text-sm text-slate-500">Posted on {new Date(selectedThread.createdAt).toLocaleDateString()}</p>
+                </div>
+                <div className="rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-700">{selectedThread.body}</div>
+                <div className="space-y-3">
+                  {(selectedThread.comments || []).length === 0 ? (
+                    <div className="rounded-2xl bg-slate-100 p-4 text-sm text-slate-500">No replies yet.</div>
+                  ) : (
+                    (selectedThread.comments || []).map((comment, index) => (
+                      <div key={`${selectedThread.id}-${index}`} className="rounded-2xl bg-slate-50 p-4 text-sm text-slate-800">
+                        <div className="mb-2 flex items-center justify-between gap-2 text-xs text-slate-500">
+                          <span>{comment.author}</span>
+                          <span>{new Date(comment.createdAt).toLocaleString()}</span>
+                        </div>
+                        <p>{comment.message}</p>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-2xl bg-slate-50 p-8 text-center text-sm text-slate-500">Select a discussion thread from the list to view details.</div>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmitComment} className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="mb-4 flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Reply to discussion</h2>
+                <p className="text-sm text-slate-500">Write an answer or respond to student questions.</p>
+              </div>
+              <MessageSquare className="h-5 w-5 text-slate-500" />
+            </div>
+            <textarea
+              value={commentText}
+              onChange={(event) => setCommentText(event.target.value)}
+              rows={4}
+              placeholder={selectedThread ? 'Write your response...' : 'Select a discussion first.'}
+              disabled={!selectedThread}
+              className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
+            />
+            {commentError ? <p className="mt-3 text-sm text-red-600">{commentError}</p> : null}
+            <button
+              type="submit"
+              disabled={!selectedThread || !commentText.trim()}
+              className="mt-4 inline-flex items-center justify-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Send className="mr-2 h-4 w-4" />
+              Post reply
+            </button>
+          </form>
+        </aside>
       </div>
     </div>
   );
