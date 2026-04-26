@@ -118,6 +118,7 @@ async function request(path, options = {}) {
     return response.status === 204 ? null : parseJsonResponse(response);
   }
 
+  const errorData = await parseJsonResponse(response);
   if (response.status === 401 && path !== '/auth/refresh') {
     const refreshToken = getStoredRefreshToken();
     if (refreshToken) {
@@ -140,8 +141,16 @@ async function request(path, options = {}) {
     }
   }
 
-  const message = await response.text();
-  throw new Error(`API request failed (${response.status}): ${message}`);
+  let errorMessage = response.statusText;
+  if (errorData) {
+    if (typeof errorData === 'object') {
+      errorMessage = errorData.message || JSON.stringify(errorData);
+    } else {
+      errorMessage = String(errorData);
+    }
+  }
+
+  throw new Error(`API request failed (${response.status}): ${errorMessage}`);
 }
 
 /**
@@ -248,6 +257,37 @@ export function fetchStudyNotes({ level, subject, search, teacherEmail } = {}) {
   if (teacherEmail) params.set('teacher_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/study-notes${query}`);
+}
+
+export function fetchStudyGroups({ level, subject } = {}) {
+  const params = new URLSearchParams();
+  if (level && level !== 'All') params.set('level', level);
+  if (subject) params.set('subject', subject);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/study-groups${query}`);
+}
+
+export function fetchStudyGroupMessages({ groupId } = {}) {
+  const params = new URLSearchParams();
+  if (groupId) params.set('group_id', groupId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/study-group-messages${query}`);
+}
+
+export function createStudyGroupMessage(data) {
+  return request('/study-group-messages', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateStudyGroup(id, data) {
+  return request(`/study-groups/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function deleteStudyGroup(id) {
+  return request(`/study-groups/${id}`, { method: 'DELETE' });
+}
+
+export function createStudyGroup(data) {
+  return request('/study-groups', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export function fetchPastPapers({ teacherEmail, level, subject, year, search, page, limit } = {}) {

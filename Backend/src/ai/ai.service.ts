@@ -23,33 +23,38 @@ export class AiService {
       );
     }
 
-    const response = await fetch(
-      `https://api.router.huggingface.co/models/${this.model}`,
-      {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inputs: prompt,
-          options: {
-            wait_for_model: true,
+    let response;
+    try {
+      response = await fetch(
+        `https://api.router.huggingface.co/models/${this.model}`,
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
           },
-        }),
-      },
-    );
+          body: JSON.stringify({
+            inputs: prompt,
+            options: {
+              wait_for_model: true,
+            },
+          }),
+        },
+      );
+    } catch (error) {
+      console.error('Hugging Face request error:', error);
+      return 'Sorry, the AI tutor is unavailable right now. Please try again later.';
+    }
 
     const responseBody = await response.text();
 
     if (!response.ok) {
-      throw new InternalServerErrorException(
-        `Hugging Face request failed: ${response.status} ${responseBody}`,
-      );
+      console.error('Hugging Face request failed:', response.status, responseBody);
+      return 'Sorry, the AI tutor is unavailable right now. Please try again later.';
     }
 
     const parsedText = this.parseResponse(responseBody);
-    return parsedText ?? responseBody.trim();
+    return (parsedText ?? responseBody.trim()) || 'Sorry, the AI tutor is unavailable right now. Please try again later.';
   }
 
   async generateQuiz(note: {

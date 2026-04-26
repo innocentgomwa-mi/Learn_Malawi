@@ -22,6 +22,16 @@ export class RegisterDto {
   @MinLength(6)
   password: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(150)
+  school?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['PSLC', 'JCE', 'MSCE'])
+  level?: string;
+
   @Transform(({ value }) => {
     if (typeof value !== 'string') return value;
     const normalized = value.trim().toLowerCase();

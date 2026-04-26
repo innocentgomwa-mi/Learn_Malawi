@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { fetchAnnouncements, createAnnouncement } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
+import { markNotificationsAsRead } from '@/lib/notificationStorage';
 
 export default function TeacherAnnouncements() {
   const { user } = useAuth();
@@ -19,8 +20,13 @@ export default function TeacherAnnouncements() {
     setError(null);
 
     try {
-      const response = await fetchAnnouncements({ teacherEmail: user?.email, published: true });
-      setAnnouncements(Array.isArray(response) ? response : []);
+      const response = await fetchAnnouncements({ published: true });
+      const announcementsList = Array.isArray(response) ? response : [];
+      const filtered = announcementsList.filter((announcement) => {
+        const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+        return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+      });
+      setAnnouncements(filtered);
     } catch (fetchError) {
       setError(fetchError.message ?? 'Unable to load announcements.');
     } finally {
@@ -29,9 +35,23 @@ export default function TeacherAnnouncements() {
   };
 
   useEffect(() => {
-    if (user?.email) {
-      loadAnnouncements();
-    }
+    if (!user?.email) return;
+
+    const loadAndMark = async () => {
+      const response = await fetchAnnouncements({ published: true });
+      const announcementsList = Array.isArray(response) ? response : [];
+      const filtered = announcementsList.filter((announcement) => {
+        const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+        return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+      });
+      await loadAnnouncements();
+      const announcementIds = filtered.filter((item) => item?.id).map((item) => item.id);
+      if (announcementIds.length > 0) {
+        markNotificationsAsRead(user.email, announcementIds);
+      }
+    };
+
+    loadAndMark();
   }, [user?.email]);
 
   const handleCreateAnnouncement = async () => {

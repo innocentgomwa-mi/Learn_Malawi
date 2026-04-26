@@ -2,20 +2,25 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { Bell, Calendar, Megaphone } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { useRefreshRate } from '@/lib/RefreshRateContext';
 import { fetchAnnouncements } from '@/api';
 import { markNotificationsAsRead } from '@/lib/notificationStorage';
 
 export default function Notifications() {
   const { user, isAuthenticated } = useAuth();
+  const { refreshSeconds } = useRefreshRate();
   const location = useLocation();
   const [announcements, setAnnouncements] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [lastRefreshed, setLastRefreshed] = useState(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
       return;
     }
+
+    let active = true;
 
     const load = async () => {
       setLoading(true);
@@ -23,16 +28,42 @@ export default function Notifications() {
 
       try {
         const response = await fetchAnnouncements({ published: true });
+        if (!active) return;
         setAnnouncements(Array.isArray(response) ? response : []);
       } catch (fetchError) {
+        if (!active) return;
         setError(fetchError.message ?? 'Unable to load notifications.');
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+          setLastRefreshed(new Date());
+        }
       }
     };
 
     load();
+    return () => {
+      active = false;
+    };
   }, [isAuthenticated]);
+
+  useEffect(() => {
+    if (!refreshSeconds || !isAuthenticated) {
+      return;
+    }
+
+    const intervalId = setInterval(async () => {
+      try {
+        const response = await fetchAnnouncements({ published: true });
+        setAnnouncements(Array.isArray(response) ? response : []);
+        setLastRefreshed(new Date());
+      } catch (error) {
+        // keep existing announcements if refresh fails
+      }
+    }, refreshSeconds * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [refreshSeconds, isAuthenticated]);
 
   if (!isAuthenticated) {
     return <Navigate to="/login" state={{ from: location }} replace />;
@@ -69,6 +100,11 @@ export default function Notifications() {
           <p className="mt-2 text-sm text-muted-foreground max-w-2xl">
             Stay informed with the latest published announcements from administrators and teachers.
           </p>
+          {lastRefreshed && (
+            <p className="mt-3 text-xs text-muted-foreground">
+              Last refreshed at {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
+            </p>
+          )}
         </div>
         <Link
           to="/"

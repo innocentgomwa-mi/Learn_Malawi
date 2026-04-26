@@ -41,7 +41,7 @@ const SECTIONS = [
   {
     group: "Content",
     items: [
-      { id: "approvals", label: "Post Approvals", icon: ClipboardCheck },
+      { id: "approvals", label: "Published Resources", icon: BookOpen },
       { id: "announcements", label: "Announcements", icon: Megaphone },
     ]
   },

@@ -11,8 +11,15 @@ export class AiController {
   @Public()
   @Post('chat')
   async chat(@Body() createAiRequestDto: CreateAiRequestDto) {
-    const text = await this.aiService.generateResponse(createAiRequestDto.prompt);
-    return { text };
+    try {
+      const text = await this.aiService.generateResponse(createAiRequestDto.prompt);
+      return { text };
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      return {
+        text: 'Sorry, the AI tutor is unavailable right now. Please try again later.',
+      };
+    }
   }
 
   @Public()

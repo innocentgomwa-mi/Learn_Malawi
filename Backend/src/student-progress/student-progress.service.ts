@@ -30,6 +30,16 @@ export class StudentProgressService {
       });
     }
 
+    if (!entry && student_email && entry_type === 'quiz' && createStudentProgressDto.quiz_id) {
+      entry = await this.studentProgressRepository.findOne({
+        where: {
+          student_email,
+          entry_type,
+          quiz_id: createStudentProgressDto.quiz_id,
+        },
+      });
+    }
+
     if (entry) {
       Object.assign(entry, createStudentProgressDto);
       return this.studentProgressRepository.save(entry);
