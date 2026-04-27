@@ -259,10 +259,11 @@ export function fetchStudyNotes({ level, subject, search, teacherEmail } = {}) {
   return request(`/study-notes${query}`);
 }
 
-export function fetchStudyGroups({ level, subject } = {}) {
+export function fetchStudyGroups({ level, subject, teacherEmail } = {}) {
   const params = new URLSearchParams();
   if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
+  if (teacherEmail) params.set('mentor_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/study-groups${query}`);
 }

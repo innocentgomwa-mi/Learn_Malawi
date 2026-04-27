@@ -49,4 +49,10 @@ export class UpdateStudyGroupDto {
   @ArrayUnique()
   @IsOptional()
   members?: string[];
+
+  @ApiPropertyOptional({ example: ['student1@example.com'] })
+  @IsArray()
+  @ArrayUnique()
+  @IsOptional()
+  banned_members?: string[];
 }

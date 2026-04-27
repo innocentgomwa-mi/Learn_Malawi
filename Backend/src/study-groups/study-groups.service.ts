@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StudyGroup } from './entities/study-group.entity';
@@ -21,7 +21,7 @@ export class StudyGroupsService {
     return this.studyGroupRepository.save(studyGroup);
   }
 
-  async findAll(level?: string, subject?: string): Promise<StudyGroup[]> {
+  async findAll(level?: string, subject?: string, mentorEmail?: string): Promise<StudyGroup[]> {
     const query = this.studyGroupRepository.createQueryBuilder('studyGroup');
 
     if (level && level !== 'All') {
@@ -30,6 +30,10 @@ export class StudyGroupsService {
 
     if (subject) {
       query.andWhere('studyGroup.subject ILIKE :subject', { subject: `%${subject}%` });
+    }
+
+    if (mentorEmail) {
+      query.andWhere('studyGroup.mentor_email = :mentorEmail', { mentorEmail });
     }
 
     return query.orderBy('studyGroup.createdDate', 'DESC').getMany();
@@ -56,6 +60,15 @@ export class StudyGroupsService {
 
   async createMessage(createStudyGroupMessageDto: CreateStudyGroupMessageDto): Promise<StudyGroupMessage> {
     const studyGroup = await this.findOne(createStudyGroupMessageDto.group_id);
+    const authorEmail = createStudyGroupMessageDto.author_email;
+    const isMentor = studyGroup.mentor_email === authorEmail;
+    const isMember = (studyGroup.members || []).includes(authorEmail);
+    const isBanned = (studyGroup.banned_members || []).includes(authorEmail);
+
+    if (!isMentor && (!isMember || isBanned)) {
+      throw new ForbiddenException('You are not allowed to send messages in this study group.');
+    }
+
     const message = this.studyGroupMessageRepository.create({
       ...createStudyGroupMessageDto,
       group: studyGroup,

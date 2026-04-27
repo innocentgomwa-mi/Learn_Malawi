@@ -7,6 +7,7 @@
  *   description?: string;
  *   scheduled_at?: string;
  *   members?: string[];
+ *   banned_members?: string[];
  *   mentor_email?: string;
  * }} StudyGroup
  *
@@ -99,6 +100,13 @@ export default function StudyGroups() {
   const joinGroup = async (group) => {
     if (!user?.email) return;
     const members = group.members || [];
+    const banned = group.banned_members || [];
+    if (banned.includes(user.email)) {
+      alert('You have been removed from this group and cannot rejoin.');
+      setActiveGroup(group);
+      return;
+    }
+
     if (!members.includes(user.email)) {
       const updated = await updateStudyGroup(group.id, { members: [...members, user.email] });
       setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
@@ -112,6 +120,15 @@ export default function StudyGroups() {
   const sendMessage = async (e) => {
     e.preventDefault();
     if (!msgText.trim() || !activeGroup || !user?.email) return;
+
+    const isMentor = activeGroup.mentor_email === user?.email;
+    const isMember = (activeGroup.members || []).includes(user.email);
+    const isBanned = (activeGroup.banned_members || []).includes(user.email);
+
+    if (!isMentor && (!isMember || isBanned)) {
+      alert('You no longer have permission to post in this study group.');
+      return;
+    }
 
     setSending(true);
     try {
@@ -138,6 +155,10 @@ export default function StudyGroups() {
 
   if (activeGroup) {
     const isMentor = activeGroup.mentor_email === user?.email;
+    const isMember = (activeGroup.members || []).includes(user?.email ?? '');
+    const isBanned = (activeGroup.banned_members || []).includes(user?.email ?? '');
+    const allowedToSend = isMentor || isMember;
+
     return (
       <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col h-[80vh]">
         <div className="flex items-center gap-3 mb-4">
@@ -146,12 +167,21 @@ export default function StudyGroups() {
           </button>
           <div>
             <h2 className="font-poppins font-bold text-foreground">{activeGroup.name}</h2>
-            <p className="text-xs text-muted-foreground">{activeGroup.subject} · {activeGroup.level} · {(activeGroup.members || []).length} members {isMentor && "· You are the mentor"}</p>
+            <p className="text-xs text-muted-foreground">
+              {activeGroup.subject} · {activeGroup.level} · {(activeGroup.members || []).length} members {isMentor && "· You are the mentor"}
+              {isBanned && !isMentor && " · You were removed from this group"}
+            </p>
           </div>
         </div>
 
         <div className="flex-1 bg-card border border-border rounded-2xl overflow-hidden flex flex-col">
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
+            {isBanned && !isMentor && (
+              <div className="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+                You were removed from this group and can no longer send messages here.
+              </div>
+            )}
+
             {messages.length === 0 && (
               <p className="text-center text-muted-foreground text-sm py-10">No messages yet. Start the conversation!</p>
             )}
@@ -179,9 +209,10 @@ export default function StudyGroups() {
               value={msgText}
               onChange={e => setMsgText(e.target.value)}
               placeholder="Type a message…"
-              className="flex-1 bg-muted rounded-xl px-4 py-2 text-sm outline-none text-foreground"
+              disabled={!allowedToSend}
+              className="flex-1 bg-muted rounded-xl px-4 py-2 text-sm outline-none text-foreground disabled:cursor-not-allowed disabled:opacity-60"
             />
-            <button type="submit" disabled={sending || !msgText.trim()}
+            <button type="submit" disabled={sending || !msgText.trim() || !allowedToSend}
               className="p-2.5 bg-primary text-primary-foreground rounded-xl hover:opacity-90 disabled:opacity-40 transition-opacity">
               <Send className="h-4 w-4" />
             </button>

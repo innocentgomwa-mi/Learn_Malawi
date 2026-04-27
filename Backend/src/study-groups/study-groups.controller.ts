@@ -18,8 +18,9 @@ export class StudyGroupsController {
   findAll(
     @Query('level') level?: string,
     @Query('subject') subject?: string,
+    @Query('mentor_email') mentorEmail?: string,
   ) {
-    return this.studyGroupsService.findAll(level, subject);
+    return this.studyGroupsService.findAll(level, subject, mentorEmail);
   }
 
   @Get(':id')
