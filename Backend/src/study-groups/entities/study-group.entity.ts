@@ -29,6 +29,9 @@ export class StudyGroup {
   @Column('text', { array: true, default: [] })
   members: string[];
 
+  @Column('text', { array: true, default: [] })
+  banned_members: string[];
+
   @CreateDateColumn({ name: 'created_date' })
   createdDate: Date;
 
