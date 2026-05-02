@@ -75,7 +75,7 @@ export default function StudyNotesAdmin() {
                   <td className="px-4 py-3 text-muted-foreground">{n.subject}</td>
                   <td className="px-4 py-3 text-muted-foreground">{n.level}</td>
                   <td className="px-4 py-3 text-muted-foreground">{n.grade || '—'}</td>
-                  <td className="px-4 py-3"><StatusBadge status={n.status || 'pending'} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={n.status || 'published'} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => setModal({ open: true, existing: n })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">

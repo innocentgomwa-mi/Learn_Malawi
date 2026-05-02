@@ -14,7 +14,8 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: () => apiClient.entities.Student.list(), refetchInterval: intervalMs });
   const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => apiClient.entities.Announcement.list({ published: true }), refetchInterval: intervalMs });
 
-  const publishedResourceCount = (Array.isArray(studyNotes) ? studyNotes.length : 0)
+  const publishedResourceCount = (Array.isArray(posts) ? posts.length : 0)
+    + (Array.isArray(studyNotes) ? studyNotes.length : 0)
     + (Array.isArray(tutorials) ? tutorials.length : 0)
     + (Array.isArray(pastPapers) ? pastPapers.length : 0);
 
@@ -25,7 +26,28 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
     { label: "Published Resources", value: publishedResourceCount, icon: BookOpen, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
   ];
 
-  const recentPosts = posts.slice(0, 5);
+  const normalizeUpload = (item, resourceType) => {
+    const uploadedAt = item.created_date ?? item.createdDate ?? item.createdAt;
+    return {
+      id: `${resourceType}-${item.id}`,
+      title: item.title || item.name || `${resourceType} upload`,
+      subject: item.subject || item.resource_subject || 'General',
+      level: item.level || item.grade || 'All levels',
+      author: item.author_name || item.teacher_name || item.author_email || item.teacher_email || 'Teacher',
+      uploadedAt,
+      resourceType,
+      sortDate: new Date(uploadedAt || Date.now()).getTime(),
+    };
+  };
+
+  const recentUploads = [
+    ...(Array.isArray(posts) ? posts.map((post) => normalizeUpload(post, 'Teacher Post')) : []),
+    ...(Array.isArray(studyNotes) ? studyNotes.map((note) => normalizeUpload(note, 'Study Note')) : []),
+    ...(Array.isArray(tutorials) ? tutorials.map((tutorial) => normalizeUpload(tutorial, 'Tutorial')) : []),
+    ...(Array.isArray(pastPapers) ? pastPapers.map((paper) => normalizeUpload(paper, 'Past Paper')) : []),
+  ]
+    .sort((a, b) => b.sortDate - a.sortDate)
+    .slice(0, 5);
 
   return (
     <div className="space-y-6">
@@ -90,32 +112,25 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
             <CardTitle className="text-base font-semibold text-gray-800">Latest Teacher Uploads</CardTitle>
           </CardHeader>
           <CardContent>
-            {recentPosts.length === 0 ? (
+            {recentUploads.length === 0 ? (
               <p className="text-sm text-gray-400 text-center py-4">No recent uploads yet</p>
             ) : (
               <div className="space-y-3">
-                {recentPosts.map(post => {
-                  const author = post.author_name || post.author_email || 'Teacher';
-                  const uploadedAt = post.createdDate ?? post.created_date;
-                  const uploadedLabel = uploadedAt ? new Date(uploadedAt).toLocaleDateString() : null;
-                  const resourceType = post.content_type || post.type || 'Resource';
-
-                  return (
-                    <div key={post.id} className="flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-slate-900 truncate">{post.title}</p>
-                          <p className="text-xs text-slate-500 truncate">{post.subject || 'General'} · {post.level || 'All levels'}</p>
-                        </div>
-                        {uploadedLabel && <span className="text-xs text-slate-400">{uploadedLabel}</span>}
+                {recentUploads.map(upload => (
+                  <div key={upload.id} className="flex flex-col gap-2 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold text-slate-900 truncate">{upload.title}</p>
+                        <p className="text-xs text-slate-500 truncate">{upload.subject || 'General'} · {upload.level || 'All levels'}</p>
                       </div>
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-                        <span className="rounded-full bg-white px-2 py-1 border border-slate-200">{resourceType}</span>
-                        <span className="rounded-full bg-white px-2 py-1 border border-slate-200">{author}</span>
-                      </div>
+                      {upload.uploadedAt && <span className="text-xs text-slate-400">{new Date(upload.uploadedAt).toLocaleDateString()}</span>}
                     </div>
-                  );
-                })}
+                    <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                      <span className="rounded-full bg-white px-2 py-1 border border-slate-200">{upload.resourceType}</span>
+                      <span className="rounded-full bg-white px-2 py-1 border border-slate-200">{upload.author}</span>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>

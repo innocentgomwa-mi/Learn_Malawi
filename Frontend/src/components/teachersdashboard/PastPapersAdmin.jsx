@@ -94,7 +94,7 @@ export default function TeacherPastPapers() {
                     <span className="bg-purple-100 text-purple-700 text-xs font-medium px-2.5 py-0.5 rounded-full">{p.level}</span>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{p.markingSchemeUrl ? '✓ Yes' : '—'}</td>
-                  <td className="px-4 py-3"><StatusBadge status={p.status || 'pending'} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={p.status || 'published'} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => setModal({ open: true, existing: p })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">

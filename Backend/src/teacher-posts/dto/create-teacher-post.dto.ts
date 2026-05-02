@@ -23,9 +23,9 @@ export class CreateTeacherPostDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ required: false, default: 'pending' })
+  @ApiProperty({ required: false, default: 'published' })
   @IsOptional()
-  @IsIn(['pending', 'approved', 'rejected'])
+  @IsIn(['pending', 'approved', 'rejected', 'published'])
   status?: string;
 
   @ApiProperty({ required: false })

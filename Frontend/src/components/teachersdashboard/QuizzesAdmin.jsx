@@ -83,7 +83,7 @@ export default function QuizzesAdmin() {
                   <p className="font-semibold text-sm truncate">{q.title}</p>
                   <p className="text-xs text-muted-foreground">{q.subject} · {q.class || q.class_level || '—'} · {(q.questions?.length ?? q.total_questions ?? 0)} questions</p>
                 </div>
-                <StatusBadge status={q.status || 'pending'} />
+                <StatusBadge status={q.status || 'published'} />
                 <div className="flex items-center gap-1.5">
                   <button onClick={() => setModal({ open: true, existing: q })} className="p-1.5 rounded hover:bg-muted text-muted-foreground transition-colors">
                     <Pencil className="w-4 h-4" />

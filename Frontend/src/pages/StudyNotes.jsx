@@ -1,6 +1,7 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
 import { useAuth } from "@/lib/AuthContext";
 import { fetchStudyNotes, fetchStudentProgress, recordStudentProgress } from "@/api";
 import { loadUserProgress, saveUserProgress } from "@/lib/dashboardStorage";
@@ -125,9 +126,16 @@ export default function StudyNotes() {
     };
   }, []);
 
+  const [searchParams] = useSearchParams();
+  const subjectFilter = searchParams.get('subject') || '';
+
   const { data: notes = [], isLoading: loading } = useQuery({
-    queryKey: ['studyNotes', level, search],
-    queryFn: () => fetchStudyNotes({ level: level === 'All' ? undefined : level, search }),
+    queryKey: ['studyNotes', level, search, subjectFilter],
+    queryFn: () => fetchStudyNotes({
+      level: level === 'All' ? undefined : level,
+      subject: subjectFilter || undefined,
+      search,
+    }),
     staleTime: 1000 * 60,
     retry: 1,
     enabled: isAuthenticated && isDeviceOnline,
@@ -188,16 +196,11 @@ export default function StudyNotes() {
   const filtered = notesToDisplay.filter((n) => {
     const matchLevel = level === "All" || n.level === level;
     const matchSearch = !search || n.title.toLowerCase().includes(search.toLowerCase()) || n.subject?.toLowerCase().includes(search.toLowerCase());
-    return matchLevel && matchSearch;
+    const matchSubject = !subjectFilter || n.subject?.toLowerCase().includes(subjectFilter.toLowerCase());
+    return matchLevel && matchSearch && matchSubject;
   });
 
-  // Group by subject
-  const grouped = filtered.reduce((acc, note) => {
-    const key = note.subject || "General";
-    if (!acc[key]) acc[key] = [];
-    acc[key].push(note);
-    return acc;
-  }, {});
+  const notesToRender = filtered;
 
   if (selected) {
     return (
@@ -317,50 +320,49 @@ export default function StudyNotes() {
           <p className="text-muted-foreground text-sm mt-1">Content will be added soon. Check back later!</p>
         </div>
       ) : (
-        <div className="space-y-8">
-          {Object.entries(grouped).map(([subject, subjectNotes]) => (
-            <div key={subject}>
-              <h2 className="font-poppins font-bold text-lg text-foreground mb-3 flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-primary rounded-full inline-block" />
-                {subject}
-              </h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                {subjectNotes.map((note) => {
-                  const completed = progress[note.id]?.completed;
-                  return (
-                    <div
-                      key={note.id}
-                      onClick={() => setSelected(note)}
-                      className="group overflow-hidden rounded-[1.5rem] border border-slate-200 bg-white shadow-sm transition-transform duration-300 hover:-translate-y-1 hover:shadow-xl cursor-pointer"
-                    >
-                      <div className="relative h-52 overflow-hidden" style={getCoverStyle(note)}>
-                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/85 via-slate-950/35 to-transparent" />
-                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.15),_transparent_40%)]" />
-                        <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(15,23,42,0.75))]" />
-                        <div className="absolute left-4 top-4 flex flex-col gap-2">
-                          {note.topic && (
-                            <span className="inline-flex rounded-full bg-white/85 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900 shadow-sm">
-                              {note.topic}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {notesToRender.map((note) => {
+            const completed = progress[note.id]?.completed;
+            return (
+              <div
+                key={note.id}
+                onClick={() => setSelected(note)}
+                className="group cursor-pointer flex flex-col basis-full overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_-25px_rgba(15,23,42,0.4)]"
+              >
+                      <div className="relative h-56 overflow-hidden" style={getCoverStyle(note)}>
+                        <div className="absolute inset-0 bg-slate-950/20" />
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.12),_transparent_35%)]" />
+                        <div className="absolute inset-x-0 bottom-0 p-5">
+                          <div className="flex flex-wrap items-center gap-2 mb-3">
+                            <span className="inline-flex rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-900 shadow-sm">
+                              {note.level || "N/A"}
                             </span>
-                          )}
-                        </div>
-                        <div className="absolute right-4 top-4 inline-flex items-center gap-2 rounded-full bg-white/90 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-900 shadow-sm">
-                          <span>{note.level || "N/A"}</span>
-                        </div>
-                        <div className="absolute inset-x-0 bottom-0 p-4 text-white">
-                          <h3 className="text-lg font-semibold leading-tight max-h-[3.2rem] overflow-hidden">{note.title}</h3>
+                            {note.topic && (
+                              <span className="inline-flex rounded-full bg-slate-900/80 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-white shadow-sm">
+                                {note.topic}
+                              </span>
+                            )}
+                            {completed && (
+                              <span className="inline-flex rounded-full bg-emerald-500/90 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white shadow-sm">
+                                Completed
+                              </span>
+                            )}
+                          </div>
+                          <h3 className="text-xl font-semibold text-white leading-tight" style={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{note.title}</h3>
                         </div>
                       </div>
-                      <div className="p-5 bg-white">
-                        <div className="flex items-center justify-between gap-3 mb-3">
-                          <div className="flex items-center gap-2 text-xs text-slate-500">
-                            <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-700">{note.grade || "General"}</span>
-                            <span>{note.fileUrl ? "Downloadable" : "Read online"}</span>
-                          </div>
+                      <div className="p-5">
+                        <div className="flex flex-wrap items-center gap-2 mb-4 text-xs text-slate-500">
+                          <span className="rounded-full border border-slate-200 px-2.5 py-1 font-semibold text-slate-700 bg-slate-50">{note.subject || 'General'}</span>
+                          <span className="rounded-full border border-slate-200 px-2.5 py-1 text-slate-500">{note.grade || 'All grades'}</span>
                         </div>
-                        <p className="text-sm text-slate-600 mb-4 leading-6">{truncateSummary(note.summary || note.content)}</p>
+                        <p className="text-sm text-slate-600 mb-5 leading-6" style={{ display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{truncateSummary(note.summary || note.content)}</p>
                         <div className="flex items-center justify-between gap-3">
-                          <span className="text-xs uppercase tracking-[0.16em] text-emerald-600 transition-colors group-hover:text-slate-900">View details →</span>
+                          <div className="flex items-center gap-2 text-[13px] font-semibold text-slate-700 uppercase tracking-[0.18em]">
+                            <span className={`inline-flex rounded-full px-2.5 py-1 ${note.fileUrl ? 'bg-emerald-50 text-emerald-700' : 'bg-slate-100 text-slate-700'}`}>
+                              {note.fileUrl ? 'Downloadable' : 'Read online'}
+                            </span>
+                          </div>
                           <div onClick={(event) => event.stopPropagation()}>
                             <SaveOfflineButton
                               isSaved={isSavedNote(note.id)}
@@ -373,9 +375,6 @@ export default function StudyNotes() {
                     </div>
                   );
                 })}
-              </div>
-            </div>
-          ))}
         </div>
       )}
     </div>

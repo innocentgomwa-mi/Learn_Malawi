@@ -13,9 +13,9 @@ const resourceCards = [
 ];
 
 const statusCards = [
-  { label: 'Pending Review', key: 'pending', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-  { label: 'Approved', key: 'approved', icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
-  { label: 'Rejected', key: 'rejected', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
+  { label: 'Drafts', key: 'pending', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
+  { label: 'Published', key: 'published', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+  { label: 'Removed', key: 'rejected', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
 ];
 
 export default function TeachersDashboardOverview() {
@@ -74,9 +74,9 @@ export default function TeachersDashboardOverview() {
               <p className="mt-1 text-sm text-sky-100/85">Total teaching resources under your profile</p>
             </div>
             <div className="rounded-3xl bg-white/10 p-5 backdrop-blur-sm border border-white/10">
-              <p className="text-sm uppercase tracking-[0.24em] text-sky-100/80">Active approvals</p>
-              <p className="mt-3 text-3xl font-semibold">{statuses.approved}</p>
-              <p className="mt-1 text-sm text-sky-100/85">Approved items visible to students</p>
+              <p className="text-sm uppercase tracking-[0.24em] text-sky-100/80">Published</p>
+              <p className="mt-3 text-3xl font-semibold">{statuses.published}</p>
+              <p className="mt-1 text-sm text-sky-100/85">Live items visible to students</p>
             </div>
           </div>
         </div>
@@ -125,7 +125,7 @@ export default function TeachersDashboardOverview() {
             </div>
           </div>
           <p className="text-sm text-slate-600">
-            Resources you upload are submitted as <strong>pending</strong> and reviewed by an admin before being published to students. Keep your drafts clean and provide clear summaries for faster approval.
+            Resources you upload are published immediately and visible to students without admin approval. Keep your uploads clear and complete so learners can access content right away.
           </p>
         </div>
       </section>

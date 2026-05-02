@@ -71,7 +71,7 @@ export default function AdminDashboard() {
         {/* Top bar */}
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <button onClick={() => setSidebarExpanded(true)} className="p-1 rounded-md hover:bg-gray-100">
+            <button onClick={() => setSidebarExpanded(true)} className="p-1 rounded-md hover:bg-gray-100 lg:hidden">
               <Menu className="w-5 h-5" />
             </button>
             <span className="font-semibold text-gray-800">Learn Malawi Admin</span>

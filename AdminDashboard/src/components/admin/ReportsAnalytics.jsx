@@ -72,7 +72,7 @@ export default function ReportsAnalytics() {
   }, [progress]);
 
   const statCards = [
-    { label: "Approved Resources", value: teacherPosts.length, icon: BookOpen, color: "text-slate-700 bg-slate-50" },
+    { label: "Published Teacher Posts", value: teacherPosts.length, icon: BookOpen, color: "text-slate-700 bg-slate-50" },
     { label: "Registered Students", value: students.length, icon: Users, color: "text-green-600 bg-green-50" },
     { label: "Platform Events", value: logs.length, icon: TrendingUp, color: "text-purple-600 bg-purple-50" },
     { label: "Quiz Records", value: progress.length, icon: Award, color: "text-amber-600 bg-amber-50" },

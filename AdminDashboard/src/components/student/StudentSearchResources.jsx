@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { apiClient } from "@/api/apiClient";
 import { logActivity } from "@/lib/activityLogger";
 import { Search, Filter, Star, Download, FileText, BookOpen, SlidersHorizontal, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,6 +14,20 @@ import {
 const SUBJECTS = ["Mathematics", "English", "Science", "Social Studies", "Chichewa", "Biology", "Chemistry", "Physics", "History", "Geography", "Agriculture", "Computer Studies", "Religious Education"];
 const TYPE_LABELS = { study_notes: "Study Notes", past_paper: "Past Paper", tutorial: "Tutorial", quiz: "Quiz", career_resource: "Career Resource" };
 const TYPE_ICONS = { study_notes: "📝", past_paper: "📄", tutorial: "🎬", quiz: "✅", career_resource: "🎓" };
+
+const normalizeResource = (item, type) => ({
+  ...item,
+  id: item.id,
+  title: item.title || item.name || item.subject || "Untitled",
+  subject: item.subject || item.topic || "General",
+  level: item.level || item.class || item.grade || "All levels",
+  teacher_name: item.teacher_name || item.teacherName || item.author_name || item.author_name || item.teacherEmail || item.author_email || "Teacher",
+  teacher_email: item.teacherEmail || item.teacher_email || item.author_email || null,
+  content_type: type,
+});
+
+const normalizeResourceCollection = (items, type) =>
+  (Array.isArray(items) ? items : []).map((item) => normalizeResource(item, type));
 
 function StarRating({ value, onChange }) {
   return (
@@ -37,8 +52,24 @@ export default function StudentSearchResources({ currentUser }) {
   const qc = useQueryClient();
 
   const { data: resources = [], isLoading } = useQuery({
-    queryKey: ["approved-posts"],
-    queryFn: () => apiClient.entities.TeacherPost.filter({ status: "approved" }, "-created_date", 100),
+    queryKey: ["published-resources"],
+    queryFn: async () => {
+      const [studyNotes, tutorials, pastPapers, quizzes, careerResources] = await Promise.all([
+        apiClient.entities.StudyNote.list(),
+        apiClient.entities.Tutorial.list(),
+        apiClient.entities.PastPaper.list(),
+        apiClient.entities.Quiz.list(),
+        apiClient.entities.CareerResource.list(),
+      ]);
+
+      return [
+        ...normalizeResourceCollection(studyNotes, 'study_notes'),
+        ...normalizeResourceCollection(tutorials, 'tutorial'),
+        ...normalizeResourceCollection(pastPapers, 'past_paper'),
+        ...normalizeResourceCollection(quizzes, 'quiz'),
+        ...normalizeResourceCollection(careerResources, 'career_resource'),
+      ];
+    },
   });
 
   const { data: ratings = [] } = useQuery({

@@ -258,6 +258,7 @@ export default function Layout() {
                       communityOpen ? 'max-h-60 opacity-100 visible' : 'max-h-0 opacity-0 invisible'
                     }`}
                   >
+                  {isAuthenticated && (
                     <Link
                       to="/achievements"
                       onClick={() => setCommunityOpen(false)}
@@ -265,13 +266,15 @@ export default function Layout() {
                     >
                       Achievements
                     </Link>
-                    <Link
-                      to="/study-groups"
-                      onClick={() => setCommunityOpen(false)}
-                      className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
-                    >
-                      Study Groups
-                    </Link>
+                  )}
+                  <Link
+                    to="/study-groups"
+                    onClick={() => setCommunityOpen(false)}
+                    className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
+                  >
+                    Study Groups
+                  </Link>
+                  {isAuthenticated && (
                     <Link
                       to="/discussions"
                       onClick={() => setCommunityOpen(false)}
@@ -279,6 +282,7 @@ export default function Layout() {
                     >
                       Discussions
                     </Link>
+                  )}
                   </div>
                 </div>
                 {navItems
@@ -450,13 +454,15 @@ export default function Layout() {
                 </div>
                 <div className="mt-4 border-t border-primary-foreground/20 pt-4">
                   <p className="text-xs font-semibold uppercase tracking-[0.25em] text-primary-foreground/70 mb-2">Community catalog</p>
-                  <Link
-                    to="/achievements"
-                    onClick={closeMenu}
-                    className={`block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/achievements' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
-                  >
-                    Achievements
-                  </Link>
+                  {isAuthenticated && (
+                    <Link
+                      to="/achievements"
+                      onClick={closeMenu}
+                      className={`block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/achievements' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
+                    >
+                      Achievements
+                    </Link>
+                  )}
                   <Link
                     to="/study-groups"
                     onClick={closeMenu}
@@ -464,13 +470,15 @@ export default function Layout() {
                   >
                     Study Groups
                   </Link>
-                  <Link
-                    to="/discussions"
-                    onClick={closeMenu}
-                    className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/discussions' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
-                  >
-                    Discussions
-                  </Link>
+                  {isAuthenticated && (
+                    <Link
+                      to="/discussions"
+                      onClick={closeMenu}
+                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/discussions' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
+                    >
+                      Discussions
+                    </Link>
+                  )}
                 </div>
                 {isAuthenticated && (
                   <div className="mt-4 border-t border-primary-foreground/20 pt-4">
