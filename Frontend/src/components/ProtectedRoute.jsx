@@ -27,7 +27,11 @@ const ProtectedRoute = ({ children, requiredRoles = ['admin', 'teacher'] }) => {
   }
 
   // If user doesn't have required role, show unauthorized or redirect
-  if (requiredRoles && user?.role) {
+  if (requiredRoles && requiredRoles.length > 0) {
+    if (!user?.role) {
+      return <Navigate to="/unauthorized" replace />;
+    }
+
     const userRole = user.role.toLowerCase();
     const hasRequiredRole = requiredRoles.some(role => 
       userRole.includes(role.toLowerCase())

@@ -13,7 +13,7 @@ export default function TeachersDashboard() {
   const { refreshSeconds } = useRefreshRate();
   const [loading, setLoading] = useState(true);
   const [counts, setCounts] = useState({ notes: 0, papers: 0, tutorials: 0, quizzes: 0 });
-  const [statuses, setStatuses] = useState({ pending: 0, approved: 0, rejected: 0 });
+  const [statuses, setStatuses] = useState({ pending: 0, published: 0, rejected: 0 });
 
   const loadCounts = useCallback(async ({ background } = { background: false }) => {
     if (!background) {
@@ -49,9 +49,9 @@ export default function TeachersDashboard() {
 
       const all = [...filteredNotes, ...filteredPapers, ...filteredTutorials, ...filteredQuizzes];
       setStatuses({
-        pending: all.filter((r) => r?.status === 'pending').length,
-        approved: all.filter((r) => r?.status === 'approved').length,
-        rejected: all.filter((r) => r?.status === 'rejected').length,
+        pending: 0,
+        published: all.length,
+        rejected: 0,
       });
     } finally {
       if (!background) {

@@ -66,7 +66,7 @@ export default function TutorialsAdmin() {
                 <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                   <PlayCircle className="w-5 h-5 text-orange-600" />
                 </div>
-                <StatusBadge status={t.status || 'pending'} />
+                <StatusBadge status={t.status || 'published'} />
               </div>
               <h3 className="font-semibold text-sm mb-1 truncate">{t.title}</h3>
               <p className="text-xs text-muted-foreground mb-2">{t.subject} · {t.class || t.class_level || '—'}</p>

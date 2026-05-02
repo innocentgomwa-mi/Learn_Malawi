@@ -423,7 +423,7 @@ export function updateCareerResource(id, data) {
 }
 
 /**
- * @param {{ teacherEmail?: string }} [params]
+ * @param {{ teacherEmail?: string, published?: boolean }} [params]
  */
 export function fetchAnnouncements({ teacherEmail, published } = {}) {
   const params = new URLSearchParams();

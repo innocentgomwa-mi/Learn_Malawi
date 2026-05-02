@@ -11,6 +11,7 @@ import Layout from './components/Layout';
 import MaintenancePage from './components/MaintenancePage';
 import { usePageLogger } from '@/hooks/usePageLogger';
 import Home from './pages/Home';
+import LandingPage from './pages/LandingPage';
 import StudyNotes from './pages/StudyNotes';
 import PastPapers from './pages/PastPapers';
 import Tutorials from './pages/Tutorials';
@@ -81,19 +82,19 @@ const AuthenticatedApp = () => {
   return (
     <Routes>
       <Route element={<Layout />}>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={isAuthenticated ? <LandingPage /> : <Home />} />
         <Route path="/study-notes" element={<StudyNotes />} />
         <Route path="/past-papers" element={<PastPapers />} />
         <Route path="/tutorials" element={<Tutorials />} />
         <Route path="/study-groups" element={<StudyGroups />} />
-        <Route path="/discussions" element={<Discussions />} />
+        <Route path="/discussions" element={<ProtectedRoute requiredRoles={[]}><Discussions /></ProtectedRoute>} />
         <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
-        <Route path="/achievements" element={<Achievements />} />
+        <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
