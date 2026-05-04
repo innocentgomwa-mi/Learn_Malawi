@@ -9,10 +9,7 @@ export default function AccessibilityButton() {
 
   useEffect(() => {
     localStorage.setItem('screenReaderEnabled', enabled);
-    if (!enabled) {
-      stopSpeaking();
-      return;
-    }
+    if (!enabled) { stopSpeaking(); return; }
 
     speak('Screen reader enabled. Hover over any text to hear it read aloud.');
 
@@ -66,33 +63,44 @@ export default function AccessibilityButton() {
   function toggle() {
     setEnabled(prev => {
       const next = !prev;
-      if (!next) {
-        stopSpeaking();
-        speak('Screen reader disabled.');
-      }
+      if (!next) { stopSpeaking(); speak('Screen reader disabled.'); }
       return next;
     });
   }
 
   return (
-    <button
-      onClick={toggle}
-      aria-label={enabled ? 'Disable screen reader' : 'Enable screen reader'}
+    <div
+      style={{ position: 'fixed', bottom: '90px', right: '24px', zIndex: 50 }}
       title={enabled ? 'Screen reader ON — click to turn off' : 'Screen reader OFF — click to turn on'}
-      className={`
-        fixed bottom-24 right-5 z-50
-        w-13 h-13 rounded-full shadow-lg
-        flex items-center justify-center
-        text-xl transition-all duration-300
-        border-2 focus:outline-none focus:ring-4 focus:ring-offset-2
-        ${enabled
-          ? 'bg-green-600 border-green-400 text-white focus:ring-green-400 animate-pulse'
-          : 'bg-gray-700 border-gray-500 text-gray-200 hover:bg-gray-600 focus:ring-gray-400'
-        }
-      `}
     >
-      {enabled ? '🔊' : '🔇'}
-      <span className="sr-only">{enabled ? 'Screen reader on' : 'Screen reader off'}</span>
-    </button>
+      <button
+        onClick={toggle}
+        aria-label={enabled ? 'Disable screen reader' : 'Enable screen reader'}
+        style={{
+          width: '56px',
+          height: '56px',
+          borderRadius: '50%',
+          border: 'none',
+          cursor: 'pointer',
+          fontSize: '22px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          boxShadow: '0 4px 14px rgba(0,0,0,0.25)',
+          transition: 'all 0.3s ease',
+          background: enabled ? '#16a34a' : '#374151',
+          color: 'white',
+          animation: enabled ? 'a11y-pulse 2s infinite' : 'none',
+        }}
+      >
+        {enabled ? '🔊' : '🔇'}
+      </button>
+      <style>{`
+        @keyframes a11y-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(22,163,74,0.5); }
+          50% { box-shadow: 0 0 0 8px rgba(22,163,74,0); }
+        }
+      `}</style>
+    </div>
   );
 }

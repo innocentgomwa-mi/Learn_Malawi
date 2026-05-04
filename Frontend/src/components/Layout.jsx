@@ -7,6 +7,7 @@ import AiTutor from "./AiTutor";
 import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
+import AccessibilityButton from "@/components/AccessibilityButton";
 
 const navItems = [
   { path: "/", label: "Home", icon: Home },
@@ -174,6 +175,7 @@ export default function Layout() {
       </footer>
 
       {/* AI Tutor floating widget */}
+      <AccessibilityButton />
       {!isTeacher && <AiTutor />}
     </div>
   );

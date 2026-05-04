@@ -25,7 +25,7 @@ export default function Quizzes() {
   const [feedbackLoading, setFeedbackLoading] = useState(false);
   const [generatorOpen, setGeneratorOpen] = useState(false);
   const [genTopic, setGenTopic] = useState("");
-  const [genDifficulty, setGenDifficulty] = useState("medium");
+  const [genDifficulty, setGenDifficulty] = useState("level1");
   const [genCount, setGenCount] = useState(5);
   const [genLoading, setGenLoading] = useState(false);
   const [genError, setGenError] = useState("");
@@ -209,10 +209,10 @@ export default function Quizzes() {
                   className="w-full rounded-xl border border-violet-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-violet-400" />
               </div>
               <div>
-                <label className="block text-sm font-medium text-violet-900 mb-1">Difficulty</label>
+                <label className="block text-sm font-medium text-violet-900 mb-1">Level</label>
                 <select value={genDifficulty} onChange={(e) => setGenDifficulty(e.target.value)}
                   className="w-full rounded-xl border border-violet-300 bg-white px-4 py-3 text-sm text-gray-900 outline-none focus:ring-2 focus:ring-violet-400">
-                  <option value="easy">Easy</option><option value="medium">Medium</option><option value="hard">Hard</option>
+                  <option value="level1">Level 1 — Beginner</option><option value="level2">Level 2 — Intermediate</option><option value="level3">Level 3 — Advanced</option>
                 </select>
               </div>
               <div>
@@ -266,7 +266,7 @@ export default function Quizzes() {
                 <div className="flex items-center gap-2 mb-3">
                   <span className={"text-xs font-semibold px-2 py-1 rounded-full " + (LEVEL_COLORS[quiz.level] || "bg-muted")}>{quiz.level}</span>
                   {quiz.difficulty && (
-                    <span className={"text-xs px-2 py-1 rounded-full font-medium " + (quiz.difficulty === "easy" ? "bg-green-100 text-green-700" : quiz.difficulty === "medium" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700")}>
+                    <span className={"text-xs px-2 py-1 rounded-full font-medium " + (quiz.difficulty === "level1" ? "bg-green-100 text-green-700" : quiz.difficulty === "level2" ? "bg-yellow-100 text-yellow-700" : "bg-blue-100 text-blue-700")}>
                       {quiz.difficulty}
                     </span>
                   )}
