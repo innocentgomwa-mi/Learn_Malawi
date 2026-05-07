@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
@@ -6,6 +7,7 @@ import { useAuth } from '@/lib/AuthContext';
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { user, login, loading, error: apiError, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,17 +138,27 @@ const Login = () => {
 
                 <label className="block text-sm font-medium text-foreground">
                   Password
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    disabled={loading}
-                    required
-                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-                  />
+                  <div className="relative mt-3">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      name="password"
+                      value={password}
+                      onChange={handleChange}
+                      placeholder="Enter your password"
+                      disabled={loading}
+                      required
+                      className="w-full rounded-3xl border border-border bg-background px-4 py-3 pr-12 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((s) => !s)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                      className="absolute inset-y-0 right-3 inline-flex items-center rounded-full p-2 text-muted-foreground hover:text-foreground"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </label>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
