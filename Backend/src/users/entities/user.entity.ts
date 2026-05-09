@@ -36,6 +36,9 @@ export class User {
   @Column({ type: 'varchar', length: 50, nullable: true })
   level?: string;
 
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  profileImageUrl?: string;
+
   @Column({
     type: 'timestamp',
     default: () => 'CURRENT_TIMESTAMP',

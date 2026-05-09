@@ -1,4 +1,8 @@
-import { Controller, Post, Body, UseGuards, Get, Request, UsePipes, ValidationPipe, Patch } from '@nestjs/common';
+import { Controller, Post, Body, UseGuards, Get, Request, UsePipes, ValidationPipe, Patch, UseInterceptors, UploadedFile, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { diskStorage } from 'multer';
+import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
@@ -7,6 +11,13 @@ import { TokenResponseDto } from './dto/token-response.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
 import { UpdateUserDto } from '../users/dto/update-user.dto';
+
+const uploadDir = join(__dirname, '..', '..', 'uploads');
+if (!existsSync(uploadDir)) {
+  mkdirSync(uploadDir, { recursive: true });
+}
+
+const allowedImageTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
 @Controller('auth')
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -53,7 +64,36 @@ export class AuthController {
 
   @Patch('profile')
   @UseGuards(JwtAuthGuard)
-  async updateProfile(@Request() req, @Body() updateUserDto: UpdateUserDto) {
+  @UseInterceptors(
+    FileInterceptor('profileImage', {
+      storage: diskStorage({
+        destination: uploadDir,
+        filename: (_req, file, callback) => {
+          const ext = file.originalname.substring(file.originalname.lastIndexOf('.')) || '';
+          const name = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+          callback(null, name);
+        },
+      }),
+      fileFilter: (_req, file, callback) => {
+        if (!allowedImageTypes.includes(file.mimetype)) {
+          callback(new BadRequestException('Only PNG, JPEG, and WEBP files are allowed for profile images.'), false);
+          return;
+        }
+        callback(null, true);
+      },
+      limits: {
+        fileSize: 5 * 1024 * 1024,
+      },
+    }),
+  )
+  async updateProfile(
+    @Request() req,
+    @UploadedFile() profileImage: Express.Multer.File,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    if (profileImage) {
+      updateUserDto.profileImageUrl = `${req.protocol}://${req.get('host')}/uploads/${profileImage.filename}`;
+    }
     return this.authService.updateProfile(req.user.id, updateUserDto);
   }
 }

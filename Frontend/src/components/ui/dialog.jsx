@@ -52,24 +52,22 @@ const DialogContent = React.forwardRef(({ className, children, ...props }, ref) 
 ))
 DialogContent.displayName = DialogPrimitive.Content.displayName
 
-const DialogHeader = ({
-  className,
-  ...props
-}) => (
+/** @type {React.ForwardRefExoticComponent<React.PropsWithoutRef<JSX.IntrinsicElements['div']> & React.RefAttributes<HTMLDivElement>>} */
+const DialogHeader = React.forwardRef(({ className, ...props }, ref) => (
   <div
+    ref={ref}
     className={cn("flex flex-col space-y-1.5 text-center sm:text-left", className)}
     {...props} />
-)
+))
 DialogHeader.displayName = "DialogHeader"
 
-const DialogFooter = ({
-  className,
-  ...props
-}) => (
+/** @type {React.ForwardRefExoticComponent<React.PropsWithoutRef<JSX.IntrinsicElements['div']> & React.RefAttributes<HTMLDivElement>>} */
+const DialogFooter = React.forwardRef(({ className, ...props }, ref) => (
   <div
+    ref={ref}
     className={cn("flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2", className)}
     {...props} />
-)
+))
 DialogFooter.displayName = "DialogFooter"
 
 /** @type {React.ForwardRefExoticComponent<React.PropsWithoutRef<import('@radix-ui/react-dialog').DialogTitleProps> & React.RefAttributes<HTMLHeadingElement>>} */

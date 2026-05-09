@@ -1,0 +1,17 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ScheduleService } from './schedule.service';
+import { StudyBlocksController } from './study-blocks.controller';
+import { ResourcesController } from './resources.controller';
+import { ExamsController } from './exams.controller';
+import { StudyBlock } from './entities/study-block.entity';
+import { Resource } from './entities/resource.entity';
+import { Exam } from './entities/exam.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([StudyBlock, Resource, Exam])],
+  controllers: [StudyBlocksController, ResourcesController, ExamsController],
+  providers: [ScheduleService],
+  exports: [ScheduleService],
+})
+export class ScheduleModule {}
