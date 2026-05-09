@@ -4,6 +4,7 @@ import {
   BookOpen, FileText, Play, Brain, Briefcase, Home, Menu, X, GraduationCap, Settings, User, UserCheck, Info, Bell, ChevronDown, LogOut
 } from "lucide-react";
 import AiTutor from "./AiTutor";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import OfflineBanner from "./OfflineBanner";
 import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
@@ -31,6 +32,9 @@ export default function Layout() {
   const { user, isAuthenticated, logout } = useAuth();
   const { settings } = useAccessibility();
   const isTeacher = user?.role?.toLowerCase() === 'teacher';
+  const userName = user
+    ? user.full_name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
+    : 'Account';
 
   const closeMenu = () => setMobileOpen(false);
   const hideTopNav = location.pathname.startsWith('/teacher');
@@ -318,12 +322,22 @@ export default function Layout() {
                     <button
                       type="button"
                       onClick={() => setSettingsOpen((current) => !current)}
-                      className={`p-2 rounded-lg hover:bg-primary-foreground/10 text-primary-foreground hidden md:inline-flex items-center ${
+                      className={`px-3 py-2 rounded-lg hover:bg-primary-foreground/10 text-primary-foreground hidden md:inline-flex items-center gap-3 ${
                         settingsOpen ? 'bg-secondary text-secondary-foreground' : ''
                       }`}
-                      title="Settings"
+                      title="Account"
                     >
-                      <Settings className="h-5 w-5" />
+                      <Avatar className="h-8 w-8">
+                        {user?.profileImageUrl ? (
+                          <AvatarImage src={user.profileImageUrl} alt={`${userName} avatar`} />
+                        ) : (
+                          <AvatarFallback className="bg-primary text-white text-xs font-bold">
+                            {userName?.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        )}
+                      </Avatar>
+                      <span className="font-medium truncate max-w-[10rem] text-sm">{userName}</span>
+                      <ChevronDown className="h-4 w-4" />
                     </button>
                     <div className={`absolute right-0 top-full mt-2 w-56 overflow-hidden rounded-2xl border border-border bg-primary text-foreground shadow-lg transition-all duration-200 ${settingsOpen ? 'max-h-80 opacity-100 visible' : 'max-h-0 opacity-0 invisible'}`}>
                       <Link
@@ -331,7 +345,7 @@ export default function Layout() {
                         onClick={() => setSettingsOpen(false)}
                         className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/profile' ? 'bg-secondary text-secondary-foreground' : ''}`}
                       >
-                        Profile
+                        My Profile
                       </Link>
                       <Link
                         to="/dashboard"
@@ -339,6 +353,13 @@ export default function Layout() {
                         className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/dashboard' ? 'bg-secondary text-secondary-foreground' : ''}`}
                       >
                         My Dashboard
+                      </Link>
+                      <Link
+                        to="/my-schedule"
+                        onClick={() => setSettingsOpen(false)}
+                        className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/my-schedule' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                      >
+                        My Schedule
                       </Link>
                       <Link
                         to="/achievements"
@@ -354,9 +375,6 @@ export default function Layout() {
                       >
                         Accessibility
                       </Link>
-                      <div className="px-4 py-3 border-t border-primary-foreground/10">
-                        <RefreshRateSelector />
-                      </div>
                       <button
                         type="button"
                         onClick={async () => {
@@ -366,7 +384,7 @@ export default function Layout() {
                         }}
                         className="w-full text-left px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
                       >
-                        Logout
+                        Sign out
                       </button>
                     </div>
                   </div>
@@ -488,7 +506,7 @@ export default function Layout() {
                       onClick={closeMenu}
                       className={`block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/profile' ? 'bg-secondary text-secondary-foreground' : ''}`}
                     >
-                      Profile
+                      My Profile
                     </Link>
                     <Link
                       to="/dashboard"
@@ -496,6 +514,13 @@ export default function Layout() {
                       className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/dashboard' ? 'bg-secondary text-secondary-foreground' : ''}`}
                     >
                       My Dashboard
+                    </Link>
+                    <Link
+                      to="/my-schedule"
+                      onClick={closeMenu}
+                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/my-schedule' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                    >
+                      My Schedule
                     </Link>
                     <Link
                       to="/achievements"

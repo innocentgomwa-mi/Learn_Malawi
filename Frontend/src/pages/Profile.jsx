@@ -15,6 +15,8 @@ export default function Profile() {
   const location = useLocation();
   const [profile, setProfile] = useState(user);
   const [profileForm, setProfileForm] = useState({ firstName: '', lastName: '', school: '', level: '' });
+  const [profileImageFile, setProfileImageFile] = useState(null);
+  const [profileImagePreview, setProfileImagePreview] = useState('');
   const [profileSaving, setProfileSaving] = useState(false);
   const [profileSaved, setProfileSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -38,6 +40,8 @@ export default function Profile() {
           school: freshProfile.school || '',
           level: freshProfile.level || '',
         });
+        setProfileImagePreview(freshProfile.profileImageUrl || '');
+        setProfileImageFile(null);
       } catch (fetchError) {
         setError(fetchError.message ?? 'Unable to load profile.');
       } finally {
@@ -48,25 +52,43 @@ export default function Profile() {
     loadProfile();
   }, [isAuthenticated]);
 
+  useEffect(() => {
+    if (!profileImageFile) {
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(profileImageFile);
+    setProfileImagePreview(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [profileImageFile]);
+
   const handleProfileSave = async () => {
     setProfileSaving(true);
     setError(null);
 
     try {
-      await updateProfile({
-        firstName: profileForm.firstName,
-        lastName: profileForm.lastName,
-        school: profileForm.school,
-        level: profileForm.level,
-      });
+      const formData = new FormData();
+      formData.append('firstName', profileForm.firstName);
+      formData.append('lastName', profileForm.lastName);
+      formData.append('school', profileForm.school);
+      formData.append('level', profileForm.level);
+      if (profileImageFile) {
+        formData.append('profileImage', profileImageFile);
+      }
+
+      const updatedProfile = await updateProfile(formData);
       await refreshUser();
       setProfile((current) => ({
         ...current,
-        firstName: profileForm.firstName,
-        lastName: profileForm.lastName,
-        school: profileForm.school,
-        level: profileForm.level,
+        ...updatedProfile,
       }));
+      if (updatedProfile.profileImageUrl) {
+        setProfileImagePreview(updatedProfile.profileImageUrl);
+      }
+      setProfileImageFile(null);
       setProfileSaved(true);
       setTimeout(() => setProfileSaved(false), 2500);
     } catch (saveError) {
@@ -83,7 +105,7 @@ export default function Profile() {
 
   const details = profile
     ? Object.entries(profile)
-        .filter(([key, value]) => value !== undefined && value !== null && value !== '')
+        .filter(([key, value]) => value !== undefined && value !== null && value !== '' && key !== 'profileImageUrl')
         .sort(([a], [b]) => a.localeCompare(b))
     : [];
 
@@ -123,7 +145,41 @@ export default function Profile() {
             </button>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-2 mb-6">
+            <div className="sm:col-span-2">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
+                <div className="h-24 w-24 overflow-hidden rounded-full bg-muted">
+                  {profileImagePreview ? (
+                    <img
+                      src={profileImagePreview}
+                      alt="Profile preview"
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center text-sm text-muted-foreground">
+                      Add photo
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="text-sm font-medium text-foreground">Profile image</p>
+                    <p className="text-sm text-muted-foreground">Upload a JPG, PNG, or WEBP avatar (max 5MB).</p>
+                  </div>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) {
+                        setProfileImageFile(file);
+                      }
+                    }}
+                    className="text-sm text-foreground"
+                  />
+                </div>
+              </div>
+            </div>
             <label className="block">
               <span className="text-sm font-medium text-foreground">First Name</span>
               <input

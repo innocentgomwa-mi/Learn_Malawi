@@ -31,6 +31,11 @@ export class CreateUserDto {
   @IsIn(['PSLC', 'JCE', 'MSCE'])
   level?: string;
 
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  profileImageUrl?: string;
+
   @IsEnum(UserRole)
   role: UserRole;
 }

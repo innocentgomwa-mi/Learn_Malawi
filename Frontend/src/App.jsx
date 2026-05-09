@@ -43,6 +43,7 @@ import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
 import Achievements from './pages/Achievements';
 import Accessibility from './pages/Accessibility';
+import MySchedule from './pages/MySchedule';
 import ProtectedRoute from './components/ProtectedRoute';
 
 const AuthenticatedApp = () => {
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/my-schedule" element={<ProtectedRoute requiredRoles={[]}><MySchedule /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
         <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>

@@ -42,6 +42,10 @@ import { ResourceRating } from './resource-ratings/entities/resource-rating.enti
 import { StudyGroupsModule } from './study-groups/study-groups.module';
 import { StudyGroup } from './study-groups/entities/study-group.entity';
 import { StudyGroupMessage } from './study-groups/entities/study-group-message.entity';
+import { ScheduleModule } from './schedule/schedule.module';
+import { StudyBlock } from './schedule/entities/study-block.entity';
+import { Resource } from './schedule/entities/resource.entity';
+import { Exam } from './schedule/entities/exam.entity';
 
 @Module({
   imports: [
@@ -88,6 +92,9 @@ import { StudyGroupMessage } from './study-groups/entities/study-group-message.e
           ResourceRating,
           StudyGroup,
           StudyGroupMessage,
+          StudyBlock,
+          Resource,
+          Exam,
         ],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
@@ -113,6 +120,7 @@ import { StudyGroupMessage } from './study-groups/entities/study-group-message.e
     InsightsModule,
     ResourceRatingsModule,
     StudyGroupsModule,
+    ScheduleModule,
   ],
   controllers: [],
   providers: [

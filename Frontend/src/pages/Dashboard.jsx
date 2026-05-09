@@ -1,20 +1,17 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { useRefreshRate } from '@/lib/RefreshRateContext';
 import { loadDashboardData } from "@/lib/dashboardStorage";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
-import { User, BookOpen, Trophy, TrendingUp, CheckCircle, RefreshCcw } from "lucide-react";
+import { User, BookOpen, Trophy, TrendingUp, CheckCircle } from "lucide-react";
 
 const COLORS = ["#0d9488", "#3b82f6", "#8b5cf6", "#f59e0b", "#ef4444", "#10b981"];
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { refreshSeconds } = useRefreshRate();
   const [progress, setProgress] = useState([]);
   const [attempts, setAttempts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [lastRefreshed, setLastRefreshed] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -26,7 +23,6 @@ export default function Dashboard() {
         setProgress([]);
         setAttempts([]);
         setLoading(false);
-        setLastRefreshed(null);
         return;
       }
 
@@ -36,7 +32,6 @@ export default function Dashboard() {
       setProgress(dashboardData.progress);
       setAttempts(dashboardData.attempts);
       setLoading(false);
-      setLastRefreshed(new Date());
     };
 
     loadData();
@@ -46,22 +41,7 @@ export default function Dashboard() {
     };
   }, [user]);
 
-  useEffect(() => {
-    if (!refreshSeconds || !user) {
-      return;
-    }
-
-    const intervalId = setInterval(() => {
-      const userKey = user?.id || user?.email;
-      if (!userKey) return;
-      const dashboardData = loadDashboardData(userKey);
-      setProgress(dashboardData.progress);
-      setAttempts(dashboardData.attempts);
-      setLastRefreshed(new Date());
-    }, refreshSeconds * 1000);
-
-    return () => clearInterval(intervalId);
-  }, [refreshSeconds, user]);
+  // Auto-refresh disabled on the dashboard to prevent page reloads while users are filling forms.
 
   const userName = user
     ? user.full_name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
@@ -108,17 +88,6 @@ export default function Dashboard() {
           <div>
             <h1 className="font-poppins text-2xl font-bold text-foreground">{userName}</h1>
             <p className="text-muted-foreground text-sm">{user?.email}</p>
-          </div>
-        </div>
-        <div className="rounded-2xl bg-card border border-border px-4 py-3 text-sm text-primary-foreground flex flex-col gap-1">
-          <div className="flex items-center gap-2 font-medium text-slate-700">
-            <RefreshCcw className="h-4 w-4" />
-            {refreshSeconds ? `Auto-refresh every ${refreshSeconds} seconds` : 'Refresh is disabled'}
-          </div>
-          <div className="text-slate-500">
-            {lastRefreshed
-              ? `Last refreshed at ${lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}`
-              : 'Loading latest data...'}
           </div>
         </div>
       </div>

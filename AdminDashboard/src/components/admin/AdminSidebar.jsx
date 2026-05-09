@@ -119,7 +119,7 @@ export default function AdminSidebar({ activeSection, onNavigate, onToggle, coll
         <button
           onClick={() => logout()}
           title={collapsed ? 'Logout' : undefined}
-          className={`w-full flex items-center gap-3 ${collapsed ? 'justify-center px-0 py-2.5' : 'justify-center px-3 py-2.5'} rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800 hover:text-white transition-colors`}
+          className={`w-full flex items-center gap-3 ${collapsed ? 'justify-center px-0 py-2.5' : 'justify-start px-3 py-2.5'} rounded-lg text-sm font-medium text-blue-200 hover:bg-blue-800 hover:text-white transition-colors`}
         >
           <LogOut className="w-5 h-5" />
           {!collapsed && <span>Logout</span>}

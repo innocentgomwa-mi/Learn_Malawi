@@ -7,6 +7,7 @@
  *   full_name?: string,
  *   school?: string,
  *   role?: string,
+ *   profileImageUrl?: string,
  * }} User
  *
  * @typedef {{

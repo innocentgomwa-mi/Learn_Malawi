@@ -86,6 +86,17 @@ function cleanRequestBody(body) {
   return body;
 }
 
+function pickFields(body, allowedFields) {
+  if (typeof body !== 'object' || body === null) return {};
+  const picked = {};
+  allowedFields.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      picked[field] = body[field];
+    }
+  });
+  return picked;
+}
+
 /**
  * @param {string} path
  * @param {RequestInit} [options]
@@ -107,6 +118,15 @@ async function request(path, options = {}) {
   }
 
   const requestBody = isForm ? body : body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body);
+
+  if (import.meta.env.DEV) {
+    console.debug('API request', {
+      path,
+      method: options.method || 'GET',
+      headers,
+      body: requestBody,
+    });
+  }
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -184,7 +204,10 @@ export function fetchSystemSettings() {
  * @param {JsonObject} data
  */
 export function updateProfile(data) {
-  return request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) });
+  return request('/auth/profile', {
+    method: 'PATCH',
+    body: data,
+  });
 }
 
 /**
@@ -266,6 +289,60 @@ export function fetchStudyGroups({ level, subject, teacherEmail } = {}) {
   if (teacherEmail) params.set('mentor_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/study-groups${query}`);
+}
+
+export function fetchStudyBlocks() {
+  return request('/study-blocks');
+}
+
+export function createStudyBlock(data) {
+  const payload = pickFields(data, ['title', 'day_of_week', 'start_time', 'end_time', 'subject', 'color', 'resource_ids', 'notes']);
+  return request('/study-blocks', { method: 'POST', body: payload });
+}
+
+export function updateStudyBlock(id, data) {
+  const payload = pickFields(data, ['title', 'day_of_week', 'start_time', 'end_time', 'subject', 'color', 'resource_ids', 'notes']);
+  return request(`/study-blocks/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteStudyBlock(id) {
+  return request(`/study-blocks/${id}`, { method: 'DELETE' });
+}
+
+export function fetchResources() {
+  return request('/resources');
+}
+
+export function createResource(data) {
+  const payload = pickFields(data, ['name', 'type', 'subject', 'url']);
+  return request('/resources', { method: 'POST', body: payload });
+}
+
+export function updateResource(id, data) {
+  const payload = pickFields(data, ['name', 'type', 'subject', 'url']);
+  return request(`/resources/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteResource(id) {
+  return request(`/resources/${id}`, { method: 'DELETE' });
+}
+
+export function fetchExams() {
+  return request('/exams');
+}
+
+export function createExam(data) {
+  const payload = pickFields(data, ['title', 'subject', 'exam_date', 'location', 'notify_days_before', 'notes', 'color']);
+  return request('/exams', { method: 'POST', body: payload });
+}
+
+export function updateExam(id, data) {
+  const payload = pickFields(data, ['title', 'subject', 'exam_date', 'location', 'notify_days_before', 'notes', 'color']);
+  return request(`/exams/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteExam(id) {
+  return request(`/exams/${id}`, { method: 'DELETE' });
 }
 
 export function fetchStudyGroupMessages({ groupId } = {}) {
