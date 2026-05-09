@@ -110,7 +110,7 @@ export default function Profile() {
     : [];
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between mb-8">
         <div>
           <h1 className="text-3xl font-bold text-foreground">My Profile</h1>

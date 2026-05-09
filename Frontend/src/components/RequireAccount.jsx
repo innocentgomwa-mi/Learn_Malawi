@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 
 export default function RequireAccount({ resourceName }) {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-20 text-center">
+    <div className="w-full px-4 py-20 text-center">
       <div className="inline-flex items-center justify-center mb-6 rounded-full bg-primary/10 p-4 text-primary">
         <span className="text-2xl">🔒</span>
       </div>

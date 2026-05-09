@@ -33,7 +33,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authLogin, authLogout, fetchProfile, fetchSystemSettings } from '@/api';
+import { authLogin, authLogout, fetchProfile, fetchSystemSettings, isJwtTokenExpiringSoon, refreshAuthTokens } from '@/api';
 
 /** @type {import('react').Context<AuthContextValue | null>} */
 const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null));
@@ -118,7 +118,23 @@ export function AuthProvider(props) {
 
     await refreshPublicSettings();
 
-    const token = getStoredAccessToken();
+    let token = getStoredAccessToken();
+    const refreshToken = getStoredRefreshToken();
+
+    if (refreshToken && (!token || isJwtTokenExpiringSoon(token, 60))) {
+      try {
+        await refreshAuthTokens(refreshToken);
+        token = getStoredAccessToken();
+      } catch {
+        clearAuthTokens();
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoadingAuth(false);
+        setIsLoadingPublicSettings(false);
+        return;
+      }
+    }
+
     if (!token) {
       setUser(null);
       setIsAuthenticated(false);

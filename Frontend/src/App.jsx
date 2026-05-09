@@ -15,6 +15,7 @@ import LandingPage from './pages/LandingPage';
 import StudyNotes from './pages/StudyNotes';
 import PastPapers from './pages/PastPapers';
 import Tutorials from './pages/Tutorials';
+import SearchResults from './pages/SearchResults';
 import Quizzes from './pages/Quizzes';
 import Career from './pages/Career';
 import StudyGroups from './pages/StudyGroups';
@@ -41,8 +42,8 @@ import StudyGroupsAdmin from './components/teacher/StudyGroupsAdmin';
 import Insight from './pages/Insight';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
+import Settings from './pages/Settings';
 import Achievements from './pages/Achievements';
-import Accessibility from './pages/Accessibility';
 import MySchedule from './pages/MySchedule';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -87,6 +88,7 @@ const AuthenticatedApp = () => {
         <Route path="/study-notes" element={<StudyNotes />} />
         <Route path="/past-papers" element={<PastPapers />} />
         <Route path="/tutorials" element={<Tutorials />} />
+        <Route path="/search" element={<SearchResults />} />
         <Route path="/study-groups" element={<StudyGroups />} />
         <Route path="/discussions" element={<ProtectedRoute requiredRoles={[]}><Discussions /></ProtectedRoute>} />
         <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
@@ -95,9 +97,9 @@ const AuthenticatedApp = () => {
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/settings" element={<ProtectedRoute requiredRoles={[]}><Settings /></ProtectedRoute>} />
         <Route path="/my-schedule" element={<ProtectedRoute requiredRoles={[]}><MySchedule /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
-        <Route path="/accessibility" element={<Accessibility />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
           <Route path="study-notes" element={<StudyNotesAdmin />} />

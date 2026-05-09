@@ -91,7 +91,7 @@ export default function PastPapers() {
   const sortedYears = Object.keys(grouped).sort((a, b) => b - a);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="mb-8">
         <h1 className="font-poppins text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
           <FileText className="h-8 w-8 text-primary" /> Past Papers

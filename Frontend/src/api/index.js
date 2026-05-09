@@ -39,7 +39,41 @@ export function clearAuthTokens() {
   window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 }
+function decodeJwtPayload(token) {
+  if (!isValidToken(token)) return null;
+  try {
+    const payload = token.split('.')[1];
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(normalized);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
 
+export function isJwtTokenExpiringSoon(token, expiresWithinSeconds = 30) {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== 'number') return true;
+  return payload.exp * 1000 <= Date.now() + expiresWithinSeconds * 1000;
+}
+
+export async function refreshAuthTokens(refreshToken) {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    const data = await parseJsonResponse(response);
+    const message = data?.message || response.statusText;
+    throw new Error(`Token refresh failed (${response.status}): ${message}`);
+  }
+
+  const responseData = await response.json();
+  saveAuthTokens(responseData.accessToken, responseData.refreshToken);
+  return responseData;
+}
 /**
  * @param {Response} response
  */
@@ -266,6 +300,25 @@ export function authLogout(refreshToken) {
   return request('/auth/logout', {
     method: 'POST',
     body: JSON.stringify({ refreshToken }),
+  });
+}
+
+export function authLogoutAll() {
+  return request('/auth/logout-all', {
+    method: 'POST',
+  });
+}
+
+export function changePassword(currentPassword, newPassword) {
+  return request('/auth/password', {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export function deleteAccount() {
+  return request('/auth/account', {
+    method: 'DELETE',
   });
 }
 

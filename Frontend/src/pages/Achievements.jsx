@@ -99,7 +99,7 @@ export default function Achievements() {
   if (loadingState) return <div className="flex justify-center py-24"><Loader2 className="h-7 w-7 animate-spin text-primary" /></div>;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="flex items-center gap-3 mb-2">
         <div className="bg-amber-100 dark:bg-amber-900/30 rounded-xl p-2"><Trophy className="h-6 w-6 text-amber-600" /></div>
         <div>
