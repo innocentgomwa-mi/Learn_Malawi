@@ -150,7 +150,7 @@ export default function MySchedule() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="border-b bg-card/80 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
+        <div className="w-full px-4 sm:px-6 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
               <GraduationCap className="h-5 w-5 text-primary" />
@@ -168,7 +168,7 @@ export default function MySchedule() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div className="w-full px-4 sm:px-6 py-6">
         <Tabs defaultValue="timetable" className="space-y-6">
           <TabsList className="bg-muted/60">
             <TabsTrigger value="timetable" className="font-heading text-xs">

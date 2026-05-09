@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 
 export default function Unauthorized() {
   return (
-    <div className="max-w-3xl mx-auto px-4 py-16 text-center">
+    <div className="w-full px-4 py-16 text-center">
       <h1 className="text-3xl font-semibold text-foreground mb-4">Unauthorized Access</h1>
       <p className="text-base text-muted-foreground mb-6">
         You do not have permission to view this page. Please sign in with an admin or teacher account.

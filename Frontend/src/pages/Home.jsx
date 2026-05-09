@@ -60,7 +60,7 @@ export default function Home() {
           <div className="absolute top-10 left-10 w-64 h-64 bg-secondary rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary rounded-full blur-3xl" />
         </div>
-        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 relative">
+        <div className="w-full px-4 py-20 md:py-28 relative">
           <div className="max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -104,7 +104,7 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section className="max-w-7xl mx-auto px-4 -mt-2 pb-8">
+      <section className="w-full px-4 -mt-2 pb-8">
         <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
           {stats.map(({ icon: Icon, value, label }) => (
             <div key={label} className="text-center p-4">
@@ -117,7 +117,7 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
+      <section className="w-full px-4 py-12">
         <div className="text-center mb-10">
           <h2 className="font-poppins text-3xl font-bold text-foreground mb-3">Everything You Need to Excel</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
@@ -152,7 +152,7 @@ export default function Home() {
 
       {/* How It Works */}
       <section className="bg-muted/50 py-20">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="w-full px-4">
           <div className="text-center mb-14">
             <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Simple & Effective</span>
             <h2 className="font-poppins text-3xl md:text-4xl font-bold text-foreground mb-3">How It Works</h2>
@@ -187,7 +187,7 @@ export default function Home() {
       </section>
 
       {/* What We Offer */}
-      <section className="max-w-7xl mx-auto px-4 py-20">
+      <section className="w-full px-4 py-20">
         <div className="text-center mb-14">
           <span className="inline-block bg-secondary/20 text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Built for Malawian Students</span>
           <h2 className="font-poppins text-3xl md:text-4xl font-bold text-foreground mb-3">What We Offer</h2>
@@ -241,7 +241,7 @@ export default function Home() {
 
       {/* Testimonial / Trust strip */}
       <section className="bg-muted/40 border-y border-border py-12">
-        <div className="max-w-7xl mx-auto px-4">
+        <div className="w-full px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             {[
               { value: "100%", label: "Free Forever", sub: "No hidden fees" },
@@ -260,7 +260,7 @@ export default function Home() {
       </section>
 
       {/* AI Tutor Banner */}
-      <section className="max-w-7xl mx-auto px-4 pb-16">
+      <section className="w-full px-4 pb-16">
         <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl" />
           <div className="relative max-w-2xl">

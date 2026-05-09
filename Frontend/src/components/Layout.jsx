@@ -168,10 +168,10 @@ export default function Layout() {
       {!hideTopNav && (
         <>
           {/* Top Nav */}
-          <header className="bg-primary text-primary-foreground sticky top-0 z-40 shadow-lg">
-            <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+          <header className="bg-primary/95 text-primary-foreground sticky top-0 z-40 border-b border-primary-foreground/10 shadow-[0_25px_50px_-25px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+            <div className="w-full px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
               {/* Logo */}
-              <Link to="/" className="flex items-center gap-2">
+              <Link to="/" className="flex items-center gap-3 rounded-2xl bg-primary/10 px-4 py-3 transition hover:bg-primary/20">
                 <div className="bg-secondary rounded-lg p-1.5">
                   <GraduationCap className="h-6 w-6 text-primary" />
                 </div>
@@ -182,10 +182,10 @@ export default function Layout() {
               </Link>
 
               {/* Desktop Nav */}
-              <nav className="hidden md:flex items-center gap-1 relative">
+              <nav className="hidden md:flex items-center gap-2 relative">
                 <Link
                   to="/"
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                  className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
                     location.pathname === '/'
                       ? "bg-secondary text-secondary-foreground"
                       : "text-primary-foreground/80 hover:bg-primary-foreground/10"
@@ -198,7 +198,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={() => setResourcesOpen((current) => !current)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
                       resourceActive
                         ? 'bg-secondary text-secondary-foreground'
                         : 'text-primary-foreground/80 hover:bg-primary-foreground/10'
@@ -247,7 +247,7 @@ export default function Layout() {
                   <button
                     type="button"
                     onClick={() => setCommunityOpen((current) => !current)}
-                    className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                    className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
                       communityActive
                         ? 'bg-secondary text-secondary-foreground'
                         : 'text-primary-foreground/80 hover:bg-primary-foreground/10'
@@ -295,7 +295,7 @@ export default function Layout() {
                     <Link
                       key={path}
                       to={path}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-medium transition-all ${
+                      className={`flex items-center gap-2 px-4 py-3 rounded-2xl text-sm font-semibold transition-all ${
                         location.pathname === path
                           ? "bg-secondary text-secondary-foreground"
                           : "text-primary-foreground/80 hover:bg-primary-foreground/10"
@@ -369,11 +369,11 @@ export default function Layout() {
                         Achievements
                       </Link>
                       <Link
-                        to="/accessibility"
+                        to="/settings"
                         onClick={() => setSettingsOpen(false)}
-                        className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/accessibility' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                        className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/settings' ? 'bg-secondary text-secondary-foreground' : ''}`}
                       >
-                        Accessibility
+                        Settings
                       </Link>
                       <button
                         type="button"
@@ -529,13 +529,6 @@ export default function Layout() {
                     >
                       Achievements
                     </Link>
-                    <Link
-                      to="/accessibility"
-                      onClick={closeMenu}
-                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/accessibility' ? 'bg-secondary text-secondary-foreground' : ''}`}
-                    >
-                      Accessibility
-                    </Link>
                     <div className="mt-4 rounded-2xl border border-border bg-primary px-3 py-3">
                       <RefreshRateSelector />
                     </div>
@@ -585,7 +578,7 @@ export default function Layout() {
       {!hideFooter && (
         <footer role="contentinfo" className="bg-primary text-primary-foreground mt-8">
           {/* Main footer links */}
-          <div className="max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
+          <div className="w-full px-6 py-12 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-8">
           {/* Column 1 */}
           <div>
             <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Study Resources</h4>
@@ -647,7 +640,6 @@ export default function Layout() {
               {[
                 { label: "Dashboard", to: "/dashboard" },
                 { label: "AI Tutor (24/7)", to: "/" },
-                { label: "Accessibility", to: "/accessibility" },
                 { label: "Onboarding", to: "/onboarding" },
                 { label: "Admin Panel", to: "/admin" },
               ].map(({ label, to }) => (
@@ -659,7 +651,7 @@ export default function Layout() {
 
         {/* Bottom bar */}
         <div className="border-t border-primary-foreground/20">
-          <div className="max-w-7xl mx-auto px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="w-full px-6 py-6 flex flex-col md:flex-row items-center justify-between gap-4">
             {/* Logo + tagline */}
             <div className="flex items-center gap-3">
               <div className="bg-secondary rounded-lg p-1.5">
@@ -674,9 +666,7 @@ export default function Layout() {
             {/* Center links */}
             <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1 text-xs text-primary-foreground/60">
               <span>© Learn Malawi {new Date().getFullYear()}</span>
-              <Link to="/accessibility" className="hover:text-primary-foreground transition-colors">Accessibility</Link>
-              <span className="hover:text-primary-foreground transition-colors cursor-default">Privacy</span>
-              <span className="hover:text-primary-foreground transition-colors cursor-default">Terms</span>
+
               <span className="text-primary-foreground/40">Aligned with MIE &amp; Malawi National Curriculum</span>
             </div>
 

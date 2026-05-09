@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { fetchAccessibilitySettings, saveAccessibilitySettings } from '@/api';
 
-const AccessibilityContext = createContext(null);
+const AccessibilityContext = createContext(/** @type {any} */ (null));
 
 const DEFAULT_ACCESSIBILITY_SETTINGS = {
   highContrast: false,

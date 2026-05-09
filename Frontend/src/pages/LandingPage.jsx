@@ -1,81 +1,105 @@
-import React, { useMemo, useState } from "react";
-import { useQuery } from '@tanstack/react-query';
+import React, { useEffect, useState } from "react";
+import { fetchResources, fetchStudyGroups } from "@/api";
 import { useAuth } from "@/lib/AuthContext";
-import { fetchStudentProgress } from "@/api";
-import HeroGreetings from "@/components/home/HeroGreetings";
-import CurrentlyReading from "@/components/home/CurrentlyReading";
-import QuickStats from "@/components/home/QuickStats";
-import RecommendedBooks from "@/components/home/RecommendedBooks";
-import ActivityPulse from "@/components/home/ActivityPulse";
-import SearchMonolith from "@/components/home/SearchMonolith";
-import SubjectIslands, { BASE_SUBJECTS } from "@/components/home/SubjectIslands";
-import FocusTimer from "@/components/home/FocusTimer";
+import HeroSection from "@/components/home/HeroSection";
+import StatsRow from "@/components/home/StatsRow";
+import ResourceCategories from "@/components/home/ResourceCategories";
+import StudyGroupsSection from "@/components/home/StudyGroupSection";
+import ContinueLearning from "@/components/home/ContinueLearning";
+import SubjectSpotlight from "@/components/home/SubjectSpotlight";
+import PersonalStats from "@/components/home/PersonalStats";
+import LearningPaths from "@/components/home/LearningPaths";
+import ResourceShowcase from "@/components/home/ResourceShowcase";
 
 export default function LandingPage() {
   const { user } = useAuth();
-  const userName = useMemo(
-    () => user?.full_name?.split(" ")[0] || "Scholar",
-    [user]
-  );
+  const [resourceCount, setResourceCount] = useState(0);
+  const [studyGroupsCount, setStudyGroupsCount] = useState(0);
+  const [loadingStats, setLoadingStats] = useState(false);
 
-  const { data: progressEntries = [] } = useQuery({
-    queryKey: ['landingPageProgress', user?.email],
-    queryFn: () => fetchStudentProgress({ studentEmail: user?.email, entryType: 'study' }),
-    enabled: Boolean(user?.email),
-    staleTime: 1000 * 60,
-    initialData: [],
-  });
+  useEffect(() => {
+    let mounted = true;
+    if (!user) return;
 
-  const progressMap = useMemo(() => {
-    return progressEntries.reduce(
-      (
-        /** @type {Record<string, any>} */ map,
-        /** @type {any} */ entry
-      ) => {
-        if (entry?.resource_id) {
-          map[entry.resource_id] = entry;
-        }
-        return map;
-      },
-      /** @type {Record<string, any>} */ ({})
-    );
-  }, [progressEntries]);
+    setLoadingStats(true);
+    Promise.all([fetchResources(), fetchStudyGroups({ limit: 6 })])
+      .then(([resources, groups]) => {
+        if (!mounted) return;
+        setResourceCount(Array.isArray(resources) ? resources.length : 0);
+        setStudyGroupsCount(Array.isArray(groups) ? groups.length : 0);
+      })
+      .catch(() => {
+        if (!mounted) return;
+        setResourceCount(0);
+        setStudyGroupsCount(0);
+      })
+      .finally(() => {
+        if (!mounted) return;
+        setLoadingStats(false);
+      });
 
-  const [bonusMinutes, setBonusMinutes] = useState(/** @type {Record<string, number>} */ ({}));
-
-  /**
-   * @param {string} subjectName
-   * @param {number} minutes
-   */
-  const handleSessionComplete = (subjectName, minutes) => {
-    setBonusMinutes((prev) => ({
-      ...prev,
-      [subjectName]: (prev[subjectName] || 0) + minutes,
-    }));
-  };
+    return () => {
+      mounted = false;
+    };
+  }, [user]);
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="pt-14 max-w-7xl mx-auto">
-        <div className="flex">
-          {/* Main Content */}
-          <main className="flex-1 min-w-0 px-4 md:px-8 py-8 space-y-8 pb-36 md:pb-28 overflow-x-hidden">
-            <HeroGreetings userName={userName} progressEntries={progressEntries} />
-            <QuickStats progressEntries={progressEntries} />
-            <CurrentlyReading progressMap={progressMap} progressEntries={progressEntries} />
-            <FocusTimer subjects={BASE_SUBJECTS} onSessionComplete={handleSessionComplete} />
-            <SubjectIslands bonusMinutes={bonusMinutes} progressEntries={progressEntries} />
-            <RecommendedBooks />
-          </main>
+      <main className="w-full px-4 sm:px-6 py-6 space-y-8">
+        {/* Hero */}
+        <HeroSection user={user} />
 
-          {/* Right Pulse Panel */}
-          <aside className="hidden lg:block w-80 xl:w-88 flex-shrink-0 border-l border-border/40 px-6 py-8 sticky top-16 h-[calc(100vh-4rem)] overflow-y-auto">
-            <ActivityPulse />
-          </aside>
+        {/* Resource Showcase */}
+        <ResourceShowcase />
+
+        {/* Stats */}
+        <StatsRow resourcesCount={resourceCount} studyGroupsCount={studyGroupsCount} loading={loadingStats} />
+
+        {/* Personal Stats */}
+        <PersonalStats />
+
+        {/* Learning Paths */}
+        <LearningPaths />
+
+        {/* Main content grid */}
+        <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-8">
+          <div className="space-y-8">
+            {/* Resource categories */}
+            <ResourceCategories />
+
+            {/* Study groups */}
+            <StudyGroupsSection />
+
+            {/* Continue learning */}
+            <ContinueLearning />
+          </div>
+
+          {/* Sidebar */}
+          <div>
+            <SubjectSpotlight />
+          </div>
         </div>
-      </div>
+      </main>
 
-      <SearchMonolith />
+      {/* Footer */}
+      <footer className="border-t mt-12 bg-card">
+        <div className="w-full px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
+              <span className="text-white text-xs font-bold">L</span>
+            </div>
+            <span className="text-sm font-heading font-semibold">Learn Malawi</span>
+          </div>
+          <p className="text-xs text-muted-foreground text-center">
+            Empowering Malawian students with quality educational resources.
+          </p>
+          <div className="flex gap-4 text-xs text-muted-foreground">
+            <button className="hover:text-foreground transition-colors">About</button>
+            <button className="hover:text-foreground transition-colors">Contact</button>
+            <button className="hover:text-foreground transition-colors">Privacy</button>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

@@ -3,6 +3,13 @@ import * as SwitchPrimitives from "@radix-ui/react-switch"
 
 import { cn } from "@/lib/utils"
 
+/**
+ * @typedef {import('@radix-ui/react-switch').SwitchProps} SwitchProps
+ */
+
+/**
+ * @type {React.ForwardRefRenderFunction<HTMLButtonElement, SwitchProps>}
+ */
 const Switch = React.forwardRef(({ className, ...props }, ref) => (
   <SwitchPrimitives.Root
     className={cn(
@@ -10,11 +17,13 @@ const Switch = React.forwardRef(({ className, ...props }, ref) => (
       className
     )}
     {...props}
-    ref={ref}>
+    ref={ref}
+  >
     <SwitchPrimitives.Thumb
       className={cn(
         "pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform data-[state=checked]:translate-x-4 data-[state=unchecked]:translate-x-0"
-      )} />
+      )}
+    />
   </SwitchPrimitives.Root>
 ))
 Switch.displayName = SwitchPrimitives.Root.displayName
