@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchStudyNotes, deleteStudyNote } from '@/api';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { filterByTeacher, sortByLatest } from './teacherUtils';
 
 export default function StudyNotesAdmin() {
   const { user } = useAuth();
-  const { refreshDashboard } = useOutletContext() || {};
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState({ open: false, existing: null });
@@ -18,7 +16,7 @@ export default function StudyNotesAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchStudyNotes();
+      const data = await fetchStudyNotes({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 
@@ -39,7 +37,6 @@ export default function StudyNotesAdmin() {
     if (!confirm('Delete this study note?')) return;
     await deleteStudyNote(id);
     load();
-    refreshDashboard?.();
   };
 
   return (
@@ -49,13 +46,13 @@ export default function StudyNotesAdmin() {
           <h1 className="text-2xl font-jakarta font-bold">Study Notes</h1>
           <p className="text-muted-foreground text-sm mt-1">Upload curriculum-aligned notes for students</p>
         </div>
-        <Button onClick={() => setModal({ open: true, existing: null })}>
+        <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600" onClick={() => setModal({ open: true, existing: null })}>
           <Plus className="w-4 h-4 mr-2" /> Upload Note
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
       ) : notes.length === 0 ? (
         <EmptyState label="study notes" />
       ) : (
@@ -78,7 +75,7 @@ export default function StudyNotesAdmin() {
                   <td className="px-4 py-3 text-muted-foreground">{n.subject}</td>
                   <td className="px-4 py-3 text-muted-foreground">{n.level}</td>
                   <td className="px-4 py-3 text-muted-foreground">{n.grade || '—'}</td>
-                  <td className="px-4 py-3"><StatusBadge status={n.status || 'uploaded'} /></td>
+                  <td className="px-4 py-3"><StatusBadge status={n.status || 'published'} /></td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       <button onClick={() => setModal({ open: true, existing: n })} className="p-1.5 rounded hover:bg-muted text-muted-foreground hover:text-foreground transition-colors">
@@ -99,7 +96,7 @@ export default function StudyNotesAdmin() {
       <ResourceModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}
-        onSaved={() => { setModal({ open: false, existing: null }); load(); refreshDashboard?.(); }}
+        onSaved={() => { setModal({ open: false, existing: null }); load(); }}
         type="studynote"
         existing={modal.existing}
       />

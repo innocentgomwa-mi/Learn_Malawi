@@ -14,19 +14,34 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const userKey = user?.id || user?.email;
-    if (!userKey) {
-      setProgress([]);
-      setAttempts([]);
-      setLoading(false);
-      return;
-    }
+    let active = true;
 
-    const dashboardData = loadDashboardData(userKey);
-    setProgress(dashboardData.progress);
-    setAttempts(dashboardData.attempts);
-    setLoading(false);
+    const loadData = async () => {
+      setLoading(true);
+      const userKey = user?.id || user?.email;
+      if (!userKey) {
+        setProgress([]);
+        setAttempts([]);
+        setLoading(false);
+        return;
+      }
+
+      const dashboardData = loadDashboardData(userKey);
+      if (!active) return;
+
+      setProgress(dashboardData.progress);
+      setAttempts(dashboardData.attempts);
+      setLoading(false);
+    };
+
+    loadData();
+
+    return () => {
+      active = false;
+    };
   }, [user]);
+
+  // Auto-refresh disabled on the dashboard to prevent page reloads while users are filling forms.
 
   const userName = user
     ? user.full_name || [user.firstName, user.lastName].filter(Boolean).join(' ') || user.email
@@ -63,17 +78,20 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       {/* Header */}
-      <div className="flex items-center gap-4 mb-8">
-        <div className="bg-primary/10 rounded-2xl p-3">
-          <User className="h-8 w-8 text-primary" />
-        </div>
-        <div>
-          <h1 className="font-poppins text-2xl font-bold text-foreground">{userName}</h1>
-          <p className="text-muted-foreground text-sm">{user?.email}</p>
+      <div className="flex flex-col gap-3 mb-8 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-4">
+          <div className="bg-primary/10 rounded-2xl p-3">
+            <User className="h-8 w-8 text-primary" />
+          </div>
+          <div>
+            <h1 className="font-poppins text-2xl font-bold text-foreground">{userName}</h1>
+            <p className="text-muted-foreground text-sm">{user?.email}</p>
+          </div>
         </div>
       </div>
+
 
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">

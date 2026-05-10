@@ -54,6 +54,10 @@ export class QuizResponseDto {
   @Expose()
   difficulty: Difficulty;
 
+  @ApiProperty({ required: false })
+  @Expose()
+  teacherEmail?: string;
+
   @ApiProperty()
   @Expose()
   class: string;

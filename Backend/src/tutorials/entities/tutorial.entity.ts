@@ -38,6 +38,9 @@ export class Tutorial {
   @Column({ type: 'varchar', length: 500 })
   videoUrl!: string;
 
+  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
+  teacherEmail?: string;
+
   @CreateDateColumn()
   createdAt!: Date;
 

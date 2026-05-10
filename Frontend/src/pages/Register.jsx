@@ -8,11 +8,15 @@ const Register = () => {
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [school, setSchool] = useState('');
+  const [level, setLevel] = useState('PSLC');
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [role, setRole] = useState(location.state?.role ?? 'Admin');
-  const roleLabel = role === 'Student' ? 'student' : role === 'Admin' ? 'admin' : 'teacher';
+  const defaultRole = location.state?.role === 'Teacher' ? 'Teacher' : 'Student';
+  const [role, setRole] = useState(defaultRole);
+  const roleLabel = role === 'Student' ? 'student' : 'teacher';
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [loading, setLoading] = useState(false);
 
@@ -22,15 +26,20 @@ const Register = () => {
   const handleSubmit = async (event) => {
     event.preventDefault();
     setError(null);
-    if (!firstName || !lastName || !email || !password) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !school || !level) {
       setError('Please complete all required fields.');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match. Please double-check and try again.');
       return;
     }
 
     setLoading(true);
     try {
       const normalizedRole = role.trim().charAt(0).toUpperCase() + role.trim().slice(1).toLowerCase();
-      await authRegister({ firstName, lastName, email, password, role: normalizedRole });
+      await authRegister({ firstName, lastName, email, password, role: normalizedRole, school, level });
       const loginResult = await login(email, password);
       if (loginResult.success) {
         navigate(role === 'Student' ? '/' : '/teacher', { replace: true });
@@ -112,13 +121,46 @@ const Register = () => {
             </label>
 
             <label className="block text-sm font-medium text-foreground">
+              Confirm password
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                required
+                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+
+            <label className="block text-sm font-medium text-foreground">
+              School
+              <input
+                type="text"
+                value={school}
+                onChange={(event) => setSchool(event.target.value)}
+                required
+                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              />
+            </label>
+            <label className="block text-sm font-medium text-foreground">
+              Level
+              <select
+                value={level}
+                onChange={(event) => setLevel(event.target.value)}
+                required
+                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              >
+                <option value="PSLC">PSLC</option>
+                <option value="JCE">JCE</option>
+                <option value="MSCE">MSCE</option>
+              </select>
+            </label>
+            <label className="block text-sm font-medium text-foreground">
               Role
               <select
                 value={role}
                 onChange={(event) => setRole(event.target.value)}
                 className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
               >
-                <option value="Admin">Admin</option>
                 <option value="Teacher">Teacher</option>
                 <option value="Student">Student</option>
               </select>

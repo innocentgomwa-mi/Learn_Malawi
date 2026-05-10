@@ -69,6 +69,13 @@ export default function TeacherAnalytics() {
   }, { Present: 0, Absent: 0, Late: 0 });
 
   const totalStudentDays = Object.values(attendanceSummary).reduce((a, b) => a + b, 0);
+  const avgEngagement = filteredAttendance.length > 0
+    ? Math.round(filteredAttendance.reduce((sum, log) => {
+        const records = log.records || [];
+        const totalScore = records.reduce((rSum, r) => rSum + (r.engagement_score || 0), 0);
+        return sum + (records.length > 0 ? totalScore / records.length : 0);
+      }, 0) / filteredAttendance.length)
+    : 0;
   const attendanceRate = totalStudentDays > 0
     ? Math.round((attendanceSummary.Present / totalStudentDays) * 100) : 0;
 
@@ -185,15 +192,16 @@ export default function TeacherAnalytics() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-20"><div className="w-7 h-7 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-20"><div className="w-7 h-7 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
       ) : (
         <div className="space-y-6">
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
             {[
-              { label: 'Total Quizzes', value: filteredQuizzes.length, color: 'text-emerald-600' },
-              { label: 'Total Questions', value: filteredQuizzes.reduce((a, q) => a + (q.questions?.length || 0), 0), color: 'text-blue-600' },
+              { label: 'Total Quizzes', value: filteredQuizzes.length, color: 'text-blue-600' },
+              { label: 'Total Questions', value: filteredQuizzes.reduce((a, q) => a + (q.questions?.length || 0), 0), color: 'text-sky-600' },
               { label: 'Attendance Rate', value: `${attendanceRate}%`, color: 'text-purple-600' },
+              { label: 'Avg Engagement', value: `${avgEngagement}%`, color: 'text-emerald-600' },
               { label: 'Sessions Logged', value: filteredAttendance.length, color: 'text-orange-600' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-card border border-border rounded-xl p-5">
@@ -228,7 +236,7 @@ export default function TeacherAnalytics() {
               <h2 className="font-semibold mb-4">Attendance Breakdown</h2>
               <div className="flex gap-6 items-center">
                 <div className="flex-1 space-y-3">
-                  {[['Present', attendanceSummary.Present, 'bg-emerald-500'], ['Absent', attendanceSummary.Absent, 'bg-red-400'], ['Late', attendanceSummary.Late, 'bg-amber-400']].map(([label, count, color]) => (
+                  {[['Present', attendanceSummary.Present, 'bg-blue-500'], ['Absent', attendanceSummary.Absent, 'bg-red-400'], ['Late', attendanceSummary.Late, 'bg-amber-400']].map(([label, count, color]) => (
                     <div key={label}>
                       <div className="flex justify-between text-sm mb-1">
                         <span>{label}</span>

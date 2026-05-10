@@ -1,13 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { existsSync, mkdirSync } from 'fs';
 import { join } from 'path';
-import * as express from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
-
-  app.use('/uploads', express.static(join(process.cwd(), 'uploads')));
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const uploadDir = join(__dirname, '..', 'uploads');
+  if (!existsSync(uploadDir)) {
+    mkdirSync(uploadDir, { recursive: true });
+  }
+  app.useStaticAssets(uploadDir, { prefix: '/uploads' });
 
   app.enableCors({
     origin: true,

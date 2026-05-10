@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { Shield, AlertTriangle, Users, LogIn, TrendingUp, Activity } from "lucide-react";
@@ -11,6 +12,8 @@ const parseDate = (value) => {
   return isValid(date) ? date : null;
 };
 
+const getCreatedAt = (entry) => parseDate(entry?.createdDate ?? entry?.created_date);
+
 const safeFormat = (value, dateFormat, fallback = "") => {
   const date = parseDate(value);
   return date ? format(date, dateFormat) : fallback;
@@ -18,8 +21,8 @@ const safeFormat = (value, dateFormat, fallback = "") => {
 
 export default function SecurityCenter() {
   const { data: logs = [] } = useQuery({
-    queryKey: ["security-logs"],
-    queryFn: () => apiClient.entities.ActivityLog.list("-created_date", 500),
+    queryKey: ["security-login-logs"],
+    queryFn: () => apiClient.entities.ActivityLog.list({ limit: 500 }),
   });
 
   const { data: history = [] } = useQuery({
@@ -35,7 +38,7 @@ export default function SecurityCenter() {
       const start = startOfDay(day).getTime();
       const end = start + 86400000;
       const logins = logs.filter((l) => {
-        const created = parseDate(l.created_date);
+        const created = getCreatedAt(l);
         return created?.getTime() >= start && created?.getTime() < end && l.action === "login";
       }).length;
       return { day: label, logins };
@@ -43,11 +46,11 @@ export default function SecurityCenter() {
   }, [logs]);
 
   // Active users (unique emails in last 24h)
-    const cutoff24h = Date.now() - 86400000;
+  const cutoff24h = Date.now() - 86400000;
   const activeUsers24h = new Set(
     logs
       .filter((l) => {
-        const created = parseDate(l.created_date);
+        const created = getCreatedAt(l);
         return created?.getTime() > cutoff24h;
       })
       .map((l) => l.user_email),

@@ -20,7 +20,7 @@ export class TeacherPost {
   @Column({ type: 'text', nullable: true })
   description?: string;
 
-  @Column({ default: 'pending' })
+  @Column({ default: 'published' })
   status: string;
 
   @Column({ nullable: true })

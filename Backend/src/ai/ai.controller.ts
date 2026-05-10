@@ -1,65 +1,31 @@
-import { Controller, Post, Body, Get } from '@nestjs/common';
+import { Body, Controller, Post } from '@nestjs/common';
 import { Public } from '../auth/decorators/public.decorator';
 import { AiService } from './ai.service';
-import {
-  AskQuestionDto,
-  QuizDto,
-  EducationalContentDto,
-  SummarizeDto,
-  CheckAnswerDto,
-  TranslateDto,
-  ChatCompletionDto,
-} from './dto/create-ai-request.dto';
+import { CreateAiRequestDto } from './dto/create-ai-request.dto';
+import { CreateAiQuizDto } from './dto/create-ai-quiz.dto';
 
 @Controller('ai')
-@Public()
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
-  @Get('models')
-  getAvailableModels() {
-    return {
-      models: [
-        { id: 'llama-3.3-70b-versatile', name: 'Llama 3.3 70B (Recommended)', description: 'Best for general use' },
-        { id: 'llama-3.1-70b-versatile', name: 'Llama 3.1 70B', description: 'Fast and versatile' },
-        { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant', description: 'Fastest, good for simple tasks' },
-        { id: 'mixtral-8x7b-32768', name: 'Mixtral 8x7B', description: 'Great for long contexts' },
-      ],
-    };
-  }
-
+  @Public()
   @Post('chat')
-  async chat(@Body() dto: ChatCompletionDto) {
-    return this.aiService.chatCompletion(dto);
+  async chat(@Body() createAiRequestDto: CreateAiRequestDto) {
+    try {
+      const text = await this.aiService.generateResponse(createAiRequestDto.prompt);
+      return { text };
+    } catch (error) {
+      console.error('AI chat failed:', error);
+      return {
+        text: 'Sorry, the AI tutor is unavailable right now. Please try again later.',
+      };
+    }
   }
 
-  @Post('generate-content')
-  async generateContent(@Body() dto: EducationalContentDto) {
-    return this.aiService.generateEducationalContent(dto.topic, dto.grade);
-  }
-
-  @Post('ask')
-  async askQuestion(@Body() dto: AskQuestionDto) {
-    return this.aiService.answerQuestion(dto.question, dto.context);
-  }
-
-  @Post('generate-quiz')
-  async generateQuiz(@Body() dto: QuizDto) {
-    return this.aiService.generateQuiz(dto.topic, dto.numQuestions || 5, dto.difficulty);
-  }
-
-  @Post('summarize')
-  async summarize(@Body() dto: SummarizeDto) {
-    return this.aiService.summarizeContent(dto.content, dto.maxLength);
-  }
-
-  @Post('check-answer')
-  async checkAnswer(@Body() dto: CheckAnswerDto) {
-    return this.aiService.checkAnswer(dto.question, dto.studentAnswer, dto.correctAnswer);
-  }
-
-  @Post('translate')
-  async translate(@Body() dto: TranslateDto) {
-    return this.aiService.translateToChichewa(dto.text);
+  @Public()
+  @Post('quiz')
+  async generateQuiz(@Body() createAiQuizDto: CreateAiQuizDto) {
+    const questions = await this.aiService.generateQuiz(createAiQuizDto);
+    return { questions };
   }
 }

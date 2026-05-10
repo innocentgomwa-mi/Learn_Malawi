@@ -24,7 +24,13 @@
       "items": {
         "type": "object",
         "properties": {
+          "student_id": {
+            "type": "string"
+          },
           "student_name": {
+            "type": "string"
+          },
+          "class_id": {
             "type": "string"
           },
           "status": {
@@ -34,6 +40,24 @@
               "Absent",
               "Late"
             ]
+          },
+          "login_time": {
+            "type": "string"
+          },
+          "logout_time": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "method": {
+            "type": "string"
+          },
+          "engagement_score": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
           }
         }
       }

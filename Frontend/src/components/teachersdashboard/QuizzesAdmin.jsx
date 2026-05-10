@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchQuizzes, deleteQuiz } from '@/api';
 import { Button } from '@/components/ui/button';
@@ -22,7 +21,6 @@ function getOptionLabels(question) {
 
 export default function QuizzesAdmin() {
   const { user } = useAuth();
-  const { refreshDashboard } = useOutletContext() || {};
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
@@ -31,7 +29,7 @@ export default function QuizzesAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchQuizzes();
+      const data = await fetchQuizzes({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 
@@ -52,7 +50,6 @@ export default function QuizzesAdmin() {
     if (!confirm('Delete this quiz?')) return;
     await deleteQuiz(id);
     load();
-    refreshDashboard?.();
   };
 
   return (
@@ -62,13 +59,13 @@ export default function QuizzesAdmin() {
           <h1 className="text-2xl font-jakarta font-bold">Quizzes</h1>
           <p className="text-muted-foreground text-sm mt-1">Create multiple-choice quizzes to test student knowledge</p>
         </div>
-        <Button onClick={() => setModal({ open: true, existing: null })}>
+        <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600" onClick={() => setModal({ open: true, existing: null })}>
           <Plus className="w-4 h-4 mr-2" /> Create Quiz
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
       ) : quizzes.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <HelpCircle className="w-12 h-12 mx-auto mb-4 opacity-30" />
@@ -79,14 +76,14 @@ export default function QuizzesAdmin() {
           {quizzes.map((q) => (
             <div key={q.id} className="bg-card border border-border rounded-xl overflow-hidden">
               <div className="flex items-center gap-4 px-5 py-4">
-                <div className="w-9 h-9 bg-emerald-100 rounded-lg flex items-center justify-center shrink-0">
-                  <HelpCircle className="w-5 h-5 text-emerald-600" />
+                <div className="w-9 h-9 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">
+                  <HelpCircle className="w-5 h-5 text-blue-600" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm truncate">{q.title}</p>
                   <p className="text-xs text-muted-foreground">{q.subject} · {q.class || q.class_level || '—'} · {(q.questions?.length ?? q.total_questions ?? 0)} questions</p>
                 </div>
-                <StatusBadge status={q.status || 'pending'} />
+                <StatusBadge status={q.status || 'published'} />
                 <div className="flex items-center gap-1.5">
                   <button onClick={() => setModal({ open: true, existing: q })} className="p-1.5 rounded hover:bg-muted text-muted-foreground transition-colors">
                     <Pencil className="w-4 h-4" />
@@ -106,7 +103,7 @@ export default function QuizzesAdmin() {
                       <p className="font-medium mb-1.5">{i + 1}. {ques.question}</p>
                       <div className="grid grid-cols-2 gap-1.5 pl-4">
                         {getOptionLabels(ques).map((opt) => (
-                          <span key={opt.label} className={`text-xs px-2 py-1 rounded ${ques.answer === opt.label || ques.correct_answer === opt.label ? 'bg-emerald-100 text-emerald-700 font-semibold' : 'text-muted-foreground'}`}>
+                          <span key={opt.label} className={`text-xs px-2 py-1 rounded ${ques.answer === opt.label || ques.correct_answer === opt.label ? 'bg-blue-100 text-blue-700 font-semibold' : 'text-muted-foreground'}`}>
                             {opt.label}. {opt.value}
                           </span>
                         ))}
@@ -123,7 +120,7 @@ export default function QuizzesAdmin() {
       <QuizModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}
-        onSaved={() => { setModal({ open: false, existing: null }); load(); refreshDashboard?.(); }}
+        onSaved={() => { setModal({ open: false, existing: null }); load(); }}
         existing={modal.existing}
       />
     </div>

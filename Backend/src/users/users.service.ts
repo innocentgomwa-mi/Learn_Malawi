@@ -36,14 +36,14 @@ export class UsersService {
 
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find({
-      select: ['id', 'firstName', 'lastName', 'email', 'role', 'createdAt', 'updatedAt'],
+      select: ['id', 'firstName', 'lastName', 'email', 'role', 'school', 'level', 'profileImageUrl', 'createdAt', 'updatedAt'],
     });
   }
 
   async findOne(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({
       where: { id },
-      select: ['id', 'firstName', 'lastName', 'email', 'role', 'createdAt', 'updatedAt'],
+      select: ['id', 'firstName', 'lastName', 'email', 'role', 'school', 'level', 'profileImageUrl', 'createdAt', 'updatedAt'],
     });
     
     if (!user) {

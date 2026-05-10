@@ -160,7 +160,7 @@ export default function StudyGroups() {
     const allowedToSend = isMentor || isMember;
 
     return (
-      <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col h-[80vh]">
+      <div className="w-full px-4 py-8 flex flex-col h-[80vh]">
         <div className="flex items-center gap-3 mb-4">
           <button onClick={() => setActiveGroup(null)} className="p-2 rounded-xl bg-muted hover:bg-primary/10">
             <ChevronLeft className="h-5 w-5" />
@@ -223,7 +223,7 @@ export default function StudyGroups() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="flex items-center gap-3 mb-6">
         <div className="bg-primary/10 rounded-xl p-2"><Users className="h-6 w-6 text-primary" /></div>
         <div>

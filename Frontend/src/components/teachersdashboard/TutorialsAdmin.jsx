@@ -1,5 +1,4 @@
 ﻿import { useEffect, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchTutorials, deleteTutorial } from '@/api';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { filterByTeacher, sortByLatest } from './teacherUtils';
 
 export default function TutorialsAdmin() {
   const { user } = useAuth();
-  const { refreshDashboard } = useOutletContext() || {};
   const [tutorials, setTutorials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState({ open: false, existing: null });
@@ -18,7 +16,7 @@ export default function TutorialsAdmin() {
   const load = async () => {
     setLoading(true);
     try {
-      const data = await fetchTutorials();
+      const data = await fetchTutorials({ teacherEmail: user?.email });
       const filtered = filterByTeacher(data, user?.email || '');
       const sorted = sortByLatest(filtered);
 
@@ -39,7 +37,6 @@ export default function TutorialsAdmin() {
     if (!confirm('Delete this tutorial?')) return;
     await deleteTutorial(id);
     load();
-    refreshDashboard?.();
   };
 
   return (
@@ -49,13 +46,13 @@ export default function TutorialsAdmin() {
           <h1 className="text-2xl font-jakarta font-bold">Tutorials</h1>
           <p className="text-muted-foreground text-sm mt-1">Upload video, animation and audio tutorials for students</p>
         </div>
-        <Button onClick={() => setModal({ open: true, existing: null })}>
+        <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600" onClick={() => setModal({ open: true, existing: null })}>
           <Plus className="w-4 h-4 mr-2" /> Add Tutorial
         </Button>
       </div>
 
       {loading ? (
-        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-emerald-200 border-t-emerald-600 rounded-full animate-spin" /></div>
+        <div className="flex justify-center py-16"><div className="w-7 h-7 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin" /></div>
       ) : tutorials.length === 0 ? (
         <div className="text-center py-20 text-muted-foreground">
           <PlayCircle className="w-12 h-12 mx-auto mb-4 opacity-30" />
@@ -69,7 +66,7 @@ export default function TutorialsAdmin() {
                 <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
                   <PlayCircle className="w-5 h-5 text-orange-600" />
                 </div>
-                <StatusBadge status={t.status || 'pending'} />
+                <StatusBadge status={t.status || 'published'} />
               </div>
               <h3 className="font-semibold text-sm mb-1 truncate">{t.title}</h3>
               <p className="text-xs text-muted-foreground mb-2">{t.subject} · {t.class || t.class_level || '—'}</p>
@@ -101,7 +98,7 @@ export default function TutorialsAdmin() {
       <ResourceModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}
-        onSaved={() => { setModal({ open: false, existing: null }); load(); refreshDashboard?.(); }}
+        onSaved={() => { setModal({ open: false, existing: null }); load(); }}
         type="tutorial"
         existing={modal.existing}
       />

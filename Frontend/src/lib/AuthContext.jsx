@@ -7,6 +7,7 @@
  *   full_name?: string,
  *   school?: string,
  *   role?: string,
+ *   profileImageUrl?: string,
  * }} User
  *
  * @typedef {{
@@ -32,7 +33,7 @@
  */
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
-import { authLogin, authLogout, fetchProfile } from '@/api';
+import { authLogin, authLogout, fetchProfile, fetchSystemSettings, isJwtTokenExpiringSoon, refreshAuthTokens } from '@/api';
 
 /** @type {import('react').Context<AuthContextValue | null>} */
 const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null));
@@ -40,14 +41,20 @@ const AuthContext = createContext(/** @type {AuthContextValue | null} */ (null))
 const ACCESS_TOKEN_KEY = 'learnmalawi_access_token';
 const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
+function isValidToken(token) {
+  return typeof token === 'string' && token.trim() !== '' && token.trim().toLowerCase() !== 'undefined' && token.trim().toLowerCase() !== 'null';
+}
+
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 /**
@@ -79,8 +86,29 @@ export function AuthProvider(props) {
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [appPublicSettings, setAppPublicSettings] = useState(/** @type {any} */ (null));
 
+  const refreshPublicSettings = async () => {
+    try {
+      const response = await fetchSystemSettings();
+      setAppPublicSettings(Array.isArray(response) ? response : []);
+    } catch {
+      setAppPublicSettings([]);
+    }
+  };
+
   useEffect(() => {
     checkAppState();
+
+    const refreshOnFocus = () => {
+      refreshPublicSettings();
+    };
+
+    const intervalId = window.setInterval(refreshPublicSettings, 15000);
+    window.addEventListener('focus', refreshOnFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener('focus', refreshOnFocus);
+    };
   }, []);
 
   const checkAppState = async () => {
@@ -88,7 +116,25 @@ export function AuthProvider(props) {
     setIsLoadingPublicSettings(true);
     setError(null);
 
-    const token = getStoredAccessToken();
+    await refreshPublicSettings();
+
+    let token = getStoredAccessToken();
+    const refreshToken = getStoredRefreshToken();
+
+    if (refreshToken && (!token || isJwtTokenExpiringSoon(token, 60))) {
+      try {
+        await refreshAuthTokens(refreshToken);
+        token = getStoredAccessToken();
+      } catch {
+        clearAuthTokens();
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsLoadingAuth(false);
+        setIsLoadingPublicSettings(false);
+        return;
+      }
+    }
+
     if (!token) {
       setUser(null);
       setIsAuthenticated(false);

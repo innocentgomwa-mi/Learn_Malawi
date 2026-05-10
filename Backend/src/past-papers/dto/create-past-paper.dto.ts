@@ -1,4 +1,3 @@
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, Max, IsUrl } from 'class-validator';
 import { EducationLevel } from '../entities/past-paper.entity';

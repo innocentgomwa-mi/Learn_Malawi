@@ -15,8 +15,13 @@ export class StudentProgressController {
   }
 
   @Get()
-  findAll(@Query('student_email') studentEmail?: string) {
-    return this.studentProgressService.findAll(studentEmail);
+  findAll(
+    @Query('student_email') studentEmail?: string,
+    @Query('entry_type') entryType?: string,
+    @Query('level') level?: string,
+    @Query('subject') subject?: string,
+  ) {
+    return this.studentProgressService.findAll(studentEmail, entryType, level, subject);
   }
 
   @Get(':id')

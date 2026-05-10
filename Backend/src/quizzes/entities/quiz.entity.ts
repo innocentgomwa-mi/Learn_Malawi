@@ -37,6 +37,9 @@ export class Quiz {
   @Column({ type: 'varchar', length: 100 })
   subject: string;
 
+  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
+  teacherEmail?: string;
+
   @Column({
     type: 'enum',
     enum: Difficulty,

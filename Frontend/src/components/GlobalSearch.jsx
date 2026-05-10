@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { Search, X, BookOpen, FileText, Play, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 
@@ -32,6 +32,7 @@ export default function GlobalSearch() {
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef(null);
+  const containerRef = useRef(null);
   const allData = useRef(null);
 
   const loadAll = async () => {
@@ -44,11 +45,9 @@ export default function GlobalSearch() {
   };
 
   useEffect(() => {
-    if (!open) return;
-    setTimeout(() => inputRef.current?.focus(), 50);
     setLoading(true);
     loadAll().then(() => setLoading(false));
-  }, [open]);
+  }, []);
 
   useEffect(() => {
     if (!query.trim() || !allData.current) { setResults([]); return; }
@@ -62,83 +61,96 @@ export default function GlobalSearch() {
     setResults(filtered);
   }, [query]);
 
-  // Keyboard shortcut Ctrl+K
   useEffect(() => {
-    const handler = (e) => { if ((e.ctrlKey || e.metaKey) && e.key === "k") { e.preventDefault(); setOpen(true); } };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
+    const handleClickOutside = (event) => {
+      if (containerRef.current && !containerRef.current.contains(event.target)) {
+        setOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handleClickOutside);
+    return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Close search with Escape
-  useEffect(() => {
-    if (!open) return;
-    const handleEscape = (e) => { if (e.key === "Escape") setOpen(false); };
-    window.addEventListener("keydown", handleEscape);
-    return () => window.removeEventListener("keydown", handleEscape);
-  }, [open]);
+  const toggleOpen = () => {
+    setOpen((current) => {
+      const next = !current;
+      if (next) {
+        window.requestAnimationFrame(() => inputRef.current?.focus());
+      }
+      return next;
+    });
+  };
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative z-50">
       <button
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/10 hover:bg-primary-foreground/20 text-primary-foreground transition-colors"
-        aria-label="Toggle search"
-        aria-expanded={open}
+        type="button"
+        onClick={toggleOpen}
+        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-border bg-card text-foreground shadow-sm hover:bg-primary-foreground/10 transition"
+        aria-label="Open search"
       >
-        <Search className="h-4 w-4" />
+        <Search className="h-5 w-5 text-foreground" />
       </button>
 
-      <div
-        className={`absolute top-full mt-2 left-1/2 z-50 w-[min(100vw-1rem,28rem)] -translate-x-1/2 overflow-hidden rounded-2xl border border-border bg-card shadow-2xl transition-all duration-300 ease-out md:left-auto md:right-0 md:translate-x-0 ${open ? 'opacity-100 scale-100 max-h-[32rem] pointer-events-auto' : 'opacity-0 scale-95 max-h-0 pointer-events-none'}`}
-        aria-hidden={!open}
-      >
-        <div className="flex items-center gap-3 px-4 py-3 border-b border-border">
-          <Search className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <input
-            ref={inputRef}
-            value={query}
-            onChange={e => setQuery(e.target.value)}
-            placeholder="Search by title, subject, level or topic…"
-            className="flex-1 bg-transparent text-foreground outline-none text-sm placeholder:text-muted-foreground"
-          />
-          {loading && <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />}
-          <button
-            onClick={() => setOpen(false)}
-            className="rounded-lg p-2 text-muted-foreground hover:bg-muted"
-            aria-label="Close search"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+      <div className={`absolute right-0 top-full mt-2 w-screen max-w-xl overflow-hidden rounded-3xl border border-border bg-card shadow-2xl transition-all duration-200 ${open ? 'opacity-100 scale-100 max-h-[32rem]' : 'opacity-0 scale-95 max-h-0 pointer-events-none'}`}>
+        <div className="p-4">
+          <div className="relative mb-3">
+            <Search className="pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <input
+              ref={inputRef}
+              type="search"
+              value={query}
+              onChange={e => setQuery(e.target.value)}
+              placeholder="Search all resources..."
+              className="w-full rounded-full border border-border bg-background px-12 py-3 text-sm text-foreground outline-none shadow-sm transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              onFocus={() => setOpen(true)}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-2 text-muted-foreground hover:bg-muted"
+                aria-label="Clear search"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            )}
+          </div>
 
-        <div className="max-h-80 overflow-y-auto">
-          {query.trim() === "" ? (
-            <p className="text-muted-foreground text-sm text-center py-8">Type to search all resources…</p>
-          ) : results.length === 0 && !loading ? (
-            <p className="text-muted-foreground text-sm text-center py-8">No results found for "{query}"</p>
-          ) : (
-            <div className="py-2">
-              {results.map(item => {
-                const cfg = TYPE_CONFIG[item._type];
-                const Icon = cfg.icon;
-                return (
-                  <Link
-                    key={item.id}
-                    to={cfg.path}
-                    onClick={() => setOpen(false)}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors"
-                  >
-                    <Icon className={`h-4 w-4 flex-shrink-0 ${cfg.color}`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">{item.subject} · {item.level} {item.topic ? `· ${item.topic}` : ""}</p>
-                    </div>
-                    <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-muted ${cfg.color}`}>{cfg.label}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          )}
+          <div className="max-h-72 overflow-y-auto">
+            {query.trim() === "" ? (
+              <p className="text-muted-foreground text-sm text-center py-8">Type to search all resources…</p>
+            ) : loading ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : results.length === 0 ? (
+              <p className="text-muted-foreground text-sm text-center py-8">No results found for "{query}"</p>
+            ) : (
+              <div className="py-2">
+                {results.map(item => {
+                  const cfg = TYPE_CONFIG[item._type];
+                  const Icon = cfg.icon;
+                  return (
+                    <Link
+                      key={item.id}
+                      to={cfg.path}
+                      onClick={() => setOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted transition-colors"
+                    >
+                      <Icon className={`h-4 w-4 flex-shrink-0 ${cfg.color}`} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">{item.subject} · {item.level} {item.topic ? `· ${item.topic}` : ""}</p>
+                      </div>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full bg-muted ${cfg.color}`}>{cfg.label}</span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

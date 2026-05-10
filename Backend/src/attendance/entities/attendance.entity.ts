@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { AttendanceRecord } from './attendance-record.entity';
 
 @Entity('attendance')
 export class Attendance {
@@ -23,8 +25,11 @@ export class Attendance {
   @Column({ name: 'teacher_email', length: 255 })
   teacherEmail!: string;
 
-  @Column({ type: 'jsonb', nullable: true })
-  records?: any[];
+  @OneToMany(() => AttendanceRecord, (record) => record.attendance, {
+    cascade: true,
+    eager: true,
+  })
+  records?: AttendanceRecord[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

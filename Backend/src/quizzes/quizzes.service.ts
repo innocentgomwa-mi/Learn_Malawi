@@ -17,7 +17,7 @@ export class QuizzesService {
     private questionsRepository: Repository<Question>,
   ) {}
 
-  async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
+  async create(createQuizDto: CreateQuizDto & { teacherEmail?: string }): Promise<Quiz> {
     const quiz = this.quizzesRepository.create({
       ...createQuizDto,
       status: QuizStatus.UPLOADED,
@@ -32,6 +32,7 @@ export class QuizzesService {
     subject?: string,
     difficulty?: string,
     classFilter?: string,
+    teacherEmail?: string,
   ): Promise<Quiz[]> {
     const query = this.quizzesRepository.createQueryBuilder('quiz')
       .leftJoinAndSelect('quiz.questions', 'questions');
@@ -51,6 +52,10 @@ export class QuizzesService {
 
     if (classFilter && classFilter !== 'all') {
       query.andWhere('quiz.class = :classFilter', { classFilter });
+    }
+
+    if (teacherEmail) {
+      query.andWhere('quiz.teacherEmail = :teacherEmail', { teacherEmail });
     }
 
     query.orderBy('quiz.id', 'ASC');
