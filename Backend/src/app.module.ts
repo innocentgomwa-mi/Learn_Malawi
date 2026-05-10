@@ -14,6 +14,7 @@ import { Tutorial } from './tutorials/entities/tutorial.entity';
 import { PastPaper } from './past-papers/entities/past-paper.entity';
 import { StudyNote } from './study-notes/entities/study-note.entity';
 import { Attendance } from './attendance/entities/attendance.entity';
+import { AttendanceRecord } from './attendance/entities/attendance-record.entity';
 import * as Joi from 'joi';
 import { CareerResourcesModule } from './career-resources/career-resources.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
@@ -42,6 +43,8 @@ import { ResourceRating } from './resource-ratings/entities/resource-rating.enti
 import { StudyGroupsModule } from './study-groups/study-groups.module';
 import { StudyGroup } from './study-groups/entities/study-group.entity';
 import { StudyGroupMessage } from './study-groups/entities/study-group-message.entity';
+import { LearningPathsModule } from './learning-paths/learning-paths.module';
+import { LearningPath } from './learning-paths/entities/learning-path.entity';
 import { ScheduleModule } from './schedule/schedule.module';
 import { StudyBlock } from './schedule/entities/study-block.entity';
 import { Resource } from './schedule/entities/resource.entity';
@@ -82,6 +85,7 @@ import { Exam } from './schedule/entities/exam.entity';
           PastPaper,
           StudyNote,
           Attendance,
+          AttendanceRecord,
           Announcement,
           Discussion,
           TeacherPost,
@@ -90,6 +94,7 @@ import { Exam } from './schedule/entities/exam.entity';
           DataChangeHistory,
           StudentProgress,
           ResourceRating,
+          LearningPath,
           StudyGroup,
           StudyGroupMessage,
           StudyBlock,
@@ -120,6 +125,7 @@ import { Exam } from './schedule/entities/exam.entity';
     InsightsModule,
     ResourceRatingsModule,
     StudyGroupsModule,
+    LearningPathsModule,
     ScheduleModule,
   ],
   controllers: [],

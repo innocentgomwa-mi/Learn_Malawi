@@ -18,7 +18,8 @@
  * }} Tutorial
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { fetchTutorials } from "@/api";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -49,6 +50,8 @@ export default function Tutorials() {
   const [type, setType] = useState(/** @type { 'All' | TutorialType } */ ("All"));
 
   const [selectedTutorial, setSelectedTutorial] = useState(null);
+  const [searchParams] = useSearchParams();
+  const selectedTutorialId = searchParams.get('selected_id') || '';
 
   const { data: tutorials = [], isLoading: loading } = useQuery({
     queryKey: ['tutorials'],
@@ -71,6 +74,14 @@ export default function Tutorials() {
     return url;
   };
   const isDirectVideoFile = (url) => /\.(mp4|webm|ogg|mov|mkv)(\?.*)?$/.test(url) || /\/uploads\//.test(url);
+
+  useEffect(() => {
+    if (!selectedTutorialId || tutorials.length === 0) return;
+    const match = tutorials.find((t) => t.id === selectedTutorialId);
+    if (match) {
+      setSelectedTutorial(match);
+    }
+  }, [selectedTutorialId, tutorials]);
 
   if (!isAuthenticated) {
     return <RequireAccount resourceName="Tutorials" />;

@@ -22,6 +22,7 @@ const groups = [
       { path: '/teacher/study-notes', icon: BookOpen, label: 'Study Materials' },
       { path: '/teacher/past-papers', icon: FileText, label: 'Past Papers' },
       { path: '/teacher/tutorials', icon: PlayCircle, label: 'Tutorials' },
+      { path: '/teacher/learning-paths', icon: GraduationCap, label: 'Learning Paths' },
       { path: '/teacher/study-groups', icon: Users, label: 'Study Groups' },
       { path: '/teacher/quizzes', icon: HelpCircle, label: 'Assignments & Quizzes' },
     ]

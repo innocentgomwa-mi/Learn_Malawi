@@ -2,7 +2,6 @@ import React from "react";
 import { SettingsSection, SettingsRow } from "./SettingsCard.jsx";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 export default function NotificationSettings() {
@@ -13,7 +12,6 @@ export default function NotificationSettings() {
     emailNotifs: true,
     inAppNotifs: true,
   });
-  const { toast } = useToast();
 
   /** @param {'studyReminders'|'quizAlerts'|'assignments'|'emailNotifs'|'inAppNotifs'} key */
   const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
@@ -41,7 +39,7 @@ export default function NotificationSettings() {
         </SettingsRow>
       </SettingsSection>
 
-      <Button onClick={() => toast({ title: "Notification preferences saved" })}>Save Preferences</Button>
+      <Button>Save Preferences</Button>
     </div>
   );
 }

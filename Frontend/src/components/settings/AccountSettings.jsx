@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Camera } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { useToast } from "@/components/ui/use-toast";
 import { updateProfile } from "@/api";
 
 /**
@@ -27,16 +26,12 @@ export default function AccountSettings({ user }) {
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(" ") || user?.full_name || user?.email || "Student";
   const initials = displayName.split(" ").map((/** @type {string} */ n) => n[0]).join("").toUpperCase().slice(0, 2) || "U";
 
-  const { toast } = useToast();
-
   const handleSave = async () => {
     try {
       await updateProfile({ firstName, lastName });
       await refreshUser();
-      toast({ title: "Profile updated", description: "Your name has been saved successfully." });
     } catch (err) {
       console.error("Unable to save profile", err);
-      toast({ title: "Unable to save profile", description: "Please try again.", variant: "destructive" });
     }
   };
 

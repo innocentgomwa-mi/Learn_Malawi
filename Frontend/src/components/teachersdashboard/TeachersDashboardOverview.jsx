@@ -1,7 +1,7 @@
 // @ts-nocheck
 import { useEffect, useState } from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { BookOpen, FileText, PlayCircle, HelpCircle, Clock, CheckCircle, XCircle, Bell, ArrowRight } from 'lucide-react';
+import { BookOpen, FileText, PlayCircle, HelpCircle, Clock, CheckCircle, XCircle, Bell, ArrowRight, GraduationCap } from 'lucide-react';
 import { fetchAnnouncements } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 
@@ -9,12 +9,13 @@ const resourceCards = [
   { label: 'Study Notes', key: 'notes', icon: BookOpen, gradient: 'from-sky-500 to-blue-600', path: '/teacher/study-notes' },
   { label: 'Past Papers', key: 'papers', icon: FileText, gradient: 'from-violet-500 to-fuchsia-600', path: '/teacher/past-papers' },
   { label: 'Tutorials', key: 'tutorials', icon: PlayCircle, gradient: 'from-orange-400 to-orange-500', path: '/teacher/tutorials' },
+  { label: 'Learning Paths', key: 'learningPaths', icon: GraduationCap, gradient: 'from-sky-500 to-blue-600', path: '/teacher/learning-paths' },
   { label: 'Quizzes', key: 'quizzes', icon: HelpCircle, gradient: 'from-sky-500 to-blue-600', path: '/teacher/quizzes' },
 ];
 
 const statusCards = [
   { label: 'Drafts', key: 'pending', icon: Clock, color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-100' },
-  { label: 'Published', key: 'published', icon: CheckCircle, color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+  { label: 'Published', key: 'published', icon: CheckCircle, color: 'text-blue-600', bg: 'bg-blue-50', border: 'border-blue-100' },
   { label: 'Removed', key: 'rejected', icon: XCircle, color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
 ];
 

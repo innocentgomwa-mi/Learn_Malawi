@@ -344,6 +344,32 @@ export function fetchStudyGroups({ level, subject, teacherEmail } = {}) {
   return request(`/study-groups${query}`);
 }
 
+export function fetchLearningPaths({ level, subject, teacherEmail, search } = {}) {
+  const params = new URLSearchParams();
+  if (level && level !== 'All') params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (search) params.set('search', search);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/learning-paths${query}`);
+}
+
+const learningPathPayloadFields = ['title', 'subject', 'level', 'description', 'milestones'];
+
+export function createLearningPath(data) {
+  const payload = pickFields(data, learningPathPayloadFields);
+  return request('/learning-paths', { method: 'POST', body: payload });
+}
+
+export function updateLearningPath(id, data) {
+  const payload = pickFields(data, learningPathPayloadFields);
+  return request(`/learning-paths/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteLearningPath(id) {
+  return request(`/learning-paths/${id}`, { method: 'DELETE' });
+}
+
 export function fetchStudyBlocks() {
   return request('/study-blocks');
 }

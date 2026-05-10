@@ -72,21 +72,6 @@ const Header = () => {
         </div>
 
         <div className="mobile-actions">
-          <div className={`SearchIconWrapper ${showSearch ? "active" : ""}`}>
-            {showSearch && (
-              <input
-                type="text"
-                placeholder="Search resources..."
-                className="search-input"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                onKeyDown={handleSearch}
-                autoFocus
-              />
-            )}
-            <FaSearch className="search-icon" onClick={toggleSearch} />
-          </div>
-
           <div className="hamburger" onClick={toggleMenu}>
             {isOpen ? <FaTimes /> : <FaBars />}
           </div>

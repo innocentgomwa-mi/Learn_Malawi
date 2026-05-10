@@ -2,7 +2,6 @@ import React from "react";
 import { SettingsSection, SettingsRow } from "./SettingsCard";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 export default function SmartFeatures() {
@@ -10,7 +9,6 @@ export default function SmartFeatures() {
     recommendations: true,
     autoQuiz: false,
   });
-  const { toast } = useToast();
   /** @param {'recommendations'|'autoQuiz'} key */
   const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
 
@@ -25,7 +23,7 @@ export default function SmartFeatures() {
         </SettingsRow>
       </SettingsSection>
 
-      <Button onClick={() => toast({ title: "Smart features saved" })}>Save Settings</Button>
+      <Button>Save Settings</Button>
     </div>
   );
 }

@@ -2,7 +2,6 @@ import React from "react";
 import { SettingsSection, SettingsRow } from "./SettingsCard.jsx";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 export default function DataUsageSettings() {
@@ -11,7 +10,6 @@ export default function DataUsageSettings() {
     disableAudio: false,
     wifiOnly: true,
   });
-  const { toast } = useToast();
   /** @param {'lowData'|'disableAudio'|'wifiOnly'} key */
   const toggle = (key) => setPrefs(p => ({ ...p, [key]: !p[key] }));
 
@@ -29,7 +27,7 @@ export default function DataUsageSettings() {
         </SettingsRow>
       </SettingsSection>
 
-      <Button onClick={() => toast({ title: "Data settings saved" })}>Save Settings</Button>
+      <Button>Save Settings</Button>
     </div>
   );
 }

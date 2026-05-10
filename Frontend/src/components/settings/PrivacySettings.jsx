@@ -4,7 +4,6 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Trash2 } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from "@/lib/AuthContext";
 import { deleteAccount } from "@/api";
 import { AlertDialog, AlertDialogTrigger, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogAction, AlertDialogCancel } from "@/components/ui/alert-dialog";
@@ -14,19 +13,16 @@ export default function PrivacySettings() {
   const [visibility, setVisibility] = useLocalStorageState("learnmalawi_privacy_visibility", "public");
   const [dataTracking, setDataTracking] = useLocalStorageState("learnmalawi_privacy_data_tracking", true);
   const [isDeleting, setIsDeleting] = useState(false);
-  const { toast } = useToast();
   const { logout } = useAuth();
 
   const handleDeleteAccount = async () => {
     setIsDeleting(true);
     try {
       await deleteAccount();
-      toast({ title: "Account deleted", description: "Your account has been removed.", variant: "destructive" });
       await logout();
       window.location.assign("/login");
     } catch (err) {
-      const message = err && typeof err === "object" && "message" in err ? err.message : "Please try again later.";
-      toast({ title: "Unable to delete account", description: message, variant: "destructive" });
+      console.error(err);
     } finally {
       setIsDeleting(false);
     }

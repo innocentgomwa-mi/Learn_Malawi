@@ -3,7 +3,6 @@ import { SettingsSection, SettingsRow } from "./SettingsCard.jsx";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
-import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 const SUBJECTS = ["Mathematics", "Biology", "Chemistry", "Physics", "English", "History", "Geography", "Chichewa"];
@@ -14,7 +13,6 @@ export default function LearningPreferences() {
   const [difficulty, setDifficulty] = useLocalStorageState("learnmalawi_learning_difficulty", 2);
   const [dailyGoal, setDailyGoal] = useLocalStorageState("learnmalawi_learning_daily_goal", [30]);
   const [studyDays, setStudyDays] = useLocalStorageState("learnmalawi_learning_study_days", ["Mon", "Wed", "Fri"]);
-  const { toast } = useToast();
 
   /** @param {string} s */
   const toggleSubject = (s) => setSelected(p => p.includes(s) ? p.filter(x => x !== s) : [...p, s]);
@@ -73,7 +71,7 @@ export default function LearningPreferences() {
         </div>
       </SettingsSection>
 
-      <Button onClick={() => toast({ title: "Preferences saved" })}>Save Preferences</Button>
+      <Button>Save Preferences</Button>
     </div>
   );
 }
