@@ -91,7 +91,7 @@ const AuthenticatedApp = () => {
         <Route path="/search" element={<SearchResults />} />
         <Route path="/study-groups" element={<StudyGroups />} />
         <Route path="/discussions" element={<ProtectedRoute requiredRoles={[]}><Discussions /></ProtectedRoute>} />
-        <Route path="/abouts" element={!isAuthenticated ? <Abouts /> : <Navigate to="/" replace />} />
+        <Route path="/abouts" element={<Abouts />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />

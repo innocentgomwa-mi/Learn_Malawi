@@ -8,14 +8,13 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import OfflineBanner from "./OfflineBanner";
 import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
-import RefreshRateSelector from '@/components/RefreshRateSelector';
 import { useAuth } from "@/lib/AuthContext";
 import { useAccessibility } from '@/lib/AccessibilityContext';
 import { fetchAnnouncements } from "@/api";
 import { getSeenNotificationIds } from "@/lib/notificationStorage";
 
 const navItems = [
-  { path: "/abouts", label: "About", icon: Info, guestOnly: true },
+  { path: "/abouts", label: "About", icon: Info },
   { path: "/career", label: "Career Resources", icon: Briefcase, authRequired: true },
 ];
 
@@ -168,7 +167,7 @@ export default function Layout() {
       {!hideTopNav && (
         <>
           {/* Top Nav */}
-          <header className="bg-primary/95 text-primary-foreground sticky top-0 z-40 border-b border-primary-foreground/10 shadow-[0_25px_50px_-25px_rgba(15,23,42,0.45)] backdrop-blur-xl">
+          <header className="relative bg-primary/95 text-primary-foreground sticky top-0 z-40 border-b border-primary-foreground/10 shadow-[0_25px_50px_-25px_rgba(15,23,42,0.45)] backdrop-blur-xl">
             <div className="w-full px-4 sm:px-6 h-20 flex items-center justify-between gap-4">
               {/* Logo */}
               <Link to="/" className="flex items-center gap-3 rounded-2xl bg-primary/10 px-4 py-3 transition hover:bg-primary/20">
@@ -306,7 +305,9 @@ export default function Layout() {
                     </Link>
                   ))}
               </nav>
-              <GlobalSearch />
+              <div className="hidden md:block">
+                <GlobalSearch />
+              </div>
 
               {/* Right controls */}
               <div className="flex items-center gap-2">
@@ -421,7 +422,7 @@ export default function Layout() {
 
             {/* Mobile Menu */}
             {mobileOpen && (
-              <div className="md:hidden border-t border-primary-foreground/20 bg-primary px-4 pb-4">
+              <div className="md:hidden absolute right-4 top-full z-40 w-[min(100%-1rem,28rem)] rounded-3xl border border-primary-foreground/20 bg-primary px-4 pb-4 shadow-2xl">
                 {navItems
                   .filter((item) => (!item.authRequired || isAuthenticated) && (!item.guestOnly || !isAuthenticated))
                   .map(({ path, label, icon: Icon }) => (
@@ -516,6 +517,13 @@ export default function Layout() {
                       My Dashboard
                     </Link>
                     <Link
+                      to="/settings"
+                      onClick={closeMenu}
+                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/settings' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                    >
+                      Settings
+                    </Link>
+                    <Link
                       to="/my-schedule"
                       onClick={closeMenu}
                       className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/my-schedule' ? 'bg-secondary text-secondary-foreground' : ''}`}
@@ -529,9 +537,6 @@ export default function Layout() {
                     >
                       Achievements
                     </Link>
-                    <div className="mt-4 rounded-2xl border border-border bg-primary px-3 py-3">
-                      <RefreshRateSelector />
-                    </div>
                     <button
                       type="button"
                       onClick={async () => {

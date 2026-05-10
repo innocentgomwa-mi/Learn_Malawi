@@ -4,7 +4,6 @@ import { Switch } from "@/components/ui/switch";
 import { Slider } from "@/components/ui/slider";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
 import { useAccessibility } from "@/lib/AccessibilityContext";
 
 export default function AccessibilitySettings() {
@@ -13,7 +12,6 @@ export default function AccessibilitySettings() {
   const [fontSize, setFontSize] = useState([16]);
   const [readingSpeed, setReadingSpeed] = useState([1]);
   const [language, setLanguage] = useState("en");
-  const { toast } = useToast();
 
   const activeCount = Object.values(settings).filter(Boolean).length;
 
@@ -84,7 +82,7 @@ export default function AccessibilitySettings() {
       </SettingsSection>
 
       <div className="flex flex-col gap-3">
-        <Button onClick={() => toast({ title: "Accessibility settings saved" })}>Save Changes</Button>
+        <Button>Save Changes</Button>
         <Button variant="outline" onClick={reset}>
           Reset to Default
         </Button>

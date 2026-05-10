@@ -80,26 +80,6 @@ export default function LandingPage() {
           </div>
         </div>
       </main>
-
-      {/* Footer */}
-      <footer className="border-t mt-12 bg-card">
-        <div className="w-full px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-              <span className="text-white text-xs font-bold">L</span>
-            </div>
-            <span className="text-sm font-heading font-semibold">Learn Malawi</span>
-          </div>
-          <p className="text-xs text-muted-foreground text-center">
-            Empowering Malawian students with quality educational resources.
-          </p>
-          <div className="flex gap-4 text-xs text-muted-foreground">
-            <button className="hover:text-foreground transition-colors">About</button>
-            <button className="hover:text-foreground transition-colors">Contact</button>
-            <button className="hover:text-foreground transition-colors">Privacy</button>
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -208,7 +208,7 @@ export default function TeacherDiscussions() {
                 type="button"
                 onClick={loadThreads}
                 disabled={loading}
-                className="inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="hidden sm:inline-flex items-center rounded-md bg-blue-50 border border-blue-200 px-3 py-2 text-sm font-medium text-blue-700 shadow-sm hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Refresh
               </button>
@@ -258,7 +258,7 @@ export default function TeacherDiscussions() {
                 type="button"
                 onClick={() => selectedThread && loadThread(selectedThread.id)}
                 disabled={!selectedThread}
-                className="inline-flex items-center rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="hidden sm:inline-flex items-center rounded-md bg-slate-50 border border-slate-200 px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 <RefreshCcw className="mr-2 h-4 w-4" />
                 Refresh

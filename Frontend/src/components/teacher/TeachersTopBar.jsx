@@ -99,17 +99,17 @@ export default function TeacherTopBar() {
   }, [user?.email]);
 
   return (
-    <header className="h-16 bg-white border-b border-blue-100 flex items-center gap-4 px-6 shrink-0">
+    <header className="h-20 bg-white border-b border-blue-100 flex items-center gap-4 px-6 shrink-0">
       {/* Page title */}
       <h1 className="text-base font-semibold text-slate-800 mr-4 hidden sm:block">{title}</h1>
 
       {/* Search */}
-      <div className="flex-1 max-w-md relative">
+      <div className="hidden sm:block sm:flex-1 sm:max-w-md relative">
         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
         <input
           type="text"
           placeholder="Search..."
-          className="w-full pl-9 pr-4 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition-all"
+          className="w-full pl-9 pr-4 py-3 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400/40 focus:border-blue-400 transition-all"
         />
       </div>
 

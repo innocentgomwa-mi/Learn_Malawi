@@ -138,7 +138,7 @@ export default function TeacherAnnouncements() {
               <h2 className="text-lg font-semibold">Published announcements</h2>
               <p className="text-sm text-slate-500">These announcements were posted by you.</p>
             </div>
-            <Button variant="default" className="bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100" onClick={loadAnnouncements} disabled={loading}>
+            <Button variant="default" className="hidden sm:inline-flex bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100" onClick={loadAnnouncements} disabled={loading}>
               Refresh
             </Button>
           </div>

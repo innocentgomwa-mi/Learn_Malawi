@@ -18,7 +18,10 @@ export class AttendanceService {
       classLevel: createAttendanceDto.class_level,
       date: createAttendanceDto.date,
       teacherEmail: createAttendanceDto.teacher_email,
-      records: createAttendanceDto.records || [],
+      records: (createAttendanceDto.records || []).map((record) => ({
+        ...record,
+        date: createAttendanceDto.date,
+      })),
     });
     return this.attendanceRepository.save(attendance);
   }
@@ -70,7 +73,12 @@ export class AttendanceService {
       date: updateAttendanceDto.date ?? attendance.date,
       teacherEmail:
         updateAttendanceDto.teacher_email ?? attendance.teacherEmail,
-      records: updateAttendanceDto.records ?? attendance.records,
+      records: updateAttendanceDto.records
+        ? updateAttendanceDto.records.map((record) => ({
+            ...record,
+            date: updateAttendanceDto.date ?? attendance.date,
+          }))
+        : attendance.records,
     });
     return this.attendanceRepository.save(attendance);
   }

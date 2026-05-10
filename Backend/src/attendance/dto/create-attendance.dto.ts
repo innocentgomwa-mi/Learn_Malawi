@@ -1,5 +1,7 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
+import { Type } from 'class-transformer';
+import { IsString, IsNotEmpty, IsOptional, IsArray, ValidateNested } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
+import { AttendanceRecordDto } from './attendance-record.dto';
 
 export class CreateAttendanceDto {
   @ApiProperty({ example: 'Mathematics' })
@@ -22,7 +24,24 @@ export class CreateAttendanceDto {
   @IsNotEmpty()
   teacher_email: string;
 
-  @ApiProperty({ example: [{ student_name: 'John Doe', status: 'Present' }] })
+  @ApiProperty({
+    example: [
+      {
+        student_name: 'John Doe',
+        status: 'Present',
+        student_id: 'student-1',
+        class_id: 'class-1',
+        login_time: '08:00',
+        logout_time: '09:00',
+        duration: 60,
+        method: 'In class',
+        engagement_score: 90,
+        reason: 'On time',
+      },
+    ],
+  })
+  @ValidateNested({ each: true })
+  @Type(() => AttendanceRecordDto)
   @IsArray()
-  records: any[];
+  records: AttendanceRecordDto[];
 }

@@ -1,16 +1,18 @@
 // @ts-nocheck
-import { useEffect, useState } from 'react';
+import { useEffect, useState, Fragment } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchAttendanceRecords, fetchAttendanceHistory, createAttendance, updateAttendance } from '@/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 import { CalendarDays, Plus, Trash2, Save, Loader2, CheckCircle, Clock, XCircle, History } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const CLASS_LEVELS = ['Standard 1','Standard 2','Standard 3','Standard 4','Standard 5','Standard 6','Standard 7','Standard 8','Form 1','Form 2','Form 3','Form 4'];
 const STATUS_OPTIONS = ['Present', 'Absent', 'Late'];
+const METHOD_OPTIONS = ['In class', 'Online', 'Hybrid', 'Self-study'];
 
 const statusStyles = {
   Present: 'bg-blue-100 text-blue-700 border-blue-300',
@@ -71,7 +73,21 @@ export default function TeacherAttendance() {
     const name = newName.trim();
     if (!name) return;
     if (students.find(s => s.student_name.toLowerCase() === name.toLowerCase())) return;
-    setStudents(s => [...s, { student_name: name, status: 'Present' }]);
+    setStudents(s => [
+      ...s,
+      {
+        student_name: name,
+        student_id: '',
+        class_id: classLevel || '',
+        status: 'Present',
+        login_time: '',
+        logout_time: '',
+        duration: 0,
+        method: 'In class',
+        engagement_score: 0,
+        reason: '',
+      },
+    ]);
     setNewName('');
   };
 
@@ -79,6 +95,9 @@ export default function TeacherAttendance() {
 
   const setStatus = (i, status) =>
     setStudents(s => s.map((st, idx) => idx === i ? { ...st, status } : st));
+
+  const setStudentField = (i, field, value) =>
+    setStudents(s => s.map((st, idx) => idx === i ? { ...st, [field]: value } : st));
 
   const handleSave = async () => {
     if (!user?.email || !course || !date || students.length === 0) return;
@@ -192,37 +211,122 @@ export default function TeacherAttendance() {
                       <tr>
                         <th className="text-left px-4 py-3 font-medium text-muted-foreground">#</th>
                         <th className="text-left px-4 py-3 font-medium text-muted-foreground">Student Name</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Student ID</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Class ID</th>
                         <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Engagement</th>
                         <th className="px-4 py-3"></th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-border">
                       {students.map((s, i) => (
-                        <tr key={i} className="hover:bg-muted/20 transition-colors">
-                          <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
-                          <td className="px-4 py-3 font-medium">{s.student_name}</td>
-                          <td className="px-4 py-3">
-                            <div className="flex gap-1.5">
-                              {STATUS_OPTIONS.map(opt => (
-                                <button
-                                  key={opt}
-                                  onClick={() => setStatus(i, opt)}
-                                  className={cn(
-                                    'px-3 py-1 rounded-full text-xs font-medium border transition-all',
-                                    s.status === opt ? statusStyles[opt] : 'border-border text-muted-foreground hover:border-slate-400'
-                                  )}
-                                >
-                                  {opt}
-                                </button>
-                              ))}
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-right">
-                            <button onClick={() => removeStudent(i)} className="p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-colors">
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
+                        <Fragment key={i}>
+                          <tr className="hover:bg-muted/20 transition-colors">
+                            <td className="px-4 py-3 text-muted-foreground">{i + 1}</td>
+                            <td className="px-4 py-3">
+                              <Input
+                                value={s.student_name}
+                                onChange={(e) => setStudentField(i, 'student_name', e.target.value)}
+                                className="w-full"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input
+                                value={s.student_id || ''}
+                                onChange={(e) => setStudentField(i, 'student_id', e.target.value)}
+                                className="w-full"
+                                placeholder="ID"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input
+                                value={s.class_id || ''}
+                                onChange={(e) => setStudentField(i, 'class_id', e.target.value)}
+                                className="w-full"
+                                placeholder="Class ID"
+                              />
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex gap-1.5 flex-wrap">
+                                {STATUS_OPTIONS.map(opt => (
+                                  <button
+                                    key={opt}
+                                    onClick={() => setStatus(i, opt)}
+                                    className={cn(
+                                      'px-3 py-1 rounded-full text-xs font-medium border transition-all',
+                                      s.status === opt ? statusStyles[opt] : 'border-border text-muted-foreground hover:border-slate-400'
+                                    )}
+                                  >
+                                    {opt}
+                                  </button>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-4 py-3">
+                              <Input
+                                type="number"
+                                value={s.engagement_score ?? 0}
+                                onChange={(e) => setStudentField(i, 'engagement_score', Number(e.target.value))}
+                                className="w-full"
+                                min={0}
+                                max={100}
+                              />
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button onClick={() => removeStudent(i)} className="p-1 rounded hover:bg-red-50 text-muted-foreground hover:text-red-500 transition-colors">
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                          <tr className="bg-muted/30">
+                            <td colSpan={7} className="px-4 py-3">
+                              <div className="grid grid-cols-1 lg:grid-cols-4 gap-3">
+                                <Input
+                                  value={s.login_time || ''}
+                                  onChange={(e) => setStudentField(i, 'login_time', e.target.value)}
+                                  placeholder="Login time"
+                                  className="w-full"
+                                />
+                                <Input
+                                  value={s.logout_time || ''}
+                                  onChange={(e) => setStudentField(i, 'logout_time', e.target.value)}
+                                  placeholder="Logout time"
+                                  className="w-full"
+                                />
+                                <Input
+                                  type="number"
+                                  value={s.duration ?? 0}
+                                  onChange={(e) => setStudentField(i, 'duration', Number(e.target.value))}
+                                  placeholder="Duration (mins)"
+                                  className="w-full"
+                                />
+                                <Select value={s.method || 'In class'} onValueChange={(value) => setStudentField(i, 'method', value)}>
+                                  <SelectTrigger className="w-full"><SelectValue placeholder="Method" /></SelectTrigger>
+                                  <SelectContent>
+                                    {METHOD_OPTIONS.map((method) => (
+                                      <SelectItem key={method} value={method}>{method}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                                <Input
+                                  type="number"
+                                  value={s.engagement_score ?? 0}
+                                  onChange={(e) => setStudentField(i, 'engagement_score', Number(e.target.value))}
+                                  placeholder="Engagement %"
+                                  className="w-full"
+                                  min={0}
+                                  max={100}
+                                />
+                                <Textarea
+                                  value={s.reason || ''}
+                                  onChange={(e) => setStudentField(i, 'reason', e.target.value)}
+                                  placeholder="Reason or notes"
+                                  className="w-full col-span-1 lg:col-span-2"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        </Fragment>
                       ))}
                     </tbody>
                   </table>
@@ -257,17 +361,21 @@ export default function TeacherAttendance() {
                 const absent = (log.records || []).filter(r => r.status === 'Absent').length;
                 const late = (log.records || []).filter(r => r.status === 'Late').length;
                 const total = log.records?.length || 0;
+                const avgEngagement = total > 0
+                  ? Math.round((log.records.reduce((sum, r) => sum + (r.engagement_score || 0), 0) / total))
+                  : 0;
                 return (
                   <div key={log.id} className="bg-card border border-border rounded-xl p-4">
-                    <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center justify-between mb-2 flex-wrap gap-3">
                       <div>
                         <p className="font-semibold text-sm">{log.course} {log.class_level ? `· ${log.class_level}` : ''}</p>
                         <p className="text-xs text-muted-foreground">{log.date} · {total} students</p>
                       </div>
-                      <div className="flex gap-2 text-xs">
+                      <div className="flex gap-2 text-xs flex-wrap">
                         <span className="bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">{present} Present</span>
                         <span className="bg-red-100 text-red-700 px-2 py-0.5 rounded-full">{absent} Absent</span>
                         {late > 0 && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full">{late} Late</span>}
+                        <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-full">{avgEngagement}% engagement</span>
                       </div>
                     </div>
                     <div className="w-full bg-muted rounded-full h-1.5 overflow-hidden">

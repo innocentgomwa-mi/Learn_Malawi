@@ -14,6 +14,7 @@ import { Tutorial } from './tutorials/entities/tutorial.entity';
 import { PastPaper } from './past-papers/entities/past-paper.entity';
 import { StudyNote } from './study-notes/entities/study-note.entity';
 import { Attendance } from './attendance/entities/attendance.entity';
+import { AttendanceRecord } from './attendance/entities/attendance-record.entity';
 import * as Joi from 'joi';
 import { CareerResourcesModule } from './career-resources/career-resources.module';
 import { QuizzesModule } from './quizzes/quizzes.module';
@@ -82,6 +83,7 @@ import { Exam } from './schedule/entities/exam.entity';
           PastPaper,
           StudyNote,
           Attendance,
+          AttendanceRecord,
           Announcement,
           Discussion,
           TeacherPost,

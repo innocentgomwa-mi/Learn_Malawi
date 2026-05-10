@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
-import { useToast } from "@/components/ui/use-toast";
 import { LogOut } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { authLogoutAll, changePassword } from "@/api";
@@ -18,7 +17,6 @@ export default function SecuritySettings() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isChanging, setIsChanging] = useState(false);
   const { logout } = useAuth();
-  const { toast } = useToast();
 
   const handleLogoutAll = async () => {
     try {
@@ -31,12 +29,10 @@ export default function SecuritySettings() {
 
   const handleChangePassword = async () => {
     if (!currentPassword || !newPassword || !confirmPassword) {
-      toast({ title: "Complete all fields", description: "Please provide your current and new password.", variant: "destructive" });
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      toast({ title: "Passwords do not match", description: "Please make sure both password fields match.", variant: "destructive" });
       return;
     }
 
@@ -47,10 +43,8 @@ export default function SecuritySettings() {
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
-      toast({ title: "Password updated", description: "Your account password has been changed successfully." });
     } catch (err) {
-      const message = err instanceof Error ? err.message : "Please try again.";
-      toast({ title: "Unable to change password", description: message, variant: "destructive" });
+      console.error(err);
     } finally {
       setIsChanging(false);
     }

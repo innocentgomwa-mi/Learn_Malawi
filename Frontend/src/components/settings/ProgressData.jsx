@@ -3,7 +3,6 @@ import { SettingsSection, SettingsRow } from "./SettingsCard.jsx";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Download, RotateCcw } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
 import { useLocalStorageState } from "@/lib/useLocalStorageState";
 
 const defaultProgress = [
@@ -14,7 +13,6 @@ const defaultProgress = [
 
 export default function ProgressData() {
   const [progressData, setProgressData] = useLocalStorageState("learnmalawi_progress_data", defaultProgress);
-  const { toast } = useToast();
 
   const handleExport = () => {
     const blob = new Blob([JSON.stringify(progressData, null, 2)], { type: "application/json" });
@@ -26,12 +24,10 @@ export default function ProgressData() {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
-    toast({ title: "Progress exported", description: "Your learning data has been saved locally." });
   };
 
   const handleReset = () => {
     setProgressData(defaultProgress);
-    toast({ title: "Progress reset", description: "Your progress data has been reset.", variant: "destructive" });
   };
 
   return (
