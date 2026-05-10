@@ -39,6 +39,8 @@ import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussi
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import StudyGroupsAdmin from './components/teacher/StudyGroupsAdmin';
+import LearningPathsAdmin from './components/teacher/LearningPathsAdmin';
+import LearningPaths from './pages/LearningPaths';
 import Insight from './pages/Insight';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
@@ -100,12 +102,14 @@ const AuthenticatedApp = () => {
         <Route path="/settings" element={<ProtectedRoute requiredRoles={[]}><Settings /></ProtectedRoute>} />
         <Route path="/my-schedule" element={<ProtectedRoute requiredRoles={[]}><MySchedule /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
+        <Route path="/learning-paths" element={<LearningPaths />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
           <Route path="study-notes" element={<StudyNotesAdmin />} />
           <Route path="past-papers" element={<PastPapersAdmin />} />
           <Route path="tutorials" element={<TutorialsAdmin />} />
           <Route path="study-groups" element={<StudyGroupsAdmin />} />
+          <Route path="learning-paths" element={<LearningPathsAdmin />} />
           <Route path="quizzes" element={<QuizzesAdmin />} />
           <Route path="students" element={<TeachersStudents />} />
           <Route path="attendance" element={<TeachersAttendance />} />

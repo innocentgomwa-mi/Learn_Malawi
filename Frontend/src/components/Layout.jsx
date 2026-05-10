@@ -38,7 +38,7 @@ export default function Layout() {
   const closeMenu = () => setMobileOpen(false);
   const hideTopNav = location.pathname.startsWith('/teacher');
   const hideFooter = isTeacher && location.pathname.startsWith('/teacher');
-  const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes'].some((path) => location.pathname.startsWith(path));
+  const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes', '/learning-paths'].some((path) => location.pathname.startsWith(path));
   const communityActive = ['/achievements', '/study-groups', '/discussions'].some((path) => location.pathname.startsWith(path));
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const isNotificationsPage = location.pathname === '/notifications';
@@ -239,6 +239,13 @@ export default function Layout() {
                       className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
                     >
                       Quizzes
+                    </Link>
+                    <Link
+                      to="/learning-paths"
+                      onClick={() => setResourcesOpen(false)}
+                      className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
+                    >
+                      Learning Paths
                     </Link>
                   </div>
                 </div>

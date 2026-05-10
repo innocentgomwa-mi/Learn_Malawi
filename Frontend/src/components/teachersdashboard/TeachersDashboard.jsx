@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { useRefreshRate } from '@/lib/RefreshRateContext';
-import { fetchStudyNotes, fetchPastPapers, fetchTutorials, fetchQuizzes } from '@/api';
+import { fetchStudyNotes, fetchPastPapers, fetchTutorials, fetchQuizzes, fetchLearningPaths } from '@/api';
 import { filterByTeacher } from './teacherUtils';
 import TeacherSidebar from '@/components/teacher/TeacherSidebar';
 import TeachersTopBar from '@/components/teacher/TeachersTopBar';
@@ -12,7 +12,7 @@ export default function TeachersDashboard() {
   const { user } = useAuth();
   const { refreshSeconds } = useRefreshRate();
   const [loading, setLoading] = useState(true);
-  const [counts, setCounts] = useState({ notes: 0, papers: 0, tutorials: 0, quizzes: 0 });
+  const [counts, setCounts] = useState({ notes: 0, papers: 0, tutorials: 0, quizzes: 0, learningPaths: 0 });
   const [statuses, setStatuses] = useState({ pending: 0, published: 0, rejected: 0 });
 
   const loadCounts = useCallback(async ({ background } = { background: false }) => {
@@ -40,11 +40,15 @@ export default function TeachersDashboard() {
       const filteredTutorials = filterByTeacher(supportedTutorials, email);
       const filteredQuizzes = filterByTeacher(supportedQuizzes, email);
 
+      const learningPaths = await fetchLearningPaths({ teacherEmail: email });
+      const supportedLearningPaths = Array.isArray(learningPaths) ? learningPaths : learningPaths?.data ?? [];
+
       setCounts({
         notes: filteredNotes.length,
         papers: filteredPapers.length,
         tutorials: filteredTutorials.length,
         quizzes: filteredQuizzes.length,
+        learningPaths: supportedLearningPaths.length,
       });
 
       const all = [...filteredNotes, ...filteredPapers, ...filteredTutorials, ...filteredQuizzes];

@@ -15,6 +15,7 @@ const PAGE_TITLES = {
   '/teacher/quizzes': 'Quizzes',
   '/teacher/students': 'Students',
   '/teacher/attendance': 'Attendance',
+  '/teacher/learning-paths': 'Learning Paths',
   '/teacher/analytics': 'Analytics & Reports',
   '/teacher/discussions': 'Discussions',
   '/teacher/announcements': 'Announcements',

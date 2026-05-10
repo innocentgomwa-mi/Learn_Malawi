@@ -43,6 +43,8 @@ import { ResourceRating } from './resource-ratings/entities/resource-rating.enti
 import { StudyGroupsModule } from './study-groups/study-groups.module';
 import { StudyGroup } from './study-groups/entities/study-group.entity';
 import { StudyGroupMessage } from './study-groups/entities/study-group-message.entity';
+import { LearningPathsModule } from './learning-paths/learning-paths.module';
+import { LearningPath } from './learning-paths/entities/learning-path.entity';
 import { ScheduleModule } from './schedule/schedule.module';
 import { StudyBlock } from './schedule/entities/study-block.entity';
 import { Resource } from './schedule/entities/resource.entity';
@@ -92,6 +94,7 @@ import { Exam } from './schedule/entities/exam.entity';
           DataChangeHistory,
           StudentProgress,
           ResourceRating,
+          LearningPath,
           StudyGroup,
           StudyGroupMessage,
           StudyBlock,
@@ -122,6 +125,7 @@ import { Exam } from './schedule/entities/exam.entity';
     InsightsModule,
     ResourceRatingsModule,
     StudyGroupsModule,
+    LearningPathsModule,
     ScheduleModule,
   ],
   controllers: [],
