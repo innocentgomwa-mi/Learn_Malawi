@@ -32,6 +32,7 @@ import PastPapersAdmin from './components/teachersdashboard/PastPapersAdmin';
 import StudyNotesAdmin from './components/teachersdashboard/StudyNotesAdmin';
 import TutorialsAdmin from './components/teachersdashboard/TutorialsAdmin';
 import QuizzesAdmin from './components/teachersdashboard/QuizzesAdmin';
+import CareerResourcesAdmin from './components/teachersdashboard/CareerResourcesAdmin';
 import TeachersStudents from './components/teachersdashboard/TeachersStudents';
 import TeachersAttendance from './components/teachersdashboard/TeachersAttendance';
 import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics';
@@ -108,6 +109,7 @@ const AuthenticatedApp = () => {
           <Route path="study-notes" element={<StudyNotesAdmin />} />
           <Route path="past-papers" element={<PastPapersAdmin />} />
           <Route path="tutorials" element={<TutorialsAdmin />} />
+          <Route path="career-resources" element={<CareerResourcesAdmin />} />
           <Route path="study-groups" element={<StudyGroupsAdmin />} />
           <Route path="learning-paths" element={<LearningPathsAdmin />} />
           <Route path="quizzes" element={<QuizzesAdmin />} />
