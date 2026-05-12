@@ -72,6 +72,18 @@ export default function StudyNotes() {
   const subjectFilter = searchParams.get('subject') || '';
   const selectedNoteId = searchParams.get('selected_id') || '';
 
+  const { data: notes = [], isLoading: loading } = useQuery({
+    queryKey: ['studyNotes', level, search, subjectFilter],
+    queryFn: () => fetchStudyNotes({
+      level: level === 'All' ? undefined : level,
+      subject: subjectFilter || undefined,
+      search,
+    }),
+    staleTime: 1000 * 60,
+    retry: 1,
+    enabled: isAuthenticated && isDeviceOnline,
+  });
+
   useEffect(() => {
     const userKey = user?.id || user?.email;
     if (!userKey) {
@@ -136,18 +148,6 @@ export default function StudyNotes() {
       window.removeEventListener('online', updateStatus);
     };
   }, []);
-
-  const { data: notes = [], isLoading: loading } = useQuery({
-    queryKey: ['studyNotes', level, search, subjectFilter],
-    queryFn: () => fetchStudyNotes({
-      level: level === 'All' ? undefined : level,
-      subject: subjectFilter || undefined,
-      search,
-    }),
-    staleTime: 1000 * 60,
-    retry: 1,
-    enabled: isAuthenticated && isDeviceOnline,
-  });
 
   const notesToDisplay = isDeviceOnline ? notes : savedNotes;
 

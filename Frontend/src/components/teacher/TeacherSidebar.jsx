@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, FileText, HelpCircle, Users, BarChart2,
   MessageSquare, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
-  GraduationCap, PlayCircle, CalendarCheck, TrendingUp
+  GraduationCap, PlayCircle, CalendarCheck, TrendingUp, Briefcase
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -22,6 +22,7 @@ const groups = [
       { path: '/teacher/study-notes', icon: BookOpen, label: 'Study Materials' },
       { path: '/teacher/past-papers', icon: FileText, label: 'Past Papers' },
       { path: '/teacher/tutorials', icon: PlayCircle, label: 'Tutorials' },
+      { path: '/teacher/career-resources', icon: Briefcase, label: 'Career Resources' },
       { path: '/teacher/learning-paths', icon: GraduationCap, label: 'Learning Paths' },
       { path: '/teacher/study-groups', icon: Users, label: 'Study Groups' },
       { path: '/teacher/quizzes', icon: HelpCircle, label: 'Assignments & Quizzes' },
