@@ -11,6 +11,19 @@
  *   mentor_email?: string;
  * }} StudyGroup
  *
+/**
+ * @typedef {{
+ *   id: string;
+ *   name: string;
+ *   subject: string;
+ *   level: string;
+ *   description?: string;
+ *   scheduled_at?: string;
+ *   members?: string[];
+ *   banned_members?: string[];
+ *   mentor_email?: string;
+ * }} StudyGroup
+ *
  * @typedef {{
  *   id: string;
  *   content: string;
@@ -22,9 +35,10 @@
 
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
-import { fetchStudyGroups, fetchStudyGroupMessages, updateStudyGroup, createStudyGroupMessage } from "@/api";
+import { fetchStudyGroups, fetchStudyGroupMessages, updateStudyGroup, createStudyGroupMessage, createStudyGroup, deleteStudyGroup } from "@/api";
 import RequireAccount from '@/components/RequireAccount';
-import { Users, MessageSquare, Send, Loader2, Calendar, ChevronLeft } from "lucide-react";
+import ResourceForm from '@/components/teachersdashboard/ResourceForm';
+import { Users, MessageSquare, Send, Loader2, Calendar, ChevronLeft, Trash } from "lucide-react";
 
 const LEVEL_COLORS = {
   PSLC: "bg-emerald-100 text-emerald-700",
@@ -34,6 +48,7 @@ const LEVEL_COLORS = {
 
 export default function StudyGroups() {
   const { user, isAuthenticated, isLoadingAuth } = useAuth();
+  const [form, setForm] = useState(null);
   const [groups, setGroups] = useState(/** @type {StudyGroup[]} */ ([]));
   const [loading, setLoading] = useState(true);
   const [activeGroup, setActiveGroup] = useState(/** @type {StudyGroup | null} */ (null));
@@ -41,6 +56,8 @@ export default function StudyGroups() {
   const [msgText, setMsgText] = useState("");
   const [sending, setSending] = useState(false);
   const bottomRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const [pendingDeletes, setPendingDeletes] = useState([]);
+  const pendingTimers = useRef({});
 
   useEffect(() => {
     let active = true;
@@ -107,6 +124,22 @@ export default function StudyGroups() {
       return;
     }
 
+    // If current user is a Teacher and group has no mentor, make teacher the mentor when joining.
+    if (user.role === 'Teacher') {
+      const payload = {};
+      if (!group.mentor_email) {
+        payload.mentor_email = user.email;
+        payload.mentor_name = user.full_name || user.email.split('@')[0];
+      }
+      if (!members.includes(user.email)) {
+        payload.members = [...members, user.email];
+      }
+      const updated = Object.keys(payload).length ? await updateStudyGroup(group.id, payload) : group;
+      setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
+      setActiveGroup(updated);
+      return;
+    }
+
     if (!members.includes(user.email)) {
       const updated = await updateStudyGroup(group.id, { members: [...members, user.email] });
       setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
@@ -115,6 +148,42 @@ export default function StudyGroups() {
       setActiveGroup(group);
     }
   };
+
+  const handleDelete = async (group) => {
+    if (!confirm(`Delete study group "${group.name}"? You can undo within 5 seconds.`)) return;
+
+    // Optimistically remove from UI and schedule server delete
+    setGroups((prev) => prev.filter((g) => g.id !== group.id));
+    if (activeGroup?.id === group.id) setActiveGroup(null);
+
+    setPendingDeletes((prev) => [...prev, { id: group.id, name: group.name, data: group }]);
+
+    const timer = setTimeout(async () => {
+      try {
+        await deleteStudyGroup(group.id);
+      } catch (err) {
+        // if server delete fails, re-add the group
+        setGroups((prev) => [group, ...prev]);
+      } finally {
+        setPendingDeletes((prev) => prev.filter((p) => p.id !== group.id));
+        delete pendingTimers.current[group.id];
+      }
+    }, 5000);
+
+    pendingTimers.current[group.id] = timer;
+  };
+
+  const undoDelete = (pending) => {
+    const { id, data } = pending;
+    const timer = pendingTimers.current[id];
+    if (timer) {
+      clearTimeout(timer);
+      delete pendingTimers.current[id];
+    }
+    setPendingDeletes((prev) => prev.filter((p) => p.id !== id));
+    // restore to list
+    setGroups((prev) => [data, ...prev]);
+  }
 
   /** @param {import('react').FormEvent<HTMLFormElement>} e */
   const sendMessage = async (e) => {
@@ -143,6 +212,31 @@ export default function StudyGroups() {
     } finally {
       setSending(false);
     }
+  };
+
+  const FIELDS = [
+    { key: "name", label: "Group Name", required: true },
+    { key: "subject", label: "Subject", required: true },
+    { key: "level", label: "Level", type: "select", required: true, options: [
+      { value: "PSLC", label: "PSLC" }, { value: "JCE", label: "JCE" }, { value: "MSCE", label: "MSCE" }
+    ]},
+    { key: "description", label: "Description", type: "textarea" },
+    { key: "mentor_email", label: "Mentor Email" },
+    { key: "scheduled_at", label: "Scheduled Date/Time" },
+  ];
+
+  const handleCreate = async (data) => {
+    const prepared = {
+      ...data,
+      mentor_email: data.mentor_email?.trim() || user?.email,
+      mentor_name: data.mentor_name?.trim?.() || user?.full_name || user?.email?.split('@')[0],
+    };
+    await createStudyGroup(prepared);
+    setForm(null);
+    try {
+      const response = await fetchStudyGroups();
+      setGroups(Array.isArray(response) ? response : response?.data ?? []);
+    } catch (e) { }
   };
 
   if (isLoadingAuth || loading) {
@@ -229,14 +323,25 @@ export default function StudyGroups() {
         <div>
           <h1 className="font-poppins text-2xl font-bold text-foreground">Study Groups</h1>
           <p className="text-muted-foreground text-sm">Join a study room and collaborate with peers.</p>
+          {user?.role === 'Student' && (
+            <div className="mt-3">
+              <button onClick={() => setForm({})} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-3 py-2 rounded-xl text-sm font-semibold">Add New Group</button>
+            </div>
+          )}
         </div>
+        
       </div>
 
       {groups.length === 0 ? (
         <div className="text-center py-20">
           <Users className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
           <p className="font-medium text-foreground">No study groups yet.</p>
-          <p className="text-sm text-muted-foreground mt-1">Ask your teacher to create a study group for your subject.</p>
+          <p className="text-sm text-muted-foreground mt-1">Create a new study group to invite classmates and start collaborating.</p>
+          {user?.role === 'Student' && (
+            <div className="mt-4">
+              <button onClick={() => setForm({})} className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-3 py-2 rounded-xl text-sm font-semibold">Create Group</button>
+            </div>
+          )}
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
@@ -262,16 +367,43 @@ export default function StudyGroups() {
                   <span className="text-xs text-muted-foreground">{(group.members || []).length} members</span>
                   {group.mentor_email && <span className="text-xs text-amber-600 font-medium">⭐ Has mentor</span>}
                 </div>
-                <button
-                  onClick={() => joinGroup(group)}
-                  className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all bg-primary text-primary-foreground hover:opacity-90">
-                  <MessageSquare className="h-4 w-4" />
-                  {joined ? "Open Discussion" : "Join & Discuss"}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => joinGroup(group)}
+                    className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all bg-primary text-primary-foreground hover:opacity-90">
+                    <MessageSquare className="h-4 w-4" />
+                    {joined ? "Open Discussion" : "Join & Discuss"}
+                  </button>
+                  {user?.role === 'Student' && group.creator_email === user?.email && (
+                    <button onClick={() => handleDelete(group)} title="Delete group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50">
+                      <Trash className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             );
           })}
         </div>
+      )}
+      {/* Undo toasts for pending deletes */}
+      <div className="fixed left-4 bottom-6 space-y-2 z-50">
+        {pendingDeletes.map(p => (
+          <div key={p.id} className="flex items-center gap-3 bg-card border border-border rounded-xl px-4 py-3 shadow-md">
+            <div className="text-sm">Deleted "{p.name}"</div>
+            <div className="ml-2">
+              <button onClick={() => undoDelete(p)} className="text-sm font-semibold text-primary">Undo</button>
+            </div>
+          </div>
+        ))}
+      </div>
+      {form && (
+        <ResourceForm
+          fields={FIELDS}
+          initial={form}
+          onSave={handleCreate}
+          onCancel={() => setForm(null)}
+          title="Create Study Group"
+        />
       )}
     </div>
   );

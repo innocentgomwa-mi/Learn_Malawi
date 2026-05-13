@@ -81,16 +81,7 @@ export default function StudyGroupsAdmin() {
 
   return (
     <>
-      <ResourceTable title="Study Groups" items={items} columns={COLUMNS} loading={loading}
-        onAdd={() => setForm({ mode: "add", data: {} })}
-        onEdit={(/** @type {any} */ item) => setForm({ mode: "edit", data: item })}
-        onDelete={handleDelete} />
-      {form && (
-        <ResourceForm
-          title={form.mode === "add" ? "Create Study Group" : "Edit Study Group"}
-          fields={FIELDS} initial={form.data}
-          onSave={handleSave} onCancel={() => setForm(null)} />
-      )}
+      <ResourceTable title="Study Groups" items={items} columns={COLUMNS} loading={loading} />
     </>
   );
 }

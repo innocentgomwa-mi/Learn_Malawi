@@ -26,6 +26,12 @@ export class StudyGroup {
   @Column({ nullable: true })
   mentor_name?: string;
 
+  @Column({ nullable: true })
+  creator_email?: string;
+
+  @Column({ nullable: true })
+  creator_name?: string;
+
   @Column('text', { array: true, default: [] })
   members: string[];
 

@@ -4,12 +4,14 @@ export default function ResourceTable({ title, items, columns, loading, onAdd, o
   return (
     <div className="bg-card border border-border rounded-2xl overflow-hidden">
       <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-        <h2 className="font-poppins font-bold text-foreground">{title}</h2>
-        <button onClick={onAdd}
-          className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3 py-2 rounded-xl hover:opacity-90">
-          <Plus className="h-4 w-4" /> Add New
-        </button>
-      </div>
+            <h2 className="font-poppins font-bold text-foreground">{title}</h2>
+            {onAdd && (
+              <button onClick={onAdd}
+                className="flex items-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold px-3 py-2 rounded-xl hover:opacity-90">
+                <Plus className="h-4 w-4" /> Add New
+              </button>
+            )}
+          </div>
 
       {loading ? (
         <div className="flex justify-center py-16">
@@ -38,12 +40,16 @@ export default function ResourceTable({ title, items, columns, loading, onAdd, o
                   ))}
                   <td className="px-4 py-3 text-right">
                     <div className="flex items-center justify-end gap-2">
-                      <button onClick={() => onEdit(item)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary">
-                        <Pencil className="h-3.5 w-3.5" />
-                      </button>
-                      <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600">
-                        <Trash2 className="h-3.5 w-3.5" />
-                      </button>
+                      {onEdit && (
+                        <button onClick={() => onEdit(item)} className="p-1.5 rounded-lg hover:bg-muted text-muted-foreground hover:text-primary">
+                          <Pencil className="h-3.5 w-3.5" />
+                        </button>
+                      )}
+                      {onDelete && (
+                        <button onClick={() => onDelete(item.id)} className="p-1.5 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

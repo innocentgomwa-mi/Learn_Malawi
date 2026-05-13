@@ -49,4 +49,16 @@ export class CreateStudyGroupDto {
   @ArrayUnique()
   @IsOptional()
   members?: string[];
+
+  @ApiProperty({ example: 'creator@example.com', required: false })
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  creator_email?: string;
+
+  @ApiProperty({ example: 'Creator Name', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(255)
+  creator_name?: string;
 }

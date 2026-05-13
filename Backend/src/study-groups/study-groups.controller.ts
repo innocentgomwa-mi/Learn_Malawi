@@ -1,16 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query, UseGuards, Req, ForbiddenException } from '@nestjs/common';
 import { StudyGroupsService } from './study-groups.service';
 import { CreateStudyGroupDto } from './dto/create-study-group.dto';
 import { UpdateStudyGroupDto } from './dto/update-study-group.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../users/entities/user.entity';
 
 @Controller('study-groups')
-@UseGuards(JwtAuthGuard)
+@UseGuards(JwtAuthGuard, RolesGuard)
 export class StudyGroupsController {
   constructor(private readonly studyGroupsService: StudyGroupsService) {}
 
   @Post()
-  create(@Body() createStudyGroupDto: CreateStudyGroupDto) {
+  @Roles(UserRole.STUDENT)
+  create(@Req() req: any, @Body() createStudyGroupDto: CreateStudyGroupDto) {
+    // ensure creator info is set from the authenticated user
+    if (req?.user?.email) {
+      createStudyGroupDto.creator_email = createStudyGroupDto.creator_email || req.user.email;
+      createStudyGroupDto.creator_name = createStudyGroupDto.creator_name || req.user.full_name || req.user.email.split('@')[0];
+    }
     return this.studyGroupsService.create(createStudyGroupDto);
   }
 
@@ -29,12 +38,27 @@ export class StudyGroupsController {
   }
 
   @Patch(':id')
+  @Roles(UserRole.STUDENT, UserRole.TEACHER)
   update(@Param('id') id: string, @Body() updateStudyGroupDto: UpdateStudyGroupDto) {
     return this.studyGroupsService.update(id, updateStudyGroupDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
+  @Roles(UserRole.STUDENT)
+  async remove(@Req() req: any, @Param('id') id: string) {
+    const group = await this.studyGroupsService.findOne(id);
+    const user = req?.user;
+    if (!user) {
+      throw new ForbiddenException('Unauthorized');
+    }
+
+    // Students can delete groups they created. Admins can delete any group.
+    if (user.role === UserRole.STUDENT) {
+      if (!group.creator_email || group.creator_email !== user.email) {
+        throw new ForbiddenException('You can only delete groups you created.');
+      }
+    }
+
     return this.studyGroupsService.remove(id);
   }
 }
