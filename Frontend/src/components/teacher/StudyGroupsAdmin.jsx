@@ -79,9 +79,21 @@ export default function StudyGroupsAdmin() {
     load();
   };
 
+  const handleJoin = async (item) => {
+    if (!confirm(`Join group "${item.name}" as mentor?`)) return;
+    const members = item.members || [];
+    const payload = {
+      mentor_email: user.email,
+      mentor_name: user.full_name || user.email.split('@')[0],
+      members: members.includes(user.email) ? members : [...members, user.email],
+    };
+    await updateStudyGroup(item.id, payload);
+    load();
+  };
+
   return (
     <>
-      <ResourceTable title="Study Groups" items={items} columns={COLUMNS} loading={loading} />
+      <ResourceTable title="Study Groups" items={items} columns={COLUMNS} loading={loading} onJoin={handleJoin} />
     </>
   );
 }
