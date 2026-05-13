@@ -3,9 +3,10 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ActivityLogController } from './activity-log.controller';
 import { ActivityLogService } from './activity-log.service';
 import { ActivityLog } from './entities/activity-log.entity';
+import { SearchLogModule } from '../search-log/search-log.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([ActivityLog])],
+  imports: [TypeOrmModule.forFeature([ActivityLog]), SearchLogModule],
   controllers: [ActivityLogController],
   providers: [ActivityLogService],
   exports: [ActivityLogService],

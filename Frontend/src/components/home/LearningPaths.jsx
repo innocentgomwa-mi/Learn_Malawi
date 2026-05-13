@@ -68,7 +68,7 @@ export default function LearningPaths() {
   };
 
   return (
-    <div>
+    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-heading font-bold flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function LearningPaths() {
           })
         )}
       </div>
-    </div>
+    </section>
   );
 }
 

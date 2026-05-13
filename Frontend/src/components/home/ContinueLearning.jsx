@@ -74,7 +74,7 @@ export default function ContinueLearning() {
   }, [user]);
 
   return (
-    <div>
+    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-sm p-6">
       <div className="flex items-center justify-between mb-4">
         <div>
           <h2 className="text-xl font-heading font-bold">Continue Learning</h2>
@@ -109,6 +109,6 @@ export default function ContinueLearning() {
           </div>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

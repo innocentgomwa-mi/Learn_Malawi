@@ -13,6 +13,8 @@ import MaintenanceMode from "@/components/admin/MaintenanceMode";
 import RolesPermissions from "@/components/admin/RolesPermissions";
 import SessionsViewer from "@/components/admin/SessionsViewer";
 import ReportsAnalytics from "@/components/admin/ReportsAnalytics";
+import StudyGroupsMonitor from "@/components/admin/StudyGroupsMonitor";
+import SearchAnalytics from "@/components/admin/SearchAnalytics";
 import { Menu } from "lucide-react";
 import { usePageLogger } from "@/hooks/usePageLogger";
 import { useRefreshRate } from '@/lib/RefreshRateContext';
@@ -36,9 +38,11 @@ export default function AdminDashboard() {
       case "health": return <SystemHealth />;
       case "backups": return <BackupRestore />;
       case "maintenance": return <MaintenanceMode />;
+      case "study-groups": return <StudyGroupsMonitor refreshSeconds={refreshSeconds} />;
       case "roles": return <RolesPermissions />;
       case "sessions": return <SessionsViewer refreshSeconds={refreshSeconds} />;
       case "reports": return <ReportsAnalytics />;
+      case "search-analytics": return <SearchAnalytics />;
       default: return <AdminOverview refreshSeconds={refreshSeconds} />;
     }
   };

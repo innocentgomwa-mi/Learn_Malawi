@@ -26,6 +26,9 @@ export class ActivityLog {
   @Column({ nullable: true })
   level?: string;
 
+  @Column({ nullable: true })
+  resource_id?: string;
+
   @Column({ type: 'float', nullable: true })
   score?: number;
 

@@ -22,22 +22,22 @@ export default function StatsRow({ resourcesCount, studyGroupsCount, loading }) 
   }
 
   return (
-    <div>
+    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-sm p-6">
       <h2 className="text-xl font-heading font-bold mb-1">Platform Overview</h2>
       <p className="text-sm text-muted-foreground mb-4">What's available on Learn Malawi</p>
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      {stats.map(({ icon: Icon, label, value, color, bg }) => (
-        <div key={label} className="bg-card rounded-xl border px-5 py-4 flex items-center gap-3">
-          <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
-            <Icon className={`h-4.5 w-4.5 ${color}`} style={{ width: 18, height: 18 }} />
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {stats.map(({ icon: Icon, label, value, color, bg }) => (
+          <div key={label} className="bg-card rounded-xl border px-5 py-4 flex items-center gap-3">
+            <div className={`w-9 h-9 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
+              <Icon className={`h-4.5 w-4.5 ${color}`} style={{ width: 18, height: 18 }} />
+            </div>
+            <div>
+              <p className="text-lg font-heading font-bold">{value}</p>
+              <p className="text-xs text-muted-foreground">{label}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-heading font-bold">{value}</p>
-            <p className="text-xs text-muted-foreground">{label}</p>
-          </div>
-        </div>
-      ))}
-    </div>
-    </div>
+        ))}
+      </div>
+    </section>
   );
 }

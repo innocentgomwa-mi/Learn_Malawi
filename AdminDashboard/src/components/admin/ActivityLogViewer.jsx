@@ -27,6 +27,7 @@ const ACTION_CONFIG = {
   search_performed:     { icon: Search,      color: "bg-gray-100 text-gray-600",    label: "Search Performed" },
   login:                { icon: LogIn,       color: "bg-indigo-100 text-indigo-600",label: "Login" },
   logout:               { icon: LogIn,       color: "bg-gray-100 text-gray-600",    label: "Logout" },
+  account_deleted:      { icon: User,        color: "bg-red-100 text-red-600",      label: "Account Deleted" },
 };
 
 const ROLE_COLORS = { student: "bg-blue-100 text-blue-700", teacher: "bg-emerald-100 text-emerald-700", admin: "bg-purple-100 text-purple-700" };

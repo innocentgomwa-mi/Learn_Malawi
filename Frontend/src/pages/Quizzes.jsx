@@ -14,13 +14,14 @@
  * }} Quiz
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { fetchQuizzes, fetchStudentProgress, fetchAiChat, recordStudentProgress, logActivity } from "@/api";
 import RequireAccount from "@/components/RequireAccount";
 import { saveUserAttempt } from "@/lib/dashboardStorage";
-import { fetchQuizzes, fetchStudentProgress, fetchAiChat, recordStudentProgress } from "@/api";
 import Leaderboard from "../components/Leaderboard";
 
 /** @type {Array<'All' | string>} */
@@ -37,7 +38,10 @@ export default function Quizzes() {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState(/** @type {'All' | string} */ ("All"));
   const [activeQuiz, setActiveQuiz] = useState(/** @type {Quiz | null} */ (null));
+  const [lastSearchSignature, setLastSearchSignature] = useState("");
   const [answers, setAnswers] = useState(/** @type {{ [index: number]: string }} */ ({}));
+  const [searchParams] = useSearchParams();
+  const selectedQuizId = searchParams.get('selected_id') || '';
   const [submitted, setSubmitted] = useState(false);
   const [aiFeedback, setAiFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
@@ -51,6 +55,36 @@ export default function Quizzes() {
   });
 
   const { data: quizzes = [], isLoading: loading } = /** @type {import('@tanstack/react-query').UseQueryResult<Quiz[], Error>} */ (queryResult);
+
+  useEffect(() => {
+    if (selectedQuizId && quizzes.length > 0) {
+      const selected = quizzes.find((quiz) => String(quiz.id) === selectedQuizId);
+      if (selected) {
+        setActiveQuiz(selected);
+      }
+    }
+  }, [selectedQuizId, quizzes]);
+
+  useEffect(() => {
+    const signature = `${search.trim()}|${level}`;
+    if (signature === lastSearchSignature) return;
+    if (!search.trim() && level === 'All') return;
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: user?.email || 'anonymous',
+        user_name: user?.full_name || '',
+        user_role: user?.role || 'student',
+        resource_title: 'Quizzes',
+        subject: search.trim() || 'all',
+        metadata: JSON.stringify({ query: search.trim(), level }),
+      }).catch(() => {});
+      setLastSearchSignature(signature);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, level, user?.email, user?.full_name, user?.role, lastSearchSignature]);
 
   const progressQuery = useQuery({
     queryKey: ['quizProgress', user?.email],
@@ -83,6 +117,16 @@ export default function Quizzes() {
     setAnswers({});
     setSubmitted(false);
     setAiFeedback("");
+    logActivity({
+      action: 'resource_viewed',
+      user_email: user?.email || 'anonymous',
+      user_name: user?.full_name || '',
+      user_role: user?.role || 'student',
+      resource_title: quiz.title,
+      subject: quiz.subject,
+      level: quiz.level,
+      metadata: JSON.stringify({ resource_id: quiz.id, resource_type: 'quiz' }),
+    }).catch(() => {});
   };
 
   const getNormalizedAnswer = (question, selected) => {

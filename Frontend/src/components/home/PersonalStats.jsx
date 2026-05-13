@@ -77,18 +77,20 @@ export default function PersonalStats() {
   }, [user]);
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {stats.map(({ icon: Icon, label, value, color, bg }) => (
-        <div key={label} className="bg-card rounded-xl border p-4 flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg ${bg} flex items-center justify-center shrink-0`}>
-            <Icon className={`h-5 w-5 ${color}`} />
+    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-sm p-6 overflow-hidden">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+        {stats.map(({ icon: Icon, label, value, color, bg }) => (
+          <div key={label} className="bg-card rounded-xl border p-4 flex min-w-0 flex-col gap-3 sm:flex-row sm:items-center min-h-[100px] overflow-hidden">
+            <div className={`flex-none w-10 h-10 rounded-lg ${bg} flex items-center justify-center`}>
+              <Icon className={`h-5 w-5 ${color}`} />
+            </div>
+            <div className="min-w-0 flex-1 overflow-hidden">
+              <p className="text-lg font-heading font-bold leading-tight break-words overflow-hidden">{value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 leading-snug break-words overflow-hidden">{label}</p>
+            </div>
           </div>
-          <div>
-            <p className="text-lg font-heading font-bold leading-none">{value}</p>
-            <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-          </div>
-        </div>
-      ))}
-    </div>
+        ))}
+      </div>
+    </section>
   );
 }

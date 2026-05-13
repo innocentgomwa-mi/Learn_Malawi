@@ -228,6 +228,34 @@ export async function authRegister(data) {
   });
 }
 
+export async function authVerifyEmail(data) {
+  return request('/auth/verify-email', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function authResendVerification(data) {
+  return request('/auth/resend-verification', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function authForgotPassword(data) {
+  return request('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
+export async function authResetPassword(data) {
+  return request('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
+}
+
 export function fetchProfile() {
   return request('/auth/profile');
 }
@@ -249,6 +277,10 @@ export function updateProfile(data) {
  */
 export function logActivity(data) {
   return request('/activity-log', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function logSearch(data) {
+  return request('/search-logs', { method: 'POST', body: JSON.stringify(data) });
 }
 
 export function fetchActivityLogs({ limit, action, level, subject } = {}) {
