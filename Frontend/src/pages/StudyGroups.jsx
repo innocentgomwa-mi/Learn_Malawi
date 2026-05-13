@@ -148,6 +148,28 @@ export default function StudyGroups() {
     }
   };
 
+  const leaveGroup = async (group) => {
+    if (!user?.email) return;
+    const members = group.members || [];
+    if (!members.includes(user.email)) return;
+    if (!confirm(`Leave study group "${group.name}"?`)) return;
+
+    const updatedMembers = members.filter((m) => m !== user.email);
+    const payload = { members: updatedMembers };
+    if (group.mentor_email === user.email) {
+      payload.mentor_email = null;
+      payload.mentor_name = null;
+    }
+
+    try {
+      const updated = await updateStudyGroup(group.id, payload);
+      setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
+      setActiveGroup(null);
+    } catch (err) {
+      alert(err?.message || 'Failed to leave group');
+    }
+  };
+
   const handleDelete = async (group) => {
     if (!confirm(`Delete study group "${group.name}"? You can undo within 5 seconds.`)) return;
 
@@ -265,6 +287,11 @@ export default function StudyGroups() {
               {isBanned && !isMentor && " · You were removed from this group"}
             </p>
           </div>
+          {isMember && (
+            <div className="ml-auto">
+              <button onClick={() => leaveGroup(activeGroup)} className="px-3 py-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50 text-sm font-medium">Exit Group</button>
+            </div>
+          )}
         </div>
 
         <div className="flex-1 bg-card border border-border rounded-2xl overflow-hidden flex flex-col">
