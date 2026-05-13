@@ -1,11 +1,15 @@
 import React, { useState, useEffect } from 'react';
 
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { Toast, ToastTitle, ToastDescription, ToastClose } from '@/components/ui/toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [pageToast, setPageToast] = useState('');
+  const [pendingError, setPendingError] = useState('');
   const { user, login, loading, error: apiError, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -47,16 +51,25 @@ const Login = () => {
     console.log('Attempting login...');
     const result = await login(email, password);
     console.log('Login result:', result);
-    
+
     if (result?.success) {
       console.log('Login successful, waiting for user state update...');
       // The useEffect above will handle the redirect based on user role
+    } else if (result?.message) {
+      setPendingError(result.message);
     }
   };
 
   /**
    * @param {React.ChangeEvent<HTMLInputElement>} e
    */
+  useEffect(() => {
+    if (!loading && pendingError) {
+      setPageToast(pendingError);
+      setPendingError('');
+    }
+  }, [loading, pendingError]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'email') {
@@ -65,9 +78,12 @@ const Login = () => {
       setPassword(value);
     }
     
-    // Clear API errors on user interaction
+    // Clear API errors and page toast on user interaction
     if (apiError) {
       clearError();
+    }
+    if (pageToast) {
+      setPageToast('');
     }
   };
 
@@ -95,7 +111,13 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="rounded-[2rem] border border-border bg-card p-8 shadow-lg">
+            <div className="relative rounded-[2rem] border border-border bg-card p-8 shadow-lg overflow-hidden">
+              {loading && (
+                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-[2rem] bg-slate-950/10 backdrop-blur-sm">
+                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
+                  <p className="mt-4 text-sm font-semibold text-primary">Signing you in…</p>
+                </div>
+              )}
               <div className="mb-8">
                 <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Secure sign in</p>
                 <h2 className="mt-4 text-3xl font-bold text-foreground">Sign in</h2>
@@ -103,6 +125,18 @@ const Login = () => {
                   Use your Learn Malawi credentials to access your student dashboard or content management tools.
                 </p>
               </div>
+
+              {pageToast && (
+                <div className="mb-6">
+                  <Toast variant="destructive" className="w-full">
+                    <div className="pr-10">
+                      <ToastTitle>Login failed</ToastTitle>
+                      <ToastDescription>{pageToast}</ToastDescription>
+                    </div>
+                    <ToastClose onClick={() => setPageToast('')} />
+                  </Toast>
+                </div>
+              )}
 
               {apiError && (
                 <div className="mb-6 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
@@ -162,9 +196,16 @@ const Login = () => {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="inline-flex w-full items-center justify-center rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
+                  className="inline-flex w-full items-center justify-center gap-2 rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition duration-300 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70 disabled:bg-primary/80"
                 >
-                  {loading ? 'Signing in…' : 'Sign in to Learn Malawi'}
+                  {loading ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      <span>Signing in…</span>
+                    </>
+                  ) : (
+                    'Sign in to Learn Malawi'
+                  )}
                 </button>
               </form>
 

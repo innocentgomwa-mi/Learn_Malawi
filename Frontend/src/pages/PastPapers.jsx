@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from "@/lib/AuthContext";
-import { fetchPastPapers } from "@/api";
+import { fetchPastPapers, logActivity } from "@/api";
 import { getSavedPapers, savePaperOffline, removePaperOffline } from "@/lib/offlineCache";
 import RequireAccount from "@/components/RequireAccount";
 import SaveOfflineButton from "@/components/SaveOfflineButton";
@@ -17,9 +17,10 @@ const LEVEL_COLORS = {
 
 
 export default function PastPapers() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
+  const [lastSearchSignature, setLastSearchSignature] = useState("");
   const [savedPapers, setSavedPapers] = useState([]);
   const [isDeviceOnline, setIsDeviceOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
 
@@ -50,6 +51,27 @@ export default function PastPapers() {
     retry: 1,
     enabled: isAuthenticated && isDeviceOnline,
   });
+
+  useEffect(() => {
+    const signature = `${search.trim()}|${level}`;
+    if (signature === lastSearchSignature) return;
+    if (!search.trim() && level === 'All') return;
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: user?.email || 'anonymous',
+        user_name: user?.full_name || '',
+        user_role: user?.role || 'student',
+        resource_title: 'Past Papers',
+        subject: search.trim() || 'all',
+        metadata: JSON.stringify({ query: search.trim(), level }),
+      }).catch(() => {});
+      setLastSearchSignature(signature);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, level, user?.email, user?.full_name, user?.role, lastSearchSignature]);
 
   const papersToDisplay = isDeviceOnline ? papers : savedPapers;
 
@@ -159,12 +181,32 @@ export default function PastPapers() {
                       <div className="flex flex-wrap gap-2">
                         {paper.paperUrl && (
                           <a href={paper.paperUrl} target="_blank" rel="noopener noreferrer"
+                            onClick={() => logActivity({
+                              action: 'resource_viewed',
+                              user_email: user?.email || 'anonymous',
+                              user_name: user?.full_name || '',
+                              user_role: user?.role || 'student',
+                              resource_title: paper.title,
+                              subject: paper.subject,
+                              level: paper.level,
+                              metadata: JSON.stringify({ resource_id: paper.id, resource_type: 'past_paper', target: 'paperUrl' }),
+                            }).catch(() => {})}
                             className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold py-2 rounded-lg hover:opacity-90">
                             <Download className="h-3.5 w-3.5" /> Paper
                           </a>
                         )}
                         {paper.markingSchemeUrl && (
                           <a href={paper.markingSchemeUrl} target="_blank" rel="noopener noreferrer"
+                            onClick={() => logActivity({
+                              action: 'resource_viewed',
+                              user_email: user?.email || 'anonymous',
+                              user_name: user?.full_name || '',
+                              user_role: user?.role || 'student',
+                              resource_title: paper.title,
+                              subject: paper.subject,
+                              level: paper.level,
+                              metadata: JSON.stringify({ resource_id: paper.id, resource_type: 'past_paper', target: 'markingSchemeUrl' }),
+                            }).catch(() => {})}
                             className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 bg-accent text-accent-foreground text-xs font-semibold py-2 rounded-lg hover:opacity-90">
                             <BookOpen className="h-3.5 w-3.5" /> Scheme
                           </a>

@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { authRegister } from '@/api';
+import { authRegister, authVerifyEmail, authResendVerification } from '@/api';
 
 const Register = () => {
   const [firstName, setFirstName] = useState('');
@@ -11,6 +11,7 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [school, setSchool] = useState('');
   const [level, setLevel] = useState('PSLC');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -18,7 +19,13 @@ const Register = () => {
   const [role, setRole] = useState(defaultRole);
   const roleLabel = role === 'Student' ? 'student' : 'teacher';
   const [error, setError] = useState(/** @type {string | null} */ (null));
+  const [infoMessage, setInfoMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [step, setStep] = useState('form');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
+  const [pendingPassword, setPendingPassword] = useState('');
+  const [timeLeft, setTimeLeft] = useState(60);
 
   /**
    * @param {React.FormEvent<HTMLFormElement>} event
@@ -31,6 +38,11 @@ const Register = () => {
       return;
     }
 
+    if (!agreeTerms) {
+      setError('You must agree to the terms and conditions to create an account.');
+      return;
+    }
+
     if (password !== confirmPassword) {
       setError('Passwords do not match. Please double-check and try again.');
       return;
@@ -39,18 +51,81 @@ const Register = () => {
     setLoading(true);
     try {
       const normalizedRole = role.trim().charAt(0).toUpperCase() + role.trim().slice(1).toLowerCase();
-      await authRegister({ firstName, lastName, email, password, role: normalizedRole, school, level });
-      const loginResult = await login(email, password);
-      if (loginResult.success) {
-        navigate(role === 'Student' ? '/' : '/teacher', { replace: true });
-      } else {
-        setError(loginResult.message || 'Registration succeeded but login failed.');
-      }
+      await authRegister({ firstName, lastName, email, password, role: normalizedRole, school, level, agreeTerms });
+      setRegisteredEmail(email);
+      setPendingPassword(password);
+      setTimeLeft(60);
+      setInfoMessage('A verification code was sent to your email. Enter it below to complete registration.');
+      setStep('verify');
     } catch (registrationError) {
       const message = registrationError instanceof Error
         ? registrationError.message
         : String(registrationError);
       setError(message || 'Registration failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifySubmit = async (event) => {
+    event.preventDefault();
+    setError(null);
+    setInfoMessage('');
+
+    if (!verificationCode) {
+      setError('Please enter the verification code sent to your email.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await authVerifyEmail({ email: registeredEmail || email, code: verificationCode });
+      const loginResult = await login(registeredEmail || email, pendingPassword);
+      if (loginResult.success) {
+        navigate(role === 'Student' ? '/' : '/teacher', { replace: true });
+      } else {
+        setError(loginResult.message || 'Email verified, but login failed. Please sign in with your credentials.');
+      }
+    } catch (verificationError) {
+      const message = verificationError instanceof Error
+        ? verificationError.message
+        : String(verificationError);
+      setError(message || 'Verification failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (step !== 'verify') {
+      return undefined;
+    }
+
+    if (timeLeft <= 0) {
+      return undefined;
+    }
+
+    const interval = setInterval(() => {
+      setTimeLeft((prev) => Math.max(prev - 1, 0));
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [step, timeLeft]);
+
+  const handleResendCode = async () => {
+    setError(null);
+    setInfoMessage('');
+    setLoading(true);
+
+    try {
+      await authResendVerification({ email: registeredEmail || email });
+      setTimeLeft(60);
+      setInfoMessage('A new verification code has been sent to your email.');
+    } catch (resendError) {
+      const message = resendError instanceof Error
+        ? resendError.message
+        : String(resendError);
+      setError(message || 'Unable to resend verification code.');
     } finally {
       setLoading(false);
     }
@@ -74,112 +149,166 @@ const Register = () => {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid gap-4 sm:grid-cols-2">
-              <label className="block text-sm font-medium text-foreground">
-                First name
-                <input
-                  type="text"
-                  value={firstName}
-                  onChange={(event) => setFirstName(event.target.value)}
-                  required
-                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-                />
-              </label>
-              <label className="block text-sm font-medium text-foreground">
-                Last name
-                <input
-                  type="text"
-                  value={lastName}
-                  onChange={(event) => setLastName(event.target.value)}
-                  required
-                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-                />
-              </label>
+          {infoMessage && (
+            <div className="mb-6 rounded-3xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-700">
+              {infoMessage}
             </div>
+          )}
 
-            <label className="block text-sm font-medium text-foreground">
-              Email address
-              <input
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
-            </label>
+          {step === 'form' ? (
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label className="block text-sm font-medium text-foreground">
+                  First name
+                  <input
+                    type="text"
+                    value={firstName}
+                    onChange={(event) => setFirstName(event.target.value)}
+                    required
+                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                </label>
+                <label className="block text-sm font-medium text-foreground">
+                  Last name
+                  <input
+                    type="text"
+                    value={lastName}
+                    onChange={(event) => setLastName(event.target.value)}
+                    required
+                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                  />
+                </label>
+              </div>
 
-            <label className="block text-sm font-medium text-foreground">
-              Password
-              <input
-                type="password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
-            </label>
+              <label className="block text-sm font-medium text-foreground">
+                Email address
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
 
-            <label className="block text-sm font-medium text-foreground">
-              Confirm password
-              <input
-                type="password"
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                required
-                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
-            </label>
+              <label className="block text-sm font-medium text-foreground">
+                Password
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
 
-            <label className="block text-sm font-medium text-foreground">
-              School
-              <input
-                type="text"
-                value={school}
-                onChange={(event) => setSchool(event.target.value)}
-                required
-                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-              />
-            </label>
-            <label className="block text-sm font-medium text-foreground">
-              Level
-              <select
-                value={level}
-                onChange={(event) => setLevel(event.target.value)}
-                required
-                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+              <label className="block text-sm font-medium text-foreground">
+                Confirm password
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  required
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+
+              <label className="block text-sm font-medium text-foreground">
+                School
+                <input
+                  type="text"
+                  value={school}
+                  onChange={(event) => setSchool(event.target.value)}
+                  required
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Level
+                <select
+                  value={level}
+                  onChange={(event) => setLevel(event.target.value)}
+                  required
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                >
+                  <option value="PSLC">PSLC</option>
+                  <option value="JCE">JCE</option>
+                  <option value="MSCE">MSCE</option>
+                </select>
+              </label>
+              <label className="block text-sm font-medium text-foreground">
+                Role
+                <select
+                  value={role}
+                  onChange={(event) => setRole(event.target.value)}
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                >
+                  <option value="Teacher">Teacher</option>
+                  <option value="Student">Student</option>
+                </select>
+              </label>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <option value="PSLC">PSLC</option>
-                <option value="JCE">JCE</option>
-                <option value="MSCE">MSCE</option>
-              </select>
-            </label>
-            <label className="block text-sm font-medium text-foreground">
-              Role
-              <select
-                value={role}
-                onChange={(event) => setRole(event.target.value)}
-                className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                {loading ? 'Creating account…' : 'Register account'}
+              </button>
+            </form>
+          ) : (
+            <form onSubmit={handleVerifySubmit} className="space-y-6">
+              <p className="text-sm text-slate-600">
+                Enter the 6-digit verification code sent to <strong>{registeredEmail || email}</strong>.
+              </p>
+              <p className="text-sm text-slate-500">
+                Code expires in <strong>{timeLeft}</strong> second{timeLeft === 1 ? '' : 's'}.
+              </p>
+
+              <label className="block text-sm font-medium text-foreground">
+                Verification code
+                <input
+                  type="text"
+                  value={verificationCode}
+                  onChange={(event) => setVerificationCode(event.target.value)}
+                  maxLength={6}
+                  required
+                  className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
+                />
+              </label>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
               >
-                <option value="Teacher">Teacher</option>
-                <option value="Student">Student</option>
-              </select>
-            </label>
+                {loading ? 'Verifying…' : 'Verify email'}
+              </button>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="inline-flex w-full items-center justify-center rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70"
-            >
-              {loading ? 'Creating account…' : 'Register account'}
-            </button>
-          </form>
+              <button
+                type="button"
+                onClick={handleResendCode}
+                disabled={loading}
+                className="inline-flex w-full items-center justify-center rounded-3xl border border-border bg-background px-5 py-3 text-sm font-semibold text-foreground shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                Resend verification code
+              </button>
+            </form>
+          )}
 
-          <div className="mt-8 text-sm text-muted-foreground">
-            Already have an account?{' '}
-            <Link to="/login" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">
-              Sign in instead
-            </Link>
+          <div className="mt-8 text-sm text-muted-foreground space-y-2">
+            <p>
+              Already have an account?{' '}
+              <Link to="/login" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">
+                Sign in instead
+              </Link>
+            </p>
+            <p>
+              Forgot your password?{' '}
+              <Link to="/forgot-password" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">
+                Reset it here
+              </Link>
+            </p>
           </div>
         </div>
       </div>

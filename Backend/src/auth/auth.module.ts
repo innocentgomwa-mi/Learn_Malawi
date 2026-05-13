@@ -8,14 +8,19 @@ import { AuthController } from './auth.controller';
 import { UsersModule } from '../users/users.module';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { PendingRegistration } from './entities/pending-registration.entity';
+import { PasswordReset } from './entities/password-reset.entity';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
 import { JwtAuthGuardWithPublic } from './guards/public.guard';
+import { EmailService } from './email.service';
+import { ActivityLogModule } from '../activity-log/activity-log.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([RefreshToken]),
+    TypeOrmModule.forFeature([RefreshToken, PendingRegistration, PasswordReset]),
     UsersModule,
+    ActivityLogModule,
     PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -29,6 +34,7 @@ import { JwtAuthGuardWithPublic } from './guards/public.guard';
   controllers: [AuthController],
   providers: [
     AuthService,
+    EmailService,
     JwtStrategy,
     JwtAuthGuard,
     RolesGuard,

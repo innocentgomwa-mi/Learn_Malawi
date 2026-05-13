@@ -16,6 +16,7 @@ import {
   Wrench,
   BarChart2,
   KeyRound,
+  Search,
   ChevronRight,
   ChevronLeft,
   X
@@ -27,6 +28,7 @@ const SECTIONS = [
     items: [
       { id: "overview", label: "Dashboard", icon: LayoutDashboard },
       { id: "reports", label: "Reports & Analytics", icon: BarChart2 },
+      { id: "search-analytics", label: "Search Analytics", icon: Search },
     ]
   },
   {
@@ -43,6 +45,7 @@ const SECTIONS = [
     items: [
       { id: "approvals", label: "Published Resources", icon: BookOpen },
       { id: "announcements", label: "Announcements", icon: Megaphone },
+      { id: "study-groups", label: "Study Groups", icon: Users },
     ]
   },
   {

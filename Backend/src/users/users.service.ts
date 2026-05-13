@@ -34,6 +34,19 @@ export class UsersService {
     return await this.usersRepository.save(user);
   }
 
+  async createWithHashedPassword(createUserDto: CreateUserDto): Promise<User> {
+    const existingUser = await this.usersRepository.findOne({
+      where: { email: createUserDto.email },
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this email already exists');
+    }
+
+    const user = this.usersRepository.create(createUserDto);
+    return await this.usersRepository.save(user);
+  }
+
   async findAll(): Promise<User[]> {
     return await this.usersRepository.find({
       select: ['id', 'firstName', 'lastName', 'email', 'role', 'school', 'level', 'profileImageUrl', 'createdAt', 'updatedAt'],
@@ -84,16 +97,24 @@ async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
     return await this.usersRepository.save(user);
   }
 
-  async remove(id: string): Promise<void> {
-    const result = await this.usersRepository.delete(id);
-    
-    if (result.affected === 0) {
+  async resetPassword(id: string, newPassword: string): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+
+    if (!user) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
+
+    user.password = await bcrypt.hash(newPassword, 10);
+    return await this.usersRepository.save(user);
   }
 
+  async remove(id: string): Promise<void> {
+    const user = await this.usersRepository.findOne({ where: { id } });
 
-  async verifyPassword(user: User, password: string): Promise<boolean> {
-    return await bcrypt.compare(password, user.password);
+    if (!user) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
+
+    await this.usersRepository.remove(user);
   }
 }

@@ -15,6 +15,16 @@ const getAuthToken = () => {
   return window.localStorage.getItem(AUTH_TOKEN_KEY);
 };
 
+const refreshAccessToken = async () => {
+  const refreshToken = typeof window !== 'undefined' ? window.localStorage.getItem(REFRESH_TOKEN_KEY) : null;
+  if (!refreshToken) {
+    const error = new Error('Refresh token not available');
+    error.status = 401;
+    throw error;
+  }
+  await apiClient.auth.refresh();
+};
+
 const hasAuthToken = () => Boolean(getAuthToken());
 
 const setAuthToken = (token) => {
@@ -69,6 +79,22 @@ const fetchJson = async (endpoint, options = {}) => {
     );
     error.status = response.status;
     error.data = data;
+
+    if (
+      response.status === 401 &&
+      endpoint !== '/auth/refresh' &&
+      endpoint !== `${API_URL}/auth/refresh` &&
+      getAuthToken()
+    ) {
+      try {
+        await refreshAccessToken();
+        return fetchJson(endpoint, options);
+      } catch (refreshError) {
+        clearTokens();
+        throw error;
+      }
+    }
+
     throw error;
   }
 
@@ -170,6 +196,17 @@ const Announcement = {
   delete: async (id) => fetchJson(`/announcements/${id}`, { method: 'DELETE' }),
 };
 
+const PasswordReminder = {
+  send: async (data) => {
+    if (!hasAuthToken()) {
+      const error = new Error('Authentication required');
+      error.status = 401;
+      throw error;
+    }
+    return fetchJson('/auth/password-reminders', { method: 'POST', body: data });
+  },
+};
+
 const TeacherPost = {
   list: async (query = {}) => tryFetchJson(`/teacher-posts${toQueryString(query)}`, []),
   filter: async (query = {}) => tryFetchJson(`/teacher-posts${toQueryString(query)}`, []),
@@ -184,10 +221,12 @@ const Tutorial = buildEntity('/tutorials');
 const PastPaper = buildEntity('/past-papers');
 const CareerResource = buildEntity('/career-resources');
 const Quiz = buildEntity('/quizzes');
+const StudyGroup = buildEntity('/study-groups');
 const SystemSettings = buildEntity('/system-settings');
 const DataChangeHistory = buildEntity('/data-change-history');
 const StudentProgress = buildEntity('/student-progress');
 const ActivityLog = buildEntity('/activity-log');
+const SearchLog = buildEntity('/search-logs');
 
 const auth = {
   me: async () => fetchJson('/auth/profile'),
@@ -252,6 +291,7 @@ export const apiClient = {
     Teacher,
     Student,
     Announcement,
+    PasswordReminder,
     TeacherPost,
     ResourceRating,
     StudyNote,
@@ -259,10 +299,12 @@ export const apiClient = {
     PastPaper,
     CareerResource,
     Quiz,
+    StudyGroup,
     SystemSettings,
     DataChangeHistory,
     StudentProgress,
     ActivityLog,
+    SearchLog,
   },
 };
 

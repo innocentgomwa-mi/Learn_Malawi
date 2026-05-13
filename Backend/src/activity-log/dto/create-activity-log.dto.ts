@@ -48,6 +48,11 @@ export class CreateActivityLogDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsString()
+  resource_id?: string;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsNumber()
   score?: number;
 

@@ -1,7 +1,8 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useQuery } from '@tanstack/react-query';
-import { fetchCareerResources } from "@/api";
+import { fetchCareerResources, logActivity } from "@/api";
+import { useAuth } from "@/lib/AuthContext";
 import { Briefcase, Search, ExternalLink, GraduationCap, Award, MapPin, Calendar } from "lucide-react";
 
 const TYPES = ["All", "university_guide", "scholarship", "career_path", "bursary"];
@@ -28,6 +29,7 @@ const TYPE_ICONS = {
 export default function Career() {
   const [search, setSearch] = useState("");
   const [type, setType] = useState("All");
+  const { user } = useAuth();
 
   const { data: resources = [], isLoading: loading } = useQuery({
     queryKey: ['careerResources'],
@@ -42,6 +44,27 @@ export default function Career() {
       r.description?.toLowerCase().includes(search.toLowerCase());
     return matchSearch;
   });
+
+  useEffect(() => {
+    const trimmed = search.trim();
+    if (!trimmed && type === 'All') {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: user?.email || 'anonymous',
+        user_name: user?.full_name || '',
+        user_role: user?.role || 'student',
+        resource_title: 'Career Resources',
+        subject: trimmed,
+        metadata: JSON.stringify({ query: trimmed, category: type }),
+      }).catch(() => {});
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, type, user?.email, user?.full_name, user?.role]);
 
   return (
     <div className="w-full px-4 py-8">
@@ -96,6 +119,15 @@ export default function Career() {
                 <div className="mt-auto pt-3">
                   {r.link && (
                     <a href={r.link} target="_blank" rel="noopener noreferrer"
+                      onClick={() => logActivity({
+                        action: 'resource_viewed',
+                        user_email: user?.email || 'anonymous',
+                        user_name: user?.full_name || '',
+                        user_role: user?.role || 'student',
+                        resource_title: r.title,
+                        subject: r.type,
+                        metadata: JSON.stringify({ resource_type: 'career_resource', external_link: r.link }),
+                      }).catch(() => {})}
                       className="mt-3 w-full inline-flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl hover:opacity-90">
                       <ExternalLink className="h-3.5 w-3.5" /> Learn More
                     </a>

@@ -57,6 +57,12 @@ function getStoredRefreshToken() {
   return isValidToken(token) ? token : null;
 }
 
+const MIN_LOGIN_LOADING_MS = 700;
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 /**
  * @param {string} accessToken
  * @param {string} refreshToken
@@ -163,6 +169,7 @@ export function AuthProvider(props) {
    * @param {string} password
    */
   const login = async (email, password) => {
+    const startTime = Date.now();
     setLoading(true);
     setError(null);
 
@@ -176,10 +183,17 @@ export function AuthProvider(props) {
       return { success: true };
     } catch (loginError) {
       clearAuthTokens();
-      const message = /** @type {{ message?: string }} */ (loginError)?.message || 'Unable to sign in. Please try again.';
-      setError(message);
-      return { success: false, message };
+      const rawMessage = /** @type {{ message?: string }} */ (loginError)?.message || 'Unable to sign in. Please try again.';
+      const formattedMessage = /invalid credentials/i.test(rawMessage)
+        ? 'Wrong email or password. Please check your credentials and try again.'
+        : rawMessage;
+      setError(formattedMessage);
+      return { success: false, message: formattedMessage };
     } finally {
+      const elapsed = Date.now() - startTime;
+      if (elapsed < MIN_LOGIN_LOADING_MS) {
+        await sleep(MIN_LOGIN_LOADING_MS - elapsed);
+      }
       setLoading(false);
     }
   };

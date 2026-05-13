@@ -61,7 +61,7 @@ export default function SubjectSpotlight() {
   }, []);
 
   return (
-    <div className="bg-card rounded-xl border p-5">
+    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-heading font-bold text-base flex items-center gap-2">
           <Flame className="h-4 w-4 text-orange-500" /> Subjects
@@ -87,6 +87,6 @@ export default function SubjectSpotlight() {
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

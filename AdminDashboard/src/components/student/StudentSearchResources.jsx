@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiClient } from "@/api/apiClient";
 import { logActivity } from "@/lib/activityLogger";
@@ -49,6 +49,7 @@ export default function StudentSearchResources({ currentUser }) {
   const [sortBy, setSortBy] = useState("newest");
   const [showFilters, setShowFilters] = useState(false);
   const [userRatings, setUserRatings] = useState({});
+  const [lastSearchSignature, setLastSearchSignature] = useState("");
   const qc = useQueryClient();
 
   const { data: resources = [], isLoading } = useQuery({
@@ -99,15 +100,49 @@ export default function StudentSearchResources({ currentUser }) {
   };
   const getDownloads = (id) => ratingMap[id]?.downloads || 0;
 
+  useEffect(() => {
+    const signature = `${search.trim()}|${filterSubject}|${filterType}|${filterLevel}|${sortBy}`;
+    if (signature === lastSearchSignature) {
+      return;
+    }
+
+    if (!search.trim() && filterSubject === 'all' && filterType === 'all' && filterLevel === 'all') {
+      return;
+    }
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: currentUser?.email || 'anonymous',
+        user_name: currentUser?.full_name || '',
+        user_role: currentUser?.role || 'student',
+        resource_title: 'Student Resource Search',
+        subject: search.trim() || 'all',
+        metadata: JSON.stringify({
+          query: search.trim(),
+          filterSubject,
+          filterType,
+          filterLevel,
+          sortBy,
+        }),
+      });
+      setLastSearchSignature(signature);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, filterSubject, filterType, filterLevel, sortBy, currentUser?.email, currentUser?.full_name, currentUser?.role, lastSearchSignature]);
+
   const handleView = (resource) => {
     logActivity({
       action: "resource_viewed",
       user_email: currentUser?.email || "anonymous",
       user_name: currentUser?.full_name || "",
+      user_role: currentUser?.role || "student",
       resource_id: resource.id,
       resource_title: resource.title,
       subject: resource.subject,
       level: resource.level,
+      metadata: JSON.stringify({ content_type: resource.content_type }),
     });
   };
 
