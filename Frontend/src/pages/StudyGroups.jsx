@@ -127,14 +127,13 @@ export default function StudyGroups() {
     // If current user is a Teacher and group has no mentor, make teacher the mentor when joining.
     if (user.role === 'Teacher') {
       const payload = {};
-      if (!group.mentor_email) {
-        payload.mentor_email = user.email;
-        payload.mentor_name = user.full_name || user.email.split('@')[0];
-      }
+      // Teachers joining a group become the mentor (overwrite existing mentor)
+      payload.mentor_email = user.email;
+      payload.mentor_name = user.full_name || user.email.split('@')[0];
       if (!members.includes(user.email)) {
         payload.members = [...members, user.email];
       }
-      const updated = Object.keys(payload).length ? await updateStudyGroup(group.id, payload) : group;
+      const updated = await updateStudyGroup(group.id, payload);
       setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
       setActiveGroup(updated);
       return;
