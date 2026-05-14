@@ -44,21 +44,24 @@ export class StudyGroupsController {
   }
 
   @Delete(':id')
-  @Roles(UserRole.STUDENT)
+  @Roles(UserRole.STUDENT, UserRole.TEACHER)
   async remove(@Req() req: any, @Param('id') id: string) {
-    const group = await this.studyGroupsService.findOne(id);
     const user = req?.user;
     if (!user) {
       throw new ForbiddenException('Unauthorized');
     }
 
-    // Students can delete groups they created. Admins can delete any group.
-    if (user.role === UserRole.STUDENT) {
-      if (!group.creator_email || group.creator_email !== user.email) {
-        throw new ForbiddenException('You can only delete groups you created.');
-      }
+    return this.studyGroupsService.remove(id, user);
+  }
+
+  @Delete(':id/members/:memberEmail')
+  @Roles(UserRole.TEACHER)
+  async removeMember(@Req() req: any, @Param('id') id: string, @Param('memberEmail') memberEmail: string) {
+    const user = req?.user;
+    if (!user) {
+      throw new ForbiddenException('Unauthorized');
     }
 
-    return this.studyGroupsService.remove(id);
+    return this.studyGroupsService.removeMember(id, memberEmail, user);
   }
 }
