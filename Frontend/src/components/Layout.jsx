@@ -280,7 +280,7 @@ export default function Layout() {
                       onClick={() => setCommunityOpen(false)}
                       className="block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10"
                     >
-                      Discussions
+                      Community
                     </Link>
                   )}
                   </div>
@@ -476,7 +476,7 @@ export default function Layout() {
                       onClick={closeMenu}
                       className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium transition-all ${location.pathname === '/discussions' ? 'bg-secondary text-secondary-foreground' : 'text-primary-foreground/80 hover:bg-primary-foreground/10'}`}
                     >
-                      Discussions
+                      Community
                     </Link>
                   )}
                 </div>
