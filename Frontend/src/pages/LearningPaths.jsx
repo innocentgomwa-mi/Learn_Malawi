@@ -1,6 +1,6 @@
 // @ts-nocheck
 import { useState, useEffect } from "react";
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from "@/lib/AuthContext";
 import { fetchLearningPaths, fetchStudentProgress, fetchStudyNotes, fetchResources, deleteLearningPath, recordStudentProgress } from '@/api';
 import { Map as MapIcon, BookOpen, CheckCircle, Circle, Lock, ChevronRight, Loader2, Sparkles } from "lucide-react";
@@ -33,6 +33,8 @@ export default function LearningPaths() {
   const [level, setLevel] = useState("All");
   const [subject, setSubject] = useState("");
   const [activePath, setActivePath] = useState(null);
+  const [searchParams] = useSearchParams();
+  const selectedPathId = searchParams.get('path_id');
   const isTeacher = user?.role === "teacher" || user?.role === "admin";
 
   useEffect(() => {
@@ -66,6 +68,16 @@ export default function LearningPaths() {
     load();
     return () => { isMounted = false; };
   }, [user]);
+
+  useEffect(() => {
+    if (loading) return;
+    if (selectedPathId) {
+      const matchedPath = paths.find((p) => String(p.id) === selectedPathId);
+      setActivePath(matchedPath || null);
+    } else {
+      setActivePath(null);
+    }
+  }, [loading, selectedPathId, paths]);
 
   const completedResourceIds = new Set(progress.filter(p => p.completed && p.entry_type !== 'learning_path' && p.entry_type !== 'learning_path_milestone').map(p => p.resource_id));
   const completedMilestoneIds = new Set(progress.filter(p => p.completed && p.entry_type === 'learning_path_milestone').map(p => p.resource_id));
@@ -156,6 +168,11 @@ export default function LearningPaths() {
     }
   };
 
+  const handleViewPath = async (path) => {
+    await startPath(path);
+    navigate(`/learning-paths?path_id=${encodeURIComponent(path.id)}`);
+  };
+
   const toggleMilestone = async (path, milestone, completed, milestoneId) => {
     if (!user?.email) return;
     try {
@@ -200,7 +217,7 @@ export default function LearningPaths() {
 
     return (
       <div className="w-full px-4 py-8">
-        <button onClick={() => setActivePath(null)} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+        <button onClick={() => { navigate('/learning-paths'); }} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ChevronRight className="h-4 w-4 rotate-180" /> Back to Learning Paths
         </button>
 
@@ -385,10 +402,7 @@ export default function LearningPaths() {
                     <div className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all" style={{ width: `${pct}%` }} />
                   </div>
                 </div>
-                <button onClick={async () => {
-                    await startPath(path);
-                    setActivePath(path);
-                  }}
+                <button onClick={() => handleViewPath(path)}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl text-sm font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-all">
                   {hasStartedPath(path, done) ? "Continue Path" : "Start Path"} <ChevronRight className="h-4 w-4" />
                 </button>

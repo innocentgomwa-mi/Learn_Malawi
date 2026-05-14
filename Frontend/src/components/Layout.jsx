@@ -14,7 +14,7 @@ import { fetchAnnouncements } from "@/api";
 import { getSeenNotificationIds } from "@/lib/notificationStorage";
 
 const navItems = [
-  { path: "/abouts", label: "About", icon: Info },
+  { path: "/abouts", label: "About", icon: Info, guestOnly: true },
   { path: "/career", label: "Career Resources", icon: Briefcase, authRequired: true },
 ];
 
@@ -383,6 +383,13 @@ export default function Layout() {
                       >
                         Settings
                       </Link>
+                      <Link
+                        to="/abouts"
+                        onClick={() => setSettingsOpen(false)}
+                        className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/abouts' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                      >
+                        About
+                      </Link>
                       <button
                         type="button"
                         onClick={async () => {
@@ -531,6 +538,13 @@ export default function Layout() {
                       Settings
                     </Link>
                     <Link
+                      to="/abouts"
+                      onClick={closeMenu}
+                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/abouts' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                    >
+                      About
+                    </Link>
+                    <Link
                       to="/my-schedule"
                       onClick={closeMenu}
                       className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/my-schedule' ? 'bg-secondary text-secondary-foreground' : ''}`}
@@ -623,8 +637,6 @@ export default function Layout() {
                 { label: "Study Groups", to: "/study-groups" },
                 { label: "Achievements", to: "/achievements" },
                 { label: "Leaderboard", to: "/quizzes" },
-                { label: "Parent Portal", to: "/parent-portal" },
-                { label: "Teacher Dashboard", to: "/teacher" },
               ].map(({ label, to }) => (
                 <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
               ))}
@@ -650,10 +662,9 @@ export default function Layout() {
             <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Platform</h4>
             <ul className="space-y-2">
               {[
-                { label: "Dashboard", to: "/dashboard" },
                 { label: "AI Tutor (24/7)", to: "/" },
-                { label: "Onboarding", to: "/onboarding" },
-                { label: "Admin Panel", to: "/admin" },
+                { label: "Terms & Conditions", to: "/terms-and-conditions" },
+                { label: "Privacy Policy", to: "/privacy-policy" },
               ].map(({ label, to }) => (
                 <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
               ))}

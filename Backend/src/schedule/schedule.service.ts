@@ -4,12 +4,15 @@ import { Repository } from 'typeorm';
 import { StudyBlock } from './entities/study-block.entity';
 import { Resource } from './entities/resource.entity';
 import { Exam } from './entities/exam.entity';
+import { ClassSchedule } from './entities/class-schedule.entity';
 import { CreateStudyBlockDto } from './dto/create-study-block.dto';
 import { UpdateStudyBlockDto } from './dto/update-study-block.dto';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
+import { CreateClassScheduleDto } from './dto/create-class-schedule.dto';
+import { UpdateClassScheduleDto } from './dto/update-class-schedule.dto';
 
 @Injectable()
 export class ScheduleService {
@@ -20,6 +23,8 @@ export class ScheduleService {
     private readonly resourceRepository: Repository<Resource>,
     @InjectRepository(Exam)
     private readonly examRepository: Repository<Exam>,
+    @InjectRepository(ClassSchedule)
+    private readonly classScheduleRepository: Repository<ClassSchedule>,
   ) {}
 
   async createStudyBlock(createStudyBlockDto: CreateStudyBlockDto, userEmail?: string): Promise<StudyBlock> {
@@ -123,5 +128,41 @@ export class ScheduleService {
   async removeExam(id: string, userEmail?: string): Promise<void> {
     const exam = await this.findExam(id, userEmail);
     await this.examRepository.remove(exam);
+  }
+
+  async createClassSchedule(createClassScheduleDto: CreateClassScheduleDto, userEmail?: string): Promise<ClassSchedule> {
+    const schedule = this.classScheduleRepository.create({
+      ...createClassScheduleDto,
+      is_recurring: createClassScheduleDto.is_recurring ?? true,
+      color: createClassScheduleDto.color || 'emerald',
+      reminder_minutes: createClassScheduleDto.reminder_minutes ?? 0,
+      teacher_email: userEmail,
+    });
+    return this.classScheduleRepository.save(schedule);
+  }
+
+  async findAllClassSchedules(userEmail?: string): Promise<ClassSchedule[]> {
+    const where = userEmail ? { teacher_email: userEmail } : {};
+    return this.classScheduleRepository.find({ where, order: { day_of_week: 'ASC', start_time: 'ASC' } });
+  }
+
+  async findClassSchedule(id: string, userEmail?: string): Promise<ClassSchedule> {
+    const where = userEmail ? { id, teacher_email: userEmail } : { id };
+    const schedule = await this.classScheduleRepository.findOne({ where });
+    if (!schedule) {
+      throw new NotFoundException(`Class schedule with ID ${id} not found`);
+    }
+    return schedule;
+  }
+
+  async updateClassSchedule(id: string, updateClassScheduleDto: UpdateClassScheduleDto, userEmail?: string): Promise<ClassSchedule> {
+    const schedule = await this.findClassSchedule(id, userEmail);
+    Object.assign(schedule, updateClassScheduleDto);
+    return this.classScheduleRepository.save(schedule);
+  }
+
+  async removeClassSchedule(id: string, userEmail?: string): Promise<void> {
+    const schedule = await this.findClassSchedule(id, userEmail);
+    await this.classScheduleRepository.remove(schedule);
   }
 }

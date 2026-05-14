@@ -13,7 +13,7 @@ const ForgotPassword = () => {
   const [error, setError] = useState('');
 
   /**
-   * @param {React.FormEvent<HTMLFormElement>} event
+   * @param {React.SyntheticEvent<HTMLFormElement | HTMLButtonElement>} event
    */
   const handleRequest = async (event) => {
     event?.preventDefault?.();

@@ -21,6 +21,8 @@ import Career from './pages/Career';
 import StudyGroups from './pages/StudyGroups';
 import Discussions from './pages/Discussions';
 import Abouts from './pages/Abouts';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -43,6 +45,9 @@ import TeacherSettings from './components/teachersdashboard/TeacherSettings';
 import StudyGroupsAdmin from './components/teacher/StudyGroupsAdmin';
 import LearningPathsAdmin from './components/teacher/LearningPathsAdmin';
 import LearningPaths from './pages/LearningPaths';
+import LearningHistory from './pages/LearningHistory';
+import TeacherSchedule from './pages/TeacherSchedule';
+import TeacherCollaboration from './pages/TeacherCollaboration';
 import Insight from './pages/Insight';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
@@ -96,6 +101,8 @@ const AuthenticatedApp = () => {
         <Route path="/study-groups" element={<StudyGroups />} />
         <Route path="/discussions" element={<ProtectedRoute requiredRoles={[]}><Discussions /></ProtectedRoute>} />
         <Route path="/abouts" element={<Abouts />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -105,8 +112,11 @@ const AuthenticatedApp = () => {
         <Route path="/my-schedule" element={<ProtectedRoute requiredRoles={[]}><MySchedule /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
         <Route path="/learning-paths" element={<LearningPaths />} />
+        <Route path="/learning-history" element={<LearningHistory />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
+          <Route path="schedule" element={<TeacherSchedule />} />
+          <Route path="collaboration" element={<TeacherCollaboration />} />
           <Route path="study-notes" element={<StudyNotesAdmin />} />
           <Route path="past-papers" element={<PastPapersAdmin />} />
           <Route path="tutorials" element={<TutorialsAdmin />} />
