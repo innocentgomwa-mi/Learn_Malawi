@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { BookOpen, FileText, Play, Brain, Briefcase, ArrowRight, Users, BookMarked, Award } from "lucide-react";
+import { BookOpen, FileText, Play, Brain, Briefcase, ArrowRight, Users, BookMarked, Award, UserCheck, GraduationCap, Trophy, Star, Flame, MessageCircle, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 
 const features = [
@@ -60,7 +60,7 @@ export default function Home() {
           <div className="absolute top-10 left-10 w-64 h-64 bg-secondary rounded-full blur-3xl" />
           <div className="absolute bottom-0 right-0 w-96 h-96 bg-secondary rounded-full blur-3xl" />
         </div>
-        <div className="max-w-7xl mx-auto px-4 py-20 md:py-28 relative">
+        <div className="w-full px-4 py-20 md:py-28 relative">
           <div className="max-w-3xl">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -104,7 +104,7 @@ export default function Home() {
       </section>
 
       {/* Stats */}
-      <section className="max-w-7xl mx-auto px-4 -mt-2 pb-8">
+      <section className="w-full px-4 -mt-2 pb-8">
         <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
           {stats.map(({ icon: Icon, value, label }) => (
             <div key={label} className="text-center p-4">
@@ -117,7 +117,7 @@ export default function Home() {
       </section>
 
       {/* Features Grid */}
-      <section className="max-w-7xl mx-auto px-4 py-12">
+      <section className="w-full px-4 py-12">
         <div className="text-center mb-10">
           <h2 className="font-poppins text-3xl font-bold text-foreground mb-3">Everything You Need to Excel</h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
@@ -150,8 +150,117 @@ export default function Home() {
         </div>
       </section>
 
+      {/* How It Works */}
+      <section className="bg-muted/50 py-20">
+        <div className="w-full px-4">
+          <div className="text-center mb-14">
+            <span className="inline-block bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Simple & Effective</span>
+            <h2 className="font-poppins text-3xl md:text-4xl font-bold text-foreground mb-3">How It Works</h2>
+            <p className="text-muted-foreground max-w-xl mx-auto">Get started in minutes. No fees, no barriers — just learning.</p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 relative">
+            {/* Connector line (desktop) */}
+            <div className="hidden md:block absolute top-10 left-[12.5%] right-[12.5%] h-0.5 bg-border z-0" />
+            {[
+              { step: "1", icon: UserCheck, title: "Create Your Account", desc: "Sign up for free in seconds. No credit card required, ever.", color: "bg-emerald-100 text-emerald-700" },
+              { step: "2", icon: GraduationCap, title: "Choose Your Level", desc: "Select PSLC, JCE, or MSCE and pick your subjects.", color: "bg-blue-100 text-blue-700" },
+              { step: "3", icon: BookOpen, title: "Study the Content", desc: "Read notes, watch tutorials, and download past papers.", color: "bg-purple-100 text-purple-700" },
+              { step: "4", icon: Trophy, title: "Test & Track Progress", desc: "Take quizzes, earn badges, and watch your streak grow.", color: "bg-amber-100 text-amber-700" },
+            ].map(({ step, icon: Icon, title, desc, color }, i) => (
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, y: 24 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="relative z-10 flex flex-col items-center text-center"
+              >
+                <div className={`w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-md ${color}`}>
+                  <Icon className="h-8 w-8" />
+                </div>
+                <div className="bg-primary text-primary-foreground text-xs font-bold w-6 h-6 rounded-full flex items-center justify-center absolute top-0 right-[calc(50%-2.5rem)] -translate-y-2">{step}</div>
+                <h3 className="font-poppins font-bold text-foreground text-base mb-2">{title}</h3>
+                <p className="text-muted-foreground text-sm leading-relaxed">{desc}</p>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* What We Offer */}
+      <section className="w-full px-4 py-20">
+        <div className="text-center mb-14">
+          <span className="inline-block bg-secondary/20 text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full mb-3 uppercase tracking-wide">Built for Malawian Students</span>
+          <h2 className="font-poppins text-3xl md:text-4xl font-bold text-foreground mb-3">What We Offer</h2>
+          <p className="text-muted-foreground max-w-xl mx-auto">Everything in one place — designed around the Malawi national curriculum.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Big feature card */}
+          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.5 }}
+            className="relative rounded-3xl overflow-hidden row-span-2 min-h-[320px] group">
+            <img src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=800&q=80" alt="Students studying" className="w-full h-full object-cover absolute inset-0 group-hover:scale-105 transition-transform duration-500" />
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent" />
+            <div className="absolute bottom-0 left-0 p-7 text-white">
+              <div className="flex items-center gap-2 mb-3">
+                <Star className="h-4 w-4 text-secondary fill-secondary" />
+                <span className="text-xs font-bold uppercase tracking-wider text-secondary">Featured</span>
+              </div>
+              <h3 className="font-poppins font-bold text-2xl mb-2">AI-Powered Study Experience</h3>
+              <p className="text-white/80 text-sm leading-relaxed mb-4">Our AI tutor is available 24/7 to explain concepts, answer questions, and help you prepare for exams — in plain English or Chichewa.</p>
+              <div className="flex flex-wrap gap-2">
+                {['Instant Answers', 'Step-by-Step Help', 'All Subjects'].map(tag => (
+                  <span key={tag} className="text-xs bg-white/20 backdrop-blur-sm border border-white/30 px-2.5 py-1 rounded-full">{tag}</span>
+                ))}
+              </div>
+            </div>
+          </motion.div>
+
+          {/* Small offer cards */}
+          {[
+            { icon: Flame, title: "Daily Streaks & Achievements", desc: "Build study habits with daily streaks, earn badges, and celebrate milestones.", color: "from-orange-500 to-amber-400", img: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?w=600&q=80" },
+            { icon: Users, title: "Live Study Groups", desc: "Join peer study rooms, chat with classmates, and learn together in real time.", color: "from-blue-600 to-indigo-500", img: "https://images.unsplash.com/photo-1529070538774-1843cb3265df?w=600&q=80" },
+            { icon: MessageCircle, title: "Parent Progress Portal", desc: "Parents can link their child's account and track streaks, scores & learning paths.", color: "from-emerald-600 to-teal-500", img: "https://images.unsplash.com/photo-1581078426770-6d336e5042ff?w=600&q=80" },
+            { icon: Zap, title: "Adaptive Quizzes", desc: "Quizzes that get smarter — AI pinpoints weak topics and targets them for improvement.", color: "from-purple-600 to-pink-500", img: "https://images.unsplash.com/photo-1606326608606-aa0b62935f2b?w=600&q=80" },
+          ].map(({ icon: Icon, title, desc, color, img }, i) => (
+            <motion.div key={title} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: i * 0.08 }}
+              className="relative rounded-2xl overflow-hidden h-40 group cursor-default">
+              <img src={img} alt={title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+              <div className={`absolute inset-0 bg-gradient-to-r ${color} opacity-80`} />
+              <div className="absolute inset-0 p-5 flex items-end">
+                <div className="text-white">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Icon className="h-4 w-4" />
+                    <h3 className="font-poppins font-bold text-sm">{title}</h3>
+                  </div>
+                  <p className="text-white/80 text-xs leading-relaxed">{desc}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      </section>
+
+      {/* Testimonial / Trust strip */}
+      <section className="bg-muted/40 border-y border-border py-12">
+        <div className="w-full px-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { value: "100%", label: "Free Forever", sub: "No hidden fees" },
+              { value: "PSLC–MSCE", label: "All Levels Covered", sub: "Standard 1 to Form 4" },
+              { value: "MIE Aligned", label: "National Curriculum", sub: "Endorsed content" },
+              { value: "24 / 7", label: "Always Available", sub: "Learn at your own pace" },
+            ].map(({ value, label, sub }) => (
+              <div key={label} className="flex flex-col items-center">
+                <p className="font-poppins font-bold text-2xl text-primary">{value}</p>
+                <p className="font-semibold text-foreground text-sm mt-1">{label}</p>
+                <p className="text-muted-foreground text-xs mt-0.5">{sub}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* AI Tutor Banner */}
-      <section className="max-w-7xl mx-auto px-4 pb-16">
+      <section className="w-full px-4 pb-16">
         <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl" />
           <div className="relative max-w-2xl">

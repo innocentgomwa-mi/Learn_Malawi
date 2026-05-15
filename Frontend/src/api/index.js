@@ -8,14 +8,20 @@ const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000
 const ACCESS_TOKEN_KEY = 'learnmalawi_access_token';
 const REFRESH_TOKEN_KEY = 'learnmalawi_refresh_token';
 
+function isValidToken(token) {
+  return typeof token === 'string' && token.trim() !== '' && token.trim().toLowerCase() !== 'undefined' && token.trim().toLowerCase() !== 'null';
+}
+
 function getStoredAccessToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(ACCESS_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 function getStoredRefreshToken() {
   if (typeof window === 'undefined') return null;
-  return window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  const token = window.sessionStorage.getItem(REFRESH_TOKEN_KEY);
+  return isValidToken(token) ? token : null;
 }
 
 /**
@@ -33,7 +39,41 @@ export function clearAuthTokens() {
   window.sessionStorage.removeItem(ACCESS_TOKEN_KEY);
   window.sessionStorage.removeItem(REFRESH_TOKEN_KEY);
 }
+function decodeJwtPayload(token) {
+  if (!isValidToken(token)) return null;
+  try {
+    const payload = token.split('.')[1];
+    const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
+    const decoded = atob(normalized);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
 
+export function isJwtTokenExpiringSoon(token, expiresWithinSeconds = 30) {
+  const payload = decodeJwtPayload(token);
+  if (!payload || typeof payload.exp !== 'number') return true;
+  return payload.exp * 1000 <= Date.now() + expiresWithinSeconds * 1000;
+}
+
+export async function refreshAuthTokens(refreshToken) {
+  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ refreshToken }),
+  });
+
+  if (!response.ok) {
+    const data = await parseJsonResponse(response);
+    const message = data?.message || response.statusText;
+    throw new Error(`Token refresh failed (${response.status}): ${message}`);
+  }
+
+  const responseData = await response.json();
+  saveAuthTokens(responseData.accessToken, responseData.refreshToken);
+  return responseData;
+}
 /**
  * @param {Response} response
  */
@@ -51,8 +91,13 @@ async function parseJsonResponse(response) {
  * @param {any} body
  * @returns {any}
  */
+function isFormData(value) {
+  return typeof FormData !== 'undefined' && value instanceof FormData;
+}
+
 function cleanRequestBody(body) {
   if (body === null || body === undefined) return body;
+  if (isFormData(body)) return body;
   if (typeof body === 'string') {
     try {
       const parsed = JSON.parse(body);
@@ -75,40 +120,59 @@ function cleanRequestBody(body) {
   return body;
 }
 
+function pickFields(body, allowedFields) {
+  if (typeof body !== 'object' || body === null) return {};
+  const picked = {};
+  allowedFields.forEach((field) => {
+    if (Object.prototype.hasOwnProperty.call(body, field)) {
+      picked[field] = body[field];
+    }
+  });
+  return picked;
+}
+
 /**
  * @param {string} path
  * @param {RequestInit} [options]
  */
 async function request(path, options = {}) {
   const headers = /** @type {Record<string, string>} */ ({
-    'Content-Type': 'application/json',
     ...(options.headers || {}),
   });
+
+  const body = options.body;
+  const isForm = isFormData(body);
+  if (body !== undefined && body !== null && !headers['Content-Type'] && !headers['content-type'] && !isForm) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   const accessToken = getStoredAccessToken();
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const body = options.body;
-  
-  // For FormData, don't set Content-Type header (browser will set it with boundary)
-  if (body instanceof FormData) {
-    delete headers['Content-Type'];
+  const requestBody = isForm ? body : body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body);
+
+  if (import.meta.env.DEV) {
+    console.debug('API request', {
+      path,
+      method: options.method || 'GET',
+      headers,
+      body: requestBody,
+    });
   }
-  
-  const requestBody = body instanceof FormData ? body : (body && typeof body !== 'string' ? cleanRequestBody(body) : cleanRequestBody(body));
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
     headers,
-    body: requestBody instanceof FormData ? requestBody : (typeof requestBody === 'object' ? JSON.stringify(requestBody) : requestBody),
+    body: isForm ? requestBody : typeof requestBody === 'object' ? JSON.stringify(requestBody) : requestBody,
   });
 
   if (response.ok) {
     return response.status === 204 ? null : parseJsonResponse(response);
   }
 
+  const errorData = await parseJsonResponse(response);
   if (response.status === 401 && path !== '/auth/refresh') {
     const refreshToken = getStoredRefreshToken();
     if (refreshToken) {
@@ -131,8 +195,16 @@ async function request(path, options = {}) {
     }
   }
 
-  const message = await response.text();
-  throw new Error(`API request failed (${response.status}): ${message}`);
+  let errorMessage = response.statusText;
+  if (errorData) {
+    if (typeof errorData === 'object') {
+      errorMessage = errorData.message || JSON.stringify(errorData);
+    } else {
+      errorMessage = String(errorData);
+    }
+  }
+
+  throw new Error(`API request failed (${response.status}): ${errorMessage}`);
 }
 
 /**
@@ -159,12 +231,66 @@ export async function authRegister(data) {
 export function fetchProfile() {
   return request('/auth/profile');
 }
-
+export function fetchSystemSettings() {
+  return request('/system-settings');
+}
 /**
  * @param {JsonObject} data
  */
 export function updateProfile(data) {
-  return request('/auth/profile', { method: 'PATCH', body: JSON.stringify(data) });
+  return request('/auth/profile', {
+    method: 'PATCH',
+    body: data,
+  });
+}
+
+/**
+ * @param {JsonObject} data
+ */
+export function logActivity(data) {
+  return request('/activity-log', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function fetchActivityLogs({ limit, action, level, subject } = {}) {
+  const params = new URLSearchParams();
+  if (limit) params.set('limit', String(limit));
+  if (action) params.set('action', action);
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/activity-log${query}`);
+}
+
+export function fetchInsights({ level, subject, limit } = {}) {
+  const params = new URLSearchParams();
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (limit) params.set('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/insights${query}`);
+}
+
+const ACCESSIBILITY_SETTINGS_KEY = 'learnmalawi_accessibility_settings';
+
+export async function fetchAccessibilitySettings() {
+  if (typeof window === 'undefined') return {};
+  const stored = window.localStorage.getItem(ACCESSIBILITY_SETTINGS_KEY);
+  if (!stored) return {};
+  try {
+    return JSON.parse(stored);
+  } catch {
+    return {};
+  }
+}
+
+export async function saveAccessibilitySettings(data) {
+  if (typeof window === 'undefined') return data;
+  try {
+    window.localStorage.setItem(ACCESSIBILITY_SETTINGS_KEY, JSON.stringify(data));
+  } catch {
+    // ignore storage failures
+  }
+  return data;
 }
 
 /**
@@ -177,27 +303,189 @@ export function authLogout(refreshToken) {
   });
 }
 
+export function authLogoutAll() {
+  return request('/auth/logout-all', {
+    method: 'POST',
+  });
+}
+
+export function changePassword(currentPassword, newPassword) {
+  return request('/auth/password', {
+    method: 'PATCH',
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
+export function deleteAccount() {
+  return request('/auth/account', {
+    method: 'DELETE',
+  });
+}
+
 /**
  * @param {StudyNotesParams} [params]
  */
-export function fetchStudyNotes({ level, subject, search } = {}) {
+export function fetchStudyNotes({ level, subject, search, teacherEmail } = {}) {
   const params = new URLSearchParams();
   if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
   if (search) params.set('search', search);
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/study-notes${query}`);
 }
 
-export function fetchPastPapers() {
-  return request('/past-papers').then((response) => {
+export function fetchStudyGroups({ level, subject, teacherEmail } = {}) {
+  const params = new URLSearchParams();
+  if (level && level !== 'All') params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (teacherEmail) params.set('mentor_email', teacherEmail);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/study-groups${query}`);
+}
+
+export function fetchLearningPaths({ level, subject, teacherEmail, search } = {}) {
+  const params = new URLSearchParams();
+  if (level && level !== 'All') params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (search) params.set('search', search);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/learning-paths${query}`);
+}
+
+const learningPathPayloadFields = ['title', 'subject', 'level', 'description', 'milestones'];
+
+export function createLearningPath(data) {
+  const payload = pickFields(data, learningPathPayloadFields);
+  return request('/learning-paths', { method: 'POST', body: payload });
+}
+
+export function updateLearningPath(id, data) {
+  const payload = pickFields(data, learningPathPayloadFields);
+  return request(`/learning-paths/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteLearningPath(id) {
+  return request(`/learning-paths/${id}`, { method: 'DELETE' });
+}
+
+export function fetchStudyBlocks() {
+  return request('/study-blocks');
+}
+
+export function createStudyBlock(data) {
+  const payload = pickFields(data, ['title', 'day_of_week', 'start_time', 'end_time', 'subject', 'color', 'resource_ids', 'notes']);
+  return request('/study-blocks', { method: 'POST', body: payload });
+}
+
+export function updateStudyBlock(id, data) {
+  const payload = pickFields(data, ['title', 'day_of_week', 'start_time', 'end_time', 'subject', 'color', 'resource_ids', 'notes']);
+  return request(`/study-blocks/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteStudyBlock(id) {
+  return request(`/study-blocks/${id}`, { method: 'DELETE' });
+}
+
+export function fetchResources() {
+  return request('/resources');
+}
+
+export function createResource(data) {
+  const payload = pickFields(data, ['name', 'type', 'subject', 'url']);
+  return request('/resources', { method: 'POST', body: payload });
+}
+
+export function updateResource(id, data) {
+  const payload = pickFields(data, ['name', 'type', 'subject', 'url']);
+  return request(`/resources/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteResource(id) {
+  return request(`/resources/${id}`, { method: 'DELETE' });
+}
+
+export function fetchExams() {
+  return request('/exams');
+}
+
+export function createExam(data) {
+  const payload = pickFields(data, ['title', 'subject', 'exam_date', 'location', 'notify_days_before', 'notes', 'color']);
+  return request('/exams', { method: 'POST', body: payload });
+}
+
+export function updateExam(id, data) {
+  const payload = pickFields(data, ['title', 'subject', 'exam_date', 'location', 'notify_days_before', 'notes', 'color']);
+  return request(`/exams/${id}`, { method: 'PATCH', body: payload });
+}
+
+export function deleteExam(id) {
+  return request(`/exams/${id}`, { method: 'DELETE' });
+}
+
+export function fetchStudyGroupMessages({ groupId } = {}) {
+  const params = new URLSearchParams();
+  if (groupId) params.set('group_id', groupId);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/study-group-messages${query}`);
+}
+
+export function createStudyGroupMessage(data) {
+  return request('/study-group-messages', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateStudyGroup(id, data) {
+  return request(`/study-groups/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function deleteStudyGroup(id) {
+  return request(`/study-groups/${id}`, { method: 'DELETE' });
+}
+
+export function createStudyGroup(data) {
+  return request('/study-groups', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function fetchPastPapers({ teacherEmail, level, subject, year, search, page, limit } = {}) {
+  const params = new URLSearchParams();
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (year) params.set('year', String(year));
+  if (search) params.set('search', search);
+  if (page) params.set('page', String(page));
+  if (limit) params.set('limit', String(limit));
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/past-papers${query}`).then((response) => {
     if (Array.isArray(response)) return response;
     return response?.data ?? [];
   });
 }
 
-export function fetchTutorials() {
-  return request('/tutorials');
+export function fetchTutorials({ teacherEmail, level, subject, classFilter } = {}) {
+  const params = new URLSearchParams();
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (level) params.set('level', level);
+  if (subject) params.set('subject', subject);
+  if (classFilter) params.set('class', classFilter);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/tutorials${query}`);
+}
+
+export function fetchStudentProgress({ studentEmail, entryType } = {}) {
+  const params = new URLSearchParams();
+  if (studentEmail) params.set('student_email', studentEmail);
+  if (entryType) params.set('entry_type', entryType);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/student-progress${query}`);
+}
+
+export function recordStudentProgress(data) {
+  return request('/student-progress', {
+    method: 'POST',
+    body: JSON.stringify(data),
+  });
 }
 
 export function fetchCareerResources() {
@@ -205,9 +493,23 @@ export function fetchCareerResources() {
 }
 
 export function fetchAiChat(prompt) {
-  return request('/ai/ask', {
+  return request('/ai/chat', {
     method: 'POST',
-    body: JSON.stringify({ question: prompt }),
+    body: JSON.stringify({ prompt }),
+  });
+}
+
+export function generateStudyNoteQuiz(note) {
+  return request('/ai/quiz', {
+    method: 'POST',
+    body: JSON.stringify({
+      title: note.title,
+      subject: note.subject,
+      level: note.level,
+      topic: note.topic,
+      content: note.content,
+      summary: note.summary,
+    }),
   });
 }
 
@@ -215,19 +517,21 @@ export function fetchAiChat(prompt) {
  * @param {JsonObject} data
  */
 export function createStudyNote(data) {
-  return request('/study-notes', { method: 'POST', body: JSON.stringify(data) });
+  return request('/study-notes', {
+    method: 'POST',
+    body: isFormData(data) ? data : JSON.stringify(data),
+  });
 }
 
 /**
  * @param {string} id
- * @param {JsonObject} data
+ * @param {JsonObject|FormData} data
  */
 export function updateStudyNote(id, data) {
-  if (data instanceof FormData) {
-    return request(`/study-notes/${id}`, { method: 'PATCH', headers: {}, body: data });
-  }
-
-  return request(`/study-notes/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  return request(`/study-notes/${id}`, {
+    method: 'PATCH',
+    body: isFormData(data) ? data : JSON.stringify(data),
+  });
 }
 
 /**
@@ -241,19 +545,15 @@ export function deleteStudyNote(id) {
  * @param {JsonObject} data
  */
 export function createTutorial(data) {
-  return request('/tutorials', { method: 'POST', body: JSON.stringify(data) });
+  return request('/tutorials', { method: 'POST', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
  * @param {string} id
- * @param {JsonObject} data
+ * @param {JsonObject|FormData} data
  */
 export function updateTutorial(id, data) {
-  if (data instanceof FormData) {
-    return request(`/tutorials/${id}`, { method: 'PATCH', headers: {}, body: data });
-  }
-
-  return request(`/tutorials/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  return request(`/tutorials/${id}`, { method: 'PATCH', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
@@ -279,11 +579,12 @@ export function updateCareerResource(id, data) {
 }
 
 /**
- * @param {{ teacherEmail?: string }} [params]
+ * @param {{ teacherEmail?: string, published?: boolean }} [params]
  */
-export function fetchAnnouncements({ teacherEmail } = {}) {
+export function fetchAnnouncements({ teacherEmail, published } = {}) {
   const params = new URLSearchParams();
   if (teacherEmail) params.set('teacher_email', teacherEmail);
+  if (published !== undefined) params.set('published', published ? 'true' : 'false');
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/announcements${query}`);
 }
@@ -368,15 +669,15 @@ export function deleteCareerResource(id) {
  * @param {JsonObject} data
  */
 export function createPastPaper(data) {
-  return request('/past-papers', { method: 'POST', body: JSON.stringify(data) });
+  return request('/past-papers', { method: 'POST', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
  * @param {string} id
- * @param {JsonObject} data
+ * @param {JsonObject|FormData} data
  */
 export function updatePastPaper(id, data) {
-  return request(`/past-papers/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+  return request(`/past-papers/${id}`, { method: 'PATCH', body: isFormData(data) ? data : JSON.stringify(data) });
 }
 
 /**
@@ -411,14 +712,13 @@ export function deleteQuiz(id) {
 /**
  * @param {QuizzesParams} [params]
  */
-export function fetchQuizzes({ level, subject, difficulty, classFilter } = {}) {
+export function fetchQuizzes({ level, subject, difficulty, classFilter, teacherEmail } = {}) {
   const params = new URLSearchParams();
-  // Backend only accepts 'primary' or 'secondary' — skip PSLC/JCE/MSCE filters
-  const validLevels = ['primary', 'secondary'];
-  if (level && validLevels.includes(level)) params.set('level', level);
+  if (level && level !== 'All') params.set('level', level);
   if (subject) params.set('subject', subject);
   if (difficulty && difficulty !== 'All') params.set('difficulty', difficulty);
   if (classFilter) params.set('class', classFilter);
+  if (teacherEmail) params.set('teacher_email', teacherEmail);
   const query = params.toString() ? `?${params.toString()}` : '';
   return request(`/quizzes${query}`);
 }
@@ -442,49 +742,4 @@ export function createAttendance(data) {
 
 export function updateAttendance(id, data) {
   return request(`/attendance/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
-}
-
-export function fetchAiGenerateQuiz({ topic, numQuestions = 5, difficulty }) {
-  return request('/ai/generate-quiz', {
-    method: 'POST',
-    body: JSON.stringify({ topic, numQuestions, difficulty }),
-  });
-}
-
-// File Upload APIs
-
-/**
- * Upload a tutorial video
- * @param {FormData} formData - FormData containing file and tutorial metadata
- */
-export function uploadTutorial(formData) {
-  return request('/tutorials', {
-    method: 'POST',
-    headers: {}, // Let browser set Content-Type with boundary
-    body: formData,
-  });
-}
-
-/**
- * Upload a past paper
- * @param {FormData} formData - FormData containing file and past paper metadata
- */
-export function uploadPastPaper(formData) {
-  return request('/past-papers', {
-    method: 'POST',
-    headers: {}, // Let browser set Content-Type with boundary
-    body: formData,
-  });
-}
-
-/**
- * Upload a study note
- * @param {FormData} formData - FormData containing file and study note metadata
- */
-export function uploadStudyNote(formData) {
-  return request('/study-notes', {
-    method: 'POST',
-    headers: {}, // Let browser set Content-Type with boundary
-    body: formData,
-  });
 }

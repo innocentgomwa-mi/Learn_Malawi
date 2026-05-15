@@ -6,12 +6,12 @@ export class CreateAiQuizDto {
   title!: string;
 
   @IsString()
-  @IsNotEmpty()
-  subject!: string;
+  @IsOptional()
+  subject?: string;
 
   @IsString()
-  @IsNotEmpty()
-  level!: string;
+  @IsOptional()
+  level?: string;
 
   @IsString()
   @IsOptional()
@@ -24,4 +24,8 @@ export class CreateAiQuizDto {
   @IsString()
   @IsOptional()
   summary?: string;
+
+  @IsString()
+  @IsOptional()
+  schoolLevel?: string;
 }

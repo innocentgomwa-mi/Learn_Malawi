@@ -32,6 +32,10 @@ export class StudyNoteResponseDto {
 
   @ApiProperty({ required: false })
   @Expose()
+  imageUrl?: string;
+
+  @ApiProperty({ required: false })
+  @Expose()
   content?: string;
 
   @ApiProperty({ required: false })

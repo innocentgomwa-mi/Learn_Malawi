@@ -12,12 +12,12 @@ export class StudyNotesService {
     private studyNotesRepository: Repository<StudyNote>,
   ) {}
 
-  async create(createStudyNoteDto: CreateStudyNoteDto): Promise<StudyNote> {
+  async create(createStudyNoteDto: CreateStudyNoteDto & { teacherEmail?: string }): Promise<StudyNote> {
     const studyNote = this.studyNotesRepository.create(createStudyNoteDto);
     return await this.studyNotesRepository.save(studyNote);
   }
 
-  async findAll(level?: string, subject?: string, search?: string): Promise<StudyNote[]> {
+  async findAll(level?: string, subject?: string, search?: string, teacherEmail?: string): Promise<StudyNote[]> {
     const query = this.studyNotesRepository.createQueryBuilder('studyNote');
 
     if (level && level !== 'All') {
@@ -33,6 +33,10 @@ export class StudyNotesService {
         '(studyNote.title ILIKE :search OR studyNote.subject ILIKE :search OR studyNote.topic ILIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (teacherEmail) {
+      query.andWhere('studyNote.teacherEmail = :teacherEmail', { teacherEmail });
     }
 
     return await query.orderBy('studyNote.createdAt', 'DESC').getMany();

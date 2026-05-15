@@ -4,10 +4,7 @@ import {
   PrimaryGeneratedColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  ManyToOne,
-  JoinColumn,
 } from 'typeorm';
-import { User } from '../../users/entities/user.entity';
 
 export enum EducationLevel {
   PSLC = 'PSLC',
@@ -52,10 +49,6 @@ export class PastPaper {
 
   @Column({ type: 'integer', default: 0 })
   viewCount!: number;
-
-  @ManyToOne(() => User, { nullable: true, eager: false })
-  @JoinColumn({ name: 'uploaded_by' })
-  uploadedBy?: User;
 
   @CreateDateColumn()
   createdAt!: Date;

@@ -31,7 +31,6 @@ export default function ManageTeachers() {
   const { data: teachers = [], isLoading } = useQuery({
     queryKey: ["teachers"],
     queryFn: () => apiClient.entities.Teacher.list("-created_date"),
-    enabled: apiClient.hasAuthToken(),
   });
 
   const createMutation = useMutation({

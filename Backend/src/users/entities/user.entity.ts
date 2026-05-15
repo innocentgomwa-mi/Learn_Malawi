@@ -26,9 +26,18 @@ export class User {
   @Column({
     type: 'enum',
     enum: UserRole,
-    default: UserRole.ADMIN,
+    default: UserRole.TEACHER,
   })
   role!: UserRole;
+
+  @Column({ type: 'varchar', length: 150, nullable: true })
+  school?: string;
+
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  level?: string;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  profileImageUrl?: string;
 
   @Column({
     type: 'timestamp',

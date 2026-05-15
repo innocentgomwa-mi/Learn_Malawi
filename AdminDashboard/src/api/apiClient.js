@@ -64,7 +64,9 @@ const fetchJson = async (endpoint, options = {}) => {
   const raw = await response.text();
   const data = raw ? safeJsonParse(raw) : null;
   if (!response.ok) {
-    const error = new Error(data?.message || response.statusText || 'Request failed');
+    const error = new Error(
+      data?.message || (typeof data === 'object' ? JSON.stringify(data) : response.statusText) || 'Request failed'
+    );
     error.status = response.status;
     error.data = data;
     throw error;
@@ -82,14 +84,31 @@ const tryFetchJson = async (endpoint, fallback = null, options = {}) => {
   }
 };
 
+const normalizeListResponse = (response) => {
+  if (Array.isArray(response)) return response;
+  if (response && typeof response === 'object' && Array.isArray(response?.data)) return response.data;
+  return [];
+};
+
+const toQueryString = (query = {}) => {
+  if (!query || typeof query !== 'object') return '';
+  const params = new URLSearchParams();
+  Object.entries(query).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== '') {
+      params.set(key, String(value));
+    }
+  });
+  return params.toString() ? `?${params.toString()}` : '';
+};
+
 const buildEntity = (basePath) => ({
-  list: async () => {
+  list: async (query = {}) => {
     if (!hasAuthToken()) return [];
-    return tryFetchJson(basePath, []);
+    return normalizeListResponse(await tryFetchJson(`${basePath}${toQueryString(query)}`, []));
   },
-  filter: async () => {
+  filter: async (query = {}) => {
     if (!hasAuthToken()) return [];
-    return tryFetchJson(basePath, []);
+    return normalizeListResponse(await tryFetchJson(`${basePath}${toQueryString(query)}`, []));
   },
   create: async (data) => {
     if (!hasAuthToken()) {
@@ -117,11 +136,16 @@ const buildEntity = (basePath) => ({
   },
 });
 
-const User = buildEntity('/users');
+const User = {
+  list: async () => fetchJson('/users'),
+  create: async (data) => fetchJson('/users', { method: 'POST', body: data }),
+  update: async (id, data) => fetchJson(`/users/${id}`, { method: 'PATCH', body: data }),
+  delete: async (id) => fetchJson(`/users/${id}`, { method: 'DELETE' }),
+};
 
 const Teacher = {
   list: async () => {
-    const teachers = await buildEntity('/users?role=Teacher').list();
+    const teachers = (await User.list()).filter((user) => user?.role === 'Teacher');
     return teachers.map((teacher) => ({
       ...teacher,
       full_name: teacher.full_name || [teacher.firstName, teacher.lastName].filter(Boolean).join(' '),
@@ -133,34 +157,33 @@ const Teacher = {
 };
 
 const Student = {
-  list: async () => {
-    const students = await buildEntity('/users?role=Student').list();
-    return students.map((student) => ({
-      ...student,
-      full_name: student.full_name || [student.firstName, student.lastName].filter(Boolean).join(' '),
-    }));
-  },
+  list: async () => (await User.list()).filter((user) => user?.role === 'Student'),
   create: async (data) => User.create({ ...data, role: 'Student' }),
   update: User.update,
   delete: User.delete,
 };
 
 const Announcement = {
-  list: async () => fetchJson('/announcements'),
+  list: async (query = {}) => tryFetchJson(`/announcements${toQueryString(query)}`, []),
   create: async (data) => fetchJson('/announcements', { method: 'POST', body: data }),
   update: async (id, data) => fetchJson(`/announcements/${id}`, { method: 'PATCH', body: data }),
   delete: async (id) => fetchJson(`/announcements/${id}`, { method: 'DELETE' }),
 };
 
 const TeacherPost = {
-  list: async () => tryFetchJson('/teacher-posts', []),
-  filter: async () => tryFetchJson('/teacher-posts', []),
+  list: async (query = {}) => tryFetchJson(`/teacher-posts${toQueryString(query)}`, []),
+  filter: async (query = {}) => tryFetchJson(`/teacher-posts${toQueryString(query)}`, []),
   create: async (data) => tryFetchJson('/teacher-posts', data, { method: 'POST', body: data }),
   update: async (id, data) => tryFetchJson(`/teacher-posts/${id}`, data, { method: 'PATCH', body: data }),
   delete: async (id) => tryFetchJson(`/teacher-posts/${id}`, {}, { method: 'DELETE' }),
 };
 
 const ResourceRating = buildEntity('/resource-ratings');
+const StudyNote = buildEntity('/study-notes');
+const Tutorial = buildEntity('/tutorials');
+const PastPaper = buildEntity('/past-papers');
+const CareerResource = buildEntity('/career-resources');
+const Quiz = buildEntity('/quizzes');
 const SystemSettings = buildEntity('/system-settings');
 const DataChangeHistory = buildEntity('/data-change-history');
 const StudentProgress = buildEntity('/student-progress');
@@ -178,15 +201,15 @@ const auth = {
     }
     return data;
   },
-  register: async (userData) => {
-    const data = await fetchJson('/auth/register', { method: 'POST', body: userData });
-    if (data?.accessToken) {
-      setAuthToken(data.accessToken);
+  register: async (data) => {
+    const response = await fetchJson('/auth/register', { method: 'POST', body: data });
+    if (response?.accessToken) {
+      setAuthToken(response.accessToken);
     }
-    if (data?.refreshToken) {
-      setRefreshToken(data.refreshToken);
+    if (response?.refreshToken) {
+      setRefreshToken(response.refreshToken);
     }
-    return data;
+    return response;
   },
   refresh: async () => {
     const refreshToken = typeof window !== 'undefined' ? window.localStorage.getItem(REFRESH_TOKEN_KEY) : null;
@@ -231,6 +254,11 @@ export const apiClient = {
     Announcement,
     TeacherPost,
     ResourceRating,
+    StudyNote,
+    Tutorial,
+    PastPaper,
+    CareerResource,
+    Quiz,
     SystemSettings,
     DataChangeHistory,
     StudentProgress,

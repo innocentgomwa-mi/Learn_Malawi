@@ -29,11 +29,17 @@ export class StudyNote {
   @Column({ type: 'text', nullable: true })
   summary?: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  imageUrl?: string;
+
   @Column({ type: 'text', nullable: true })
   content?: string;
 
   @Column({ type: 'varchar', length: 500, nullable: true })
   fileUrl?: string;
+
+  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
+  teacherEmail?: string;
 
   @CreateDateColumn()
   createdAt!: Date;

@@ -16,50 +16,38 @@ export class InsightsService {
   ) {}
 
   async getInsights({ level, subject, limit }: InsightsParams = {}) {
-    const [activities, quizAttemptsRaw, quizSubjectPool] = await Promise.all([
-      this.activityLogService.findAll(limit, undefined, level, undefined),
-      this.studentProgressService.findAll(undefined, 'quiz', level, subject),
-      this.studentProgressService.findAll(undefined, 'quiz', level, undefined),
+    const [activities, progressRaw] = await Promise.all([
+      this.activityLogService.findAll(limit),
+      this.studentProgressService.findAll(),
     ]);
 
-    const subjects = [...new Set((quizSubjectPool || []).map((entry) => entry.subject).filter(Boolean))];
-
-    const normalizedQuizAttempts = (quizAttemptsRaw || []).map((entry) => {
-      const scoreValue = typeof entry.score === 'number'
-        ? entry.score
-        : entry.total_questions && entry.correct_answers
-          ? Math.round((entry.correct_answers / entry.total_questions) * 100)
-          : 0;
-
-      const passedValue = scoreValue >= 50;
-
-      return {
-        ...entry,
-        user_email: entry.student_email,
-        user_name: entry.student_name || entry.student_email,
-        score_percentage: scoreValue,
-        passed: passedValue,
-        created_date: entry.completed_at || entry.createdDate,
-        quiz_title: entry.quiz_title || entry.resource_title,
-        topics_failed: entry.topics_failed || [],
-      };
+    const filtered = (progressRaw || []).filter((entry) => {
+      if (level && entry.level !== level) return false;
+      if (subject && entry.subject !== subject) return false;
+      return true;
     });
+
+    const subjects = [...new Set((progressRaw || []).map((e) => e.subject).filter(Boolean))];
+
+    const normalizedQuizAttempts = filtered.map((entry) => ({
+      ...entry,
+      user_email: entry.student_email,
+      user_name: entry.student_email,
+      score_percentage: entry.average_score ?? 0,
+      passed: (entry.average_score ?? 0) >= 50,
+      created_date: entry.createdDate,
+      quiz_title: entry.subject,
+      topics_failed: [],
+    }));
 
     const summary = {
       uniqueStudents: new Set(normalizedQuizAttempts.map((q) => q.user_email)).size,
       totalAttempts: normalizedQuizAttempts.length,
       avgScore: normalizedQuizAttempts.length
-        ? parseFloat(
-            (
-              normalizedQuizAttempts.reduce((sum, q) => sum + q.score_percentage, 0) /
-              normalizedQuizAttempts.length
-            ).toFixed(1),
-          )
+        ? parseFloat((normalizedQuizAttempts.reduce((sum, q) => sum + q.score_percentage, 0) / normalizedQuizAttempts.length).toFixed(1))
         : 0,
       passRate: normalizedQuizAttempts.length
-        ? Math.round(
-            (normalizedQuizAttempts.filter((q) => q.passed).length / normalizedQuizAttempts.length) * 100,
-          )
+        ? Math.round((normalizedQuizAttempts.filter((q) => q.passed).length / normalizedQuizAttempts.length) * 100)
         : 0,
       atRiskCount: Object.values(
         normalizedQuizAttempts.reduce((acc, q) => {
@@ -68,16 +56,9 @@ export class InsightsService {
           return acc;
         }, {} as Record<string, number[]>),
       ).filter((scores) => scores.reduce((a, b) => a + b, 0) / scores.length < 50).length,
-      totalTimeMin: Math.round(
-        (activities.reduce((sum, log) => sum + (log.duration_seconds || 0), 0) || 0) / 60,
-      ),
+      totalTimeMin: 0,
     };
 
-    return {
-      activities,
-      quizAttempts: normalizedQuizAttempts,
-      subjects,
-      summary,
-    };
+    return { activities, quizAttempts: normalizedQuizAttempts, subjects, summary };
   }
 }

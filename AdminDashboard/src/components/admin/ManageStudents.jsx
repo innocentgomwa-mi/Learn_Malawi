@@ -12,7 +12,6 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
-import { apiClient } from "@/api/apiClient";
 
 export default function ManageStudents() {
   const [search, setSearch] = useState("");
@@ -24,7 +23,6 @@ export default function ManageStudents() {
   const { data: students = [], isLoading } = useQuery({
     queryKey: ["students"],
     queryFn: () => apiClient.entities.Student.list("-created_date"),
-    enabled: apiClient.hasAuthToken(),
   });
 
   const createMutation = useMutation({

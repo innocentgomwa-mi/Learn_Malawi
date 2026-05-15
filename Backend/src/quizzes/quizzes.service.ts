@@ -1,30 +1,24 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Quiz, QuizStatus } from './entities/quiz.entity';
-import { Question } from './entities/question.entity';
+import { Quiz, EducationLevel, Difficulty } from './entities/quiz.entity';
 import { CreateQuizDto } from './dto/create-quiz.dto';
 import { UpdateQuizDto } from './dto/update-quiz.dto';
-import { CreateQuestionDto } from './dto/create-question.dto';
-import { UpdateQuestionDto } from './dto/update-question.dto';
 
 @Injectable()
 export class QuizzesService {
   constructor(
     @InjectRepository(Quiz)
     private quizzesRepository: Repository<Quiz>,
-    @InjectRepository(Question)
-    private questionsRepository: Repository<Question>,
   ) {}
 
-  async create(createQuizDto: CreateQuizDto): Promise<Quiz> {
+  async create(createQuizDto: CreateQuizDto, teacherEmail?: string): Promise<Quiz> {
     const quiz = this.quizzesRepository.create({
       ...createQuizDto,
-      status: QuizStatus.UPLOADED,
-      questions: createQuizDto.questions.map(q => this.questionsRepository.create(q))
+      questions: createQuizDto.questions || [],
+      teacherEmail: teacherEmail || createQuizDto.teacherEmail,
     });
-    
-    return await this.quizzesRepository.save(quiz);
+    return await this.quizzesRepository.save(quiz) as unknown as Quiz;
   }
 
   async findAll(
@@ -32,56 +26,27 @@ export class QuizzesService {
     subject?: string,
     difficulty?: string,
     classFilter?: string,
+    teacherEmail?: string,
   ): Promise<Quiz[]> {
-    const query = this.quizzesRepository.createQueryBuilder('quiz')
-      .leftJoinAndSelect('quiz.questions', 'questions');
-
-    // Only filter by level if it's a valid enum value
-    if (level && level !== 'all' && (level === 'primary' || level === 'secondary')) {
-      query.andWhere('quiz.level = :level', { level });
-    }
-
-    if (subject && subject !== 'all') {
-      query.andWhere('quiz.subject = :subject', { subject });
-    }
-
-    if (difficulty && difficulty !== 'all') {
-      query.andWhere('quiz.difficulty = :difficulty', { difficulty });
-    }
-
-    if (classFilter && classFilter !== 'all') {
-      query.andWhere('quiz.class = :classFilter', { classFilter });
-    }
-
-    query.orderBy('quiz.id', 'ASC');
-
-    return await query.getMany();
+    const query = this.quizzesRepository.createQueryBuilder('quiz');
+    if (level) query.andWhere('quiz.level = :level', { level });
+    if (subject) query.andWhere('quiz.subject ILIKE :subject', { subject: `%${subject}%` });
+    if (difficulty) query.andWhere('quiz.difficulty = :difficulty', { difficulty });
+    if (classFilter) query.andWhere('quiz.class = :class', { class: classFilter });
+    if (teacherEmail) query.andWhere('quiz.teacherEmail = :teacherEmail', { teacherEmail });
+    return await query.orderBy('quiz.createdAt', 'DESC').getMany();
   }
 
   async findOne(id: number): Promise<Quiz> {
-    const quiz = await this.quizzesRepository.findOne({
-      where: { id },
-      relations: ['questions'],
-    });
-
-    if (!quiz) {
-      throw new NotFoundException(`Quiz with ID ${id} not found`);
-    }
-
+    const quiz = await this.quizzesRepository.findOne({ where: { id } });
+    if (!quiz) throw new NotFoundException(`Quiz with ID ${id} not found`);
     return quiz;
   }
 
   async update(id: number, updateQuizDto: UpdateQuizDto): Promise<Quiz> {
     const quiz = await this.findOne(id);
-    
-    // Remove existing questions if new ones are provided
-    if (updateQuizDto.questions) {
-      await this.questionsRepository.delete({ quizId: id });
-      quiz.questions = updateQuizDto.questions.map(q => this.questionsRepository.create(q));
-    }
-    
     Object.assign(quiz, updateQuizDto);
-    return await this.quizzesRepository.save(quiz);
+    return await this.quizzesRepository.save(quiz) as unknown as Quiz;
   }
 
   async remove(id: number): Promise<void> {
@@ -89,82 +54,27 @@ export class QuizzesService {
     await this.quizzesRepository.remove(quiz);
   }
 
-  // Question-specific methods
-  async addQuestion(quizId: number, createQuestionDto: CreateQuestionDto): Promise<Question> {
-    const quiz = await this.findOne(quizId);
-    const question = this.questionsRepository.create({
-      ...createQuestionDto,
-      quiz,
-    });
-    
-    return await this.questionsRepository.save(question);
-  }
-
-  async updateQuestion(questionId: number, updateQuestionDto: UpdateQuestionDto): Promise<Question> {
-    const question = await this.questionsRepository.findOne({
-      where: { id: questionId },
-    });
-
-    if (!question) {
-      throw new NotFoundException(`Question with ID ${questionId} not found`);
-    }
-
-    Object.assign(question, updateQuestionDto);
-    return await this.questionsRepository.save(question);
-  }
-
-  async removeQuestion(questionId: number): Promise<void> {
-    const question = await this.questionsRepository.findOne({
-      where: { id: questionId },
-    });
-
-    if (!question) {
-      throw new NotFoundException(`Question with ID ${questionId} not found`);
-    }
-
-    await this.questionsRepository.remove(question);
-  }
-
-  // Get unique values for filters
   async getLevels(): Promise<string[]> {
-    const result = await this.quizzesRepository
+    const results = await this.quizzesRepository
       .createQueryBuilder('quiz')
       .select('DISTINCT quiz.level', 'level')
-      .orderBy('quiz.level', 'ASC')
       .getRawMany();
-    
-    return result.map(r => r.level);
+    return results.map((r) => r.level).filter(Boolean);
   }
 
-  async getSubjects(level?: string): Promise<string[]> {
-    const query = this.quizzesRepository
+  async getSubjects(): Promise<string[]> {
+    const results = await this.quizzesRepository
       .createQueryBuilder('quiz')
       .select('DISTINCT quiz.subject', 'subject')
-      .orderBy('quiz.subject', 'ASC');
-
-    // Only filter if level is a valid enum value (primary or secondary)
-    if (level && level !== 'all' && (level === 'primary' || level === 'secondary')) {
-      query.where('quiz.level = :level', { level });
-    }
-    // If level is 'all' or any other value, don't apply level filter
-
-    const result = await query.getRawMany();
-    return result.map(r => r.subject);
+      .getRawMany();
+    return results.map((r) => r.subject).filter(Boolean);
   }
 
-  async getClasses(level?: string): Promise<string[]> {
-    const query = this.quizzesRepository
+  async getClasses(): Promise<string[]> {
+    const results = await this.quizzesRepository
       .createQueryBuilder('quiz')
       .select('DISTINCT quiz.class', 'class')
-      .orderBy('quiz.class', 'ASC');
-
-    // Only filter if level is a valid enum value (primary or secondary)
-    if (level && level !== 'all' && (level === 'primary' || level === 'secondary')) {
-      query.where('quiz.level = :level', { level });
-    }
-    // If level is 'all' or any other value, don't apply level filter
-
-    const result = await query.getRawMany();
-    return result.map(r => r.class);
+      .getRawMany();
+    return results.map((r) => r.class).filter(Boolean);
   }
 }

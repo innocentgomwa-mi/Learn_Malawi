@@ -1,6 +1,6 @@
-import { Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, Max, IsUrl } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { EducationLevel } from '../entities/past-paper.entity';
 
 export class CreatePastPaperDto {
@@ -24,6 +24,7 @@ export class CreatePastPaperDto {
   level: EducationLevel;
 
   @ApiProperty({ example: 2024 })
+  @Transform(({ value }) => parseInt(value, 10))
   @IsNumber()
   @Min(1900)
   @Max(new Date().getFullYear())

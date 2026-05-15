@@ -43,8 +43,14 @@ export class CreateStudyNoteDto {
   content?: string;
 
   @ApiProperty({ example: 'https://example.com/fractions.pdf', required: false })
-  @IsUrl()
   @IsOptional()
+  @IsString()
   @MaxLength(500)
   fileUrl?: string;
+
+  @ApiProperty({ example: 'https://example.com/fractions-cover.jpg', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  imageUrl?: string;
 }

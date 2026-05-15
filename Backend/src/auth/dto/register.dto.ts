@@ -24,20 +24,27 @@ export class RegisterDto {
 
   @IsOptional()
   @IsString()
+  @MaxLength(150)
   school?: string;
 
   @IsOptional()
   @IsString()
+  @IsIn(['PSLC', 'JCE', 'MSCE'])
   level?: string;
 
   @Transform(({ value }) => {
-    if (typeof value !== 'string') return UserRole.ADMIN;
+    if (typeof value !== 'string') return value;
     const normalized = value.trim().toLowerCase();
-    if (normalized === 'student') return UserRole.STUDENT;
-    if (normalized === 'teacher') return UserRole.TEACHER;
-    if (normalized === 'admin') return UserRole.ADMIN;
-    return UserRole.ADMIN;
+    if (normalized === 'student') return 'Student';
+    if (normalized === 'teacher') return 'Teacher';
+    if (normalized === 'admin') return 'Admin';
+    return value;
   })
   @IsIn([UserRole.ADMIN, UserRole.TEACHER, UserRole.STUDENT])
-  role: UserRole = UserRole.ADMIN;
+  role: UserRole;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  secretKey?: string;
 }

@@ -37,7 +37,7 @@ export class CareerResourcesController {
 
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   async create(
     @Body() createCareerResourceDto: CreateCareerResourceDto,
   ): Promise<CareerResourceResponseDto> {
@@ -61,7 +61,7 @@ export class CareerResourcesController {
 
   @Patch(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   async update(
     @Param('id') id: string,
     @Body() updateCareerResourceDto: UpdateCareerResourceDto,
@@ -72,7 +72,7 @@ export class CareerResourcesController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.ADMIN)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
   @HttpCode(HttpStatus.NO_CONTENT)
   async remove(@Param('id') id: string): Promise<void> {
     await this.careerResourcesService.remove(+id);

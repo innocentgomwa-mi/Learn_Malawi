@@ -1,5 +1,6 @@
 import React, { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/api/apiClient";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
 import { TrendingUp, BookOpen, Users, Award } from "lucide-react";
@@ -7,17 +8,40 @@ import { TrendingUp, BookOpen, Users, Award } from "lucide-react";
 const PIE_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
 
 export default function ReportsAnalytics() {
-  const { data: posts = [] } = useQuery({ queryKey: ["report-posts"], queryFn: () => apiClient.entities.TeacherPost.filter({ status: "approved" }) });
+  const { data: teacherPosts = [] } = useQuery({ queryKey: ["report-posts"], queryFn: () => apiClient.entities.TeacherPost.list() });
+  const { data: studyNotes = [] } = useQuery({ queryKey: ["report-study-notes"], queryFn: () => apiClient.entities.StudyNote.list() });
+  const { data: tutorials = [] } = useQuery({ queryKey: ["report-tutorials"], queryFn: () => apiClient.entities.Tutorial.list() });
+  const { data: pastPapers = [] } = useQuery({ queryKey: ["report-past-papers"], queryFn: () => apiClient.entities.PastPaper.list() });
+  const { data: careerResources = [] } = useQuery({ queryKey: ["report-career-resources"], queryFn: () => apiClient.entities.CareerResource.list() });
+  const { data: quizzes = [] } = useQuery({ queryKey: ["report-quizzes"], queryFn: () => apiClient.entities.Quiz.list() });
   const { data: students = [] } = useQuery({ queryKey: ["report-students"], queryFn: () => apiClient.entities.Student.list() });
-  const { data: logs = [] } = useQuery({ queryKey: ["report-logs"], queryFn: () => apiClient.entities.ActivityLog.list("-created_date", 500) });
+  const { data: logs = [] } = useQuery({ queryKey: ["report-logs"], queryFn: () => apiClient.entities.ActivityLog.list() });
   const { data: progress = [] } = useQuery({ queryKey: ["report-progress"], queryFn: () => apiClient.entities.StudentProgress.list() });
+
+  const resources = useMemo(() => {
+    const normalize = (items) => Array.isArray(items) ? items : [];
+    return [
+      ...normalize(teacherPosts),
+      ...normalize(studyNotes),
+      ...normalize(tutorials),
+      ...normalize(pastPapers),
+      ...normalize(careerResources),
+      ...normalize(quizzes),
+    ];
+  }, [teacherPosts, studyNotes, tutorials, pastPapers, careerResources, quizzes]);
 
   // Resources by subject
   const bySubject = useMemo(() => {
     const map = {};
-    posts.forEach(p => { map[p.subject] = (map[p.subject] || 0) + 1; });
-    return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([subject, count]) => ({ subject: subject.substring(0, 8), count }));
-  }, [posts]);
+    resources.forEach(item => {
+      const subject = item?.subject || item?.topic || 'Unknown';
+      map[subject] = (map[subject] || 0) + 1;
+    });
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([subject, count]) => ({ subject: String(subject).substring(0, 12), count }));
+  }, [resources]);
 
   // Students by level
   const byLevel = useMemo(() => {
@@ -30,9 +54,13 @@ export default function ReportsAnalytics() {
   const byType = useMemo(() => {
     const labels = { study_notes: "Study Notes", past_paper: "Past Paper", tutorial: "Tutorial", quiz: "Quiz", career_resource: "Career" };
     const map = {};
-    posts.forEach(p => { const l = labels[p.content_type] || p.content_type; map[l] = (map[l] || 0) + 1; });
+    resources.forEach(item => {
+      const type = item?.content_type || item?.type || "Unknown";
+      const label = labels[type] || type;
+      map[label] = (map[label] || 0) + 1;
+    });
     return Object.entries(map).map(([name, value]) => ({ name, value }));
-  }, [posts]);
+  }, [resources]);
 
   // Average quiz scores per subject
   const quizPerformance = useMemo(() => {
@@ -44,7 +72,7 @@ export default function ReportsAnalytics() {
   }, [progress]);
 
   const statCards = [
-    { label: "Approved Resources", value: posts.length, icon: BookOpen, color: "text-slate-700 bg-slate-50" },
+    { label: "Published Teacher Posts", value: teacherPosts.length, icon: BookOpen, color: "text-slate-700 bg-slate-50" },
     { label: "Registered Students", value: students.length, icon: Users, color: "text-green-600 bg-green-50" },
     { label: "Platform Events", value: logs.length, icon: TrendingUp, color: "text-purple-600 bg-purple-50" },
     { label: "Quiz Records", value: progress.length, icon: Award, color: "text-amber-600 bg-amber-50" },
@@ -89,10 +117,21 @@ export default function ReportsAnalytics() {
           <CardContent>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
-                <Pie data={byLevel} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label={({ name, value }) => `${name}: ${value}`} labelLine={false}>
+                <Pie
+                  data={byLevel}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={70}
+                  paddingAngle={2}
+                  labelLine={true}
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
                   {byLevel.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
                 </Pie>
-                <Legend />
+                <Legend verticalAlign="bottom" height={36} />
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>

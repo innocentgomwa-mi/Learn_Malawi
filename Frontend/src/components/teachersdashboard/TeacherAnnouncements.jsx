@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { fetchAnnouncements, createAnnouncement } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
+import { markNotificationsAsRead } from '@/lib/notificationStorage';
 
 export default function TeacherAnnouncements() {
   const { user } = useAuth();
@@ -19,8 +20,13 @@ export default function TeacherAnnouncements() {
     setError(null);
 
     try {
-      const response = await fetchAnnouncements({ teacherEmail: user?.email });
-      setAnnouncements(Array.isArray(response) ? response : []);
+      const response = await fetchAnnouncements({ published: true });
+      const announcementsList = Array.isArray(response) ? response : [];
+      const filtered = announcementsList.filter((announcement) => {
+        const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+        return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+      });
+      setAnnouncements(filtered);
     } catch (fetchError) {
       setError(fetchError.message ?? 'Unable to load announcements.');
     } finally {
@@ -29,9 +35,23 @@ export default function TeacherAnnouncements() {
   };
 
   useEffect(() => {
-    if (user?.email) {
-      loadAnnouncements();
-    }
+    if (!user?.email) return;
+
+    const loadAndMark = async () => {
+      const response = await fetchAnnouncements({ published: true });
+      const announcementsList = Array.isArray(response) ? response : [];
+      const filtered = announcementsList.filter((announcement) => {
+        const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+        return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+      });
+      await loadAnnouncements();
+      const announcementIds = filtered.filter((item) => item?.id).map((item) => item.id);
+      if (announcementIds.length > 0) {
+        markNotificationsAsRead(user.email, announcementIds);
+      }
+    };
+
+    loadAndMark();
   }, [user?.email]);
 
   const handleCreateAnnouncement = async () => {
@@ -53,6 +73,8 @@ export default function TeacherAnnouncements() {
         title: title.trim(),
         body: body.trim(),
         teacherEmail: user.email,
+        targetAudience: 'students',
+        isPublished: true,
       });
       setTitle('');
       setBody('');
@@ -103,7 +125,7 @@ export default function TeacherAnnouncements() {
               />
             </div>
             {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            <Button onClick={handleCreateAnnouncement} disabled={saving}>
+            <Button variant="default" className="bg-blue-600 hover:bg-blue-700 border-blue-600 text-white" onClick={handleCreateAnnouncement} disabled={saving}>
               <Plus className="mr-2 h-4 w-4" />
               {saving ? 'Posting...' : 'Post announcement'}
             </Button>
@@ -116,11 +138,10 @@ export default function TeacherAnnouncements() {
               <h2 className="text-lg font-semibold">Published announcements</h2>
               <p className="text-sm text-slate-500">These announcements were posted by you.</p>
             </div>
-            <Button variant="secondary" onClick={loadAnnouncements} disabled={loading}>
+            <Button variant="default" className="hidden sm:inline-flex bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100" onClick={loadAnnouncements} disabled={loading}>
               Refresh
             </Button>
           </div>
-
           {loading ? (
             <div className="py-16 text-center text-slate-500">Loading announcements…</div>
           ) : announcements.length === 0 ? (

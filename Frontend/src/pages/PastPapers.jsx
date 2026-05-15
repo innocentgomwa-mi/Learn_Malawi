@@ -1,7 +1,11 @@
 // @ts-nocheck
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
+import { useAuth } from "@/lib/AuthContext";
 import { fetchPastPapers } from "@/api";
+import { getSavedPapers, savePaperOffline, removePaperOffline } from "@/lib/offlineCache";
+import RequireAccount from "@/components/RequireAccount";
+import SaveOfflineButton from "@/components/SaveOfflineButton";
 import { FileText, Search, Download, BookOpen } from "lucide-react";
 
 const LEVELS = ["All", "PSLC", "JCE", "MSCE"];
@@ -12,18 +16,67 @@ const LEVEL_COLORS = {
 };
 
 
+const getFileUrl = (url) => {
+  if (url.startsWith('http')) return url;
+  return `${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}${url}`;
+};
+
 export default function PastPapers() {
+  const { isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
+  const [savedPapers, setSavedPapers] = useState([]);
+  const [isDeviceOnline, setIsDeviceOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  useEffect(() => {
+    const updateStatus = () => {
+      const online = navigator.onLine;
+      setIsDeviceOnline(online);
+      if (!online) {
+        setSavedPapers(getSavedPapers());
+      }
+    };
+
+    setSavedPapers(getSavedPapers());
+    updateStatus();
+
+    window.addEventListener('offline', updateStatus);
+    window.addEventListener('online', updateStatus);
+    return () => {
+      window.removeEventListener('offline', updateStatus);
+      window.removeEventListener('online', updateStatus);
+    };
+  }, []);
 
   const { data: papers = [], isLoading: loading } = useQuery({
     queryKey: ['pastPapers'],
     queryFn: fetchPastPapers,
     staleTime: 1000 * 60,
     retry: 1,
+    enabled: isAuthenticated && isDeviceOnline,
   });
 
-  const filtered = papers.filter((p) => {
+  const papersToDisplay = isDeviceOnline ? papers : savedPapers;
+
+  const saveOfflinePaper = (paper) => {
+    savePaperOffline(paper);
+    setSavedPapers(getSavedPapers());
+  };
+
+  const removeOfflinePaper = (paperId) => {
+    removePaperOffline(paperId);
+    setSavedPapers(getSavedPapers());
+  };
+
+  const isSavedPaper = (paperId) => {
+    return savedPapers.some((p) => p.id === paperId);
+  };
+
+  if (!isAuthenticated) {
+    return <RequireAccount resourceName="Past Papers" />;
+  }
+
+  const filtered = papersToDisplay.filter((p) => {
     const matchLevel = level === "All" || p.level === level;
     const matchSearch = !search ||
       p.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -43,7 +96,7 @@ export default function PastPapers() {
   const sortedYears = Object.keys(grouped).sort((a, b) => b - a);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full px-4 py-8">
       <div className="mb-8">
         <h1 className="font-poppins text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
           <FileText className="h-8 w-8 text-primary" /> Past Papers
@@ -107,22 +160,31 @@ export default function PastPapers() {
                     <h3 className="font-semibold text-foreground text-sm mb-1">{paper.title}</h3>
                     <p className="text-xs text-muted-foreground mb-4">{paper.subject}</p>
                     {paper.description && <p className="text-xs text-muted-foreground mb-3 line-clamp-2">{paper.description}</p>}
-                    <div className="flex gap-2">
-                      {paper.paperUrl && (
-                        <a href={paper.paperUrl} target="_blank" rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold py-2 rounded-lg hover:opacity-90">
-                          <Download className="h-3.5 w-3.5" /> Paper
-                        </a>
-                      )}
-                      {paper.markingSchemeUrl && (
-                        <a href={paper.markingSchemeUrl} target="_blank" rel="noopener noreferrer"
-                          className="flex-1 flex items-center justify-center gap-1.5 bg-accent text-accent-foreground text-xs font-semibold py-2 rounded-lg hover:opacity-90">
-                          <BookOpen className="h-3.5 w-3.5" /> Scheme
-                        </a>
-                      )}
-                      {!paper.paper_url && !paper.marking_scheme_url && (
-                        <span className="text-xs text-muted-foreground italic">Coming soon</span>
-                      )}
+                    <div className="flex flex-col gap-3">
+                      <div className="flex flex-wrap gap-2">
+                        {paper.paperUrl && (
+                          <a href={getFileUrl(paper.paperUrl)} target="_blank" rel="noopener noreferrer"
+                            className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 bg-primary text-primary-foreground text-xs font-semibold py-2 rounded-lg hover:opacity-90">
+                            <Download className="h-3.5 w-3.5" /> Paper
+                          </a>
+                        )}
+                        {paper.markingSchemeUrl && (
+                          <a href={getFileUrl(paper.markingSchemeUrl)} target="_blank" rel="noopener noreferrer"
+                            className="flex-1 min-w-[120px] flex items-center justify-center gap-1.5 bg-accent text-accent-foreground text-xs font-semibold py-2 rounded-lg hover:opacity-90">
+                            <BookOpen className="h-3.5 w-3.5" /> Scheme
+                          </a>
+                        )}
+                        {!paper.paper_url && !paper.marking_scheme_url && (
+                          <span className="text-xs text-muted-foreground italic">Coming soon</span>
+                        )}
+                      </div>
+                      <div className="flex justify-end" onClick={(event) => event.stopPropagation()}>
+                        <SaveOfflineButton
+                          isSaved={isSavedPaper(paper.id)}
+                          onSave={() => saveOfflinePaper(paper)}
+                          onRemove={() => removeOfflinePaper(paper.id)}
+                        />
+                      </div>
                     </div>
                   </div>
                 ))}

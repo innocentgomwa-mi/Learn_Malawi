@@ -65,13 +65,6 @@ export const AuthProvider = ({ children }) => {
     try {
       await apiClient.auth.login(email, password);
       const currentUser = await apiClient.auth.me();
-      if (currentUser.role !== 'Admin') {
-        await apiClient.auth.logout();
-        setIsAuthenticated(false);
-        const error = new Error('Only administrators can access this dashboard.');
-        error.status = 403;
-        throw error;
-      }
       setUser(currentUser);
       setIsAuthenticated(true);
       return currentUser;
@@ -87,11 +80,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const register = async (userData) => {
+  const register = async (registrationData) => {
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
-      await apiClient.auth.register(userData);
+      await apiClient.auth.register(registrationData);
       const currentUser = await apiClient.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
@@ -99,7 +92,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       setIsAuthenticated(false);
       setAuthError({
-        type: 'registration_failed',
+        type: 'auth_required',
         message: error?.message || 'Registration failed',
       });
       throw error;
