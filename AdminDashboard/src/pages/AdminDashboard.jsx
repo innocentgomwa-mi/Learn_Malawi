@@ -5,6 +5,7 @@ import PostApprovals from "@/components/admin/PostApprovals";
 import ManageTeachers from "@/components/admin/ManageTeachers";
 import ManageStudents from "@/components/admin/ManageStudents";
 import ManageAnnouncements from "@/components/admin/ManageAnnouncements";
+import ManageCareerResources from "@/components/admin/ManageCareerResources";
 import ActivityLogViewer from "@/components/admin/ActivityLogViewer";
 import SecurityCenter from "@/components/admin/SecurityCenter";
 import SystemHealth from "@/components/admin/SystemHealth";
@@ -31,6 +32,7 @@ export default function AdminDashboard() {
       case "teachers": return <ManageTeachers />;
       case "students": return <ManageStudents />;
       case "announcements": return <ManageAnnouncements />;
+      case "career_resources": return <ManageCareerResources />;
       case "logs": return <ActivityLogViewer refreshSeconds={refreshSeconds} />;
       case "security": return <SecurityCenter />;
       case "health": return <SystemHealth />;

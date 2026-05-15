@@ -19,6 +19,10 @@ export class CareerResourceResponseDto {
   @Expose()
   link!: string;
 
+  @ApiProperty({ required: false })
+  @Expose()
+  guideUrl?: string;
+
   @ApiProperty()
   @Expose()
   icon!: string;

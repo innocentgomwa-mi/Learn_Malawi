@@ -35,4 +35,10 @@ export class CreateCareerResourceDto {
   @IsNotEmpty()
   @MaxLength(100)
   icon!: string;
+
+  @ApiProperty({ example: 'https://example.com/guide.pdf', required: false })
+  @IsString()
+  @IsUrl()
+  @MaxLength(500)
+  guideUrl?: string;
 }

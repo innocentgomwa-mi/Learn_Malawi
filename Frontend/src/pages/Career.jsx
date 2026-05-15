@@ -100,6 +100,12 @@ export default function Career() {
                       <ExternalLink className="h-3.5 w-3.5" /> Learn More
                     </a>
                   )}
+                  {r.guideUrl && (
+                    <a href={r.guideUrl} target="_blank" rel="noopener noreferrer"
+                      className="mt-2 w-full inline-flex items-center justify-center gap-1.5 bg-secondary text-secondary-foreground text-sm font-semibold py-2.5 rounded-xl hover:opacity-90">
+                      <ExternalLink className="h-3.5 w-3.5" /> Download Guide
+                    </a>
+                  )}
                 </div>
               </div>
             );

@@ -15,6 +15,9 @@ export class CareerResource {
   @Column({ type: 'varchar', length: 500 })
   link: string;
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  guideUrl?: string;
+
   @Column({ type: 'varchar', length: 100 })
   icon: string;
 
