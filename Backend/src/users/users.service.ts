@@ -117,4 +117,11 @@ async update(id: string, updateUserDto: UpdateUserDto): Promise<User> {
 
     await this.usersRepository.remove(user);
   }
+
+  async findTeachers(): Promise<User[]> {
+    return this.usersRepository.find({
+      where: { role: UserRole.TEACHER },
+      select: ['id', 'firstName', 'lastName', 'email', 'role', 'profileImageUrl', 'createdAt', 'updatedAt'],
+    });
+  }
 }

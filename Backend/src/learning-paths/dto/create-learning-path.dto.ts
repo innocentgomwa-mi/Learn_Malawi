@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsNotEmpty, IsString, MaxLength, IsOptional, IsArray, ValidateNested } from 'class-validator';
+import { IsNotEmpty, IsString, MaxLength, IsOptional, IsArray, ValidateNested, IsNumber } from 'class-validator';
 
 class LearningPathMilestoneDto {
   @IsNotEmpty()
@@ -9,6 +9,10 @@ class LearningPathMilestoneDto {
   @IsOptional()
   @IsString()
   description?: string;
+
+  @IsOptional()
+  @IsNumber()
+  points?: number;
 
   @IsOptional()
   @IsArray()

@@ -58,6 +58,10 @@ export class EmailService {
     await this.sendMessage(email, subject, message);
   }
 
+  async sendEmail(email: string, subject: string, message: string) {
+    await this.sendMessage(email, subject, message);
+  }
+
   async sendPasswordResetCode(email: string, code: string) {
     const appName = this.configService.get<string>('APP_NAME') || 'Learn Malawi';
     const subject = `${appName} password reset code`;

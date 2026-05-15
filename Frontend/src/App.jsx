@@ -21,6 +21,8 @@ import Career from './pages/Career';
 import StudyGroups from './pages/StudyGroups';
 import Discussions from './pages/Discussions';
 import Abouts from './pages/Abouts';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsAndConditions from './pages/TermsAndConditions';
 import Dashboard from './pages/Dashboard';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -40,9 +42,15 @@ import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics'
 import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussions';
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
+import History from './components/teachersdashboard/History';
 import StudyGroupsAdmin from './components/teacher/StudyGroupsAdmin';
 import LearningPathsAdmin from './components/teacher/LearningPathsAdmin';
 import LearningPaths from './pages/LearningPaths';
+import PathDetail from './pages/PathDetail';
+import ModuleDetails from './pages/ModuleDetails';
+import LearningHistory from './pages/LearningHistory';
+import TeacherSchedule from './pages/TeacherSchedule';
+import TeacherCollaboration from './pages/TeacherCollaboration';
 import Insight from './pages/Insight';
 import Notifications from './pages/Notifications';
 import Profile from './pages/Profile';
@@ -96,6 +104,8 @@ const AuthenticatedApp = () => {
         <Route path="/study-groups" element={<StudyGroups />} />
         <Route path="/discussions" element={<ProtectedRoute requiredRoles={[]}><Discussions /></ProtectedRoute>} />
         <Route path="/abouts" element={<Abouts />} />
+        <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
         <Route path="/quizzes" element={<Quizzes />} />
         <Route path="/career" element={<Career />} />
         <Route path="/dashboard" element={<Dashboard />} />
@@ -105,8 +115,14 @@ const AuthenticatedApp = () => {
         <Route path="/my-schedule" element={<ProtectedRoute requiredRoles={[]}><MySchedule /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
         <Route path="/learning-paths" element={<LearningPaths />} />
+        <Route path="/paths" element={<LearningPaths />} />
+        <Route path="/paths/:pathId" element={<PathDetail />} />
+        <Route path="/paths/:pathId/module/:moduleId" element={<ModuleDetails />} />
+        <Route path="/learning-history" element={<LearningHistory />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
+          <Route path="schedule" element={<TeacherSchedule />} />
+          <Route path="collaboration" element={<TeacherCollaboration />} />
           <Route path="study-notes" element={<StudyNotesAdmin />} />
           <Route path="past-papers" element={<PastPapersAdmin />} />
           <Route path="tutorials" element={<TutorialsAdmin />} />
@@ -115,6 +131,7 @@ const AuthenticatedApp = () => {
           <Route path="learning-paths" element={<LearningPathsAdmin />} />
           <Route path="quizzes" element={<QuizzesAdmin />} />
           <Route path="students" element={<TeachersStudents />} />
+          <Route path="history" element={<History />} />
           <Route path="attendance" element={<TeachersAttendance />} />
           <Route path="insights" element={<Insight />} />
           <Route path="analytics" element={<TeachersAnalytics />} />

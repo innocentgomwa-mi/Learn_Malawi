@@ -53,6 +53,11 @@ import { ScheduleModule } from './schedule/schedule.module';
 import { StudyBlock } from './schedule/entities/study-block.entity';
 import { Resource } from './schedule/entities/resource.entity';
 import { Exam } from './schedule/entities/exam.entity';
+import { ClassSchedule } from './schedule/entities/class-schedule.entity';
+import { ChatMessagesModule } from './chat-messages/chat-messages.module';
+import { ChatMessage } from './chat-messages/chat-message.entity';
+import { SharedResourcesModule } from './shared-resources/shared-resources.module';
+import { SharedResource } from './shared-resources/shared-resource.entity';
 
 @Module({
   imports: [
@@ -112,6 +117,9 @@ import { Exam } from './schedule/entities/exam.entity';
           LearningPath,
           StudyGroup,
           StudyGroupMessage,
+          ClassSchedule,
+          ChatMessage,
+          SharedResource,
           StudyBlock,
           Resource,
           Exam,
@@ -143,6 +151,8 @@ import { Exam } from './schedule/entities/exam.entity';
     StudyGroupsModule,
     LearningPathsModule,
     ScheduleModule,
+    ChatMessagesModule,
+    SharedResourcesModule,
   ],
   controllers: [],
   providers: [

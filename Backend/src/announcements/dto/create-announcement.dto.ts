@@ -39,4 +39,10 @@ export class CreateAnnouncementDto {
   @IsString()
   @MaxLength(255)
   teacherEmail?: string;
+
+  @Transform(({ value, obj }) => value ?? obj.link)
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  link?: string;
 }

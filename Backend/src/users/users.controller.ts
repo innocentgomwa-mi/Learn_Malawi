@@ -41,6 +41,14 @@ export class UsersController {
     return users.map(user => this.toResponseDto(user));
   }
 
+  @Get('teachers')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN, UserRole.TEACHER)
+  async findTeachers(): Promise<UserResponseDto[]> {
+    const teachers = await this.usersService.findTeachers();
+    return teachers.map(user => this.toResponseDto(user));
+  }
+
   @Get(':id')
   @UseGuards(JwtAuthGuard)
   async findOne(@Param('id') id: string): Promise<UserResponseDto> {

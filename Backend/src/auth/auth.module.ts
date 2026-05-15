@@ -40,6 +40,6 @@ import { ActivityLogModule } from '../activity-log/activity-log.module';
     RolesGuard,
     JwtAuthGuardWithPublic,
   ],
-  exports: [AuthService, JwtAuthGuard, RolesGuard, JwtAuthGuardWithPublic],
+  exports: [AuthService, EmailService, JwtAuthGuard, RolesGuard, JwtAuthGuardWithPublic],
 })
 export class AuthModule {}

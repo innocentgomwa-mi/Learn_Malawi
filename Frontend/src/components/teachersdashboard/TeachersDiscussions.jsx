@@ -8,9 +8,9 @@
  * }} DiscussionThread
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { MessageSquare, Plus, UploadCloud, Send, RefreshCcw } from 'lucide-react';
-import { fetchDiscussions, fetchDiscussion, createDiscussion, addDiscussionComment } from '@/api';
+import { fetchDiscussions, fetchDiscussion, createDiscussion, addDiscussionComment, fetchTeachers } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
 
 export default function TeacherDiscussions() {
@@ -23,8 +23,13 @@ export default function TeacherDiscussions() {
   const [threadLoading, setThreadLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingTeachers, setLoadingTeachers] = useState(false);
+  const [teachers, setTeachers] = useState([]);
+  const [mentionState, setMentionState] = useState({ open: false, query: '', field: '', start: 0, end: 0 });
   const [error, setError] = useState(/** @type {string | null} */ (null));
   const [commentError, setCommentError] = useState(/** @type {string | null} */ (null));
+  const newBodyRef = useRef(null);
+  const commentRef = useRef(null);
 
   const loadThreads = async () => {
     setLoading(true);
@@ -47,7 +52,75 @@ export default function TeacherDiscussions() {
 
   useEffect(() => {
     loadThreads();
+    loadTeachers();
   }, [user?.email]);
+
+  const loadTeachers = async () => {
+    setLoadingTeachers(true);
+    try {
+      const response = await fetchTeachers();
+      setTeachers(Array.isArray(response) ? response : []);
+    } catch (fetchError) {
+      console.error('Unable to load teacher list', fetchError);
+      setTeachers([]);
+    } finally {
+      setLoadingTeachers(false);
+    }
+  };
+
+  const insertTextAtCursor = (ref, setter, value) => {
+    const textarea = ref.current;
+    if (!textarea) {
+      setter((current) => `${current}${value}`);
+      return;
+    }
+    const start = textarea.selectionStart ?? textarea.value.length;
+    const end = textarea.selectionEnd ?? start;
+    const next = textarea.value.slice(0, start) + value + textarea.value.slice(end);
+    setter(next);
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      const cursor = start + value.length;
+      textarea.setSelectionRange(cursor, cursor);
+    });
+  };
+
+  const detectMention = (value, cursorPosition, field) => {
+    const prefix = value.slice(0, cursorPosition);
+    const match = /(?:^|\s)@([^\s@]*)$/.exec(prefix);
+    if (match) {
+      setMentionState({
+        open: true,
+        query: match[1],
+        field,
+        start: cursorPosition - match[1].length - 1,
+        end: cursorPosition,
+      });
+    } else {
+      setMentionState((prev) => (prev.field === field ? { ...prev, open: false } : prev));
+    }
+  };
+
+  const applyMention = (mention, field) => {
+    const ref = field === 'body' ? newBodyRef.current : commentRef.current;
+    const text = field === 'body' ? newBody : commentText;
+    if (!mentionState.open || mentionState.field !== field) return;
+    const insertValue = `@${mention.full_name || mention.email.split('@')[0]} `;
+    const updated = text.slice(0, mentionState.start) + insertValue + text.slice(mentionState.end);
+    if (field === 'body') {
+      setNewBody(updated);
+    } else {
+      setCommentText(updated);
+    }
+    setMentionState({ open: false, query: '', field: '', start: 0, end: 0 });
+    window.requestAnimationFrame(() => {
+      if (ref) {
+        const cursor = mentionState.start + insertValue.length;
+        ref.focus();
+        ref.setSelectionRange(cursor, cursor);
+      }
+    });
+  };
 
   const loadThread = async (id) => {
     setThreadLoading(true);
@@ -139,10 +212,31 @@ export default function TeacherDiscussions() {
     setNewTitle(event.target.value);
   };
 
-  /** @param {import('react').ChangeEvent<HTMLTextAreaElement>} event */
   const handleBodyChange = (event) => {
     setNewBody(event.target.value);
+    detectMention(event.target.value, event.target.selectionStart, 'body');
   };
+
+  const handleCommentChange = (event) => {
+    setCommentText(event.target.value);
+    detectMention(event.target.value, event.target.selectionStart, 'comment');
+  };
+
+  const handleTextareaCaret = (event, field) => {
+    detectMention(event.target.value, event.target.selectionStart, field);
+  };
+
+  const mentionOptions = useMemo(() => {
+    if (!mentionState.open) return [];
+    const query = mentionState.query.toLowerCase();
+    return (teachers || [])
+      .filter((teacher) => {
+        const displayName = `${teacher.full_name || ''}`.toLowerCase();
+        const email = `${teacher.email || ''}`.toLowerCase();
+        return !query || displayName.includes(query) || email.includes(query);
+      })
+      .slice(0, 6);
+  }, [mentionState.open, mentionState.query, teachers]);
 
   return (
     <div className="p-8 animate-fade-in">
@@ -178,12 +272,67 @@ export default function TeacherDiscussions() {
               <div>
                 <label className="block text-sm font-medium text-slate-700">Description</label>
                 <textarea
+                  ref={newBodyRef}
                   className="mt-1 block w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
                   rows={5}
                   value={newBody}
                   onChange={handleBodyChange}
+                  onKeyUp={(event) => handleTextareaCaret(event, 'body')}
+                  onClick={(event) => handleTextareaCaret(event, 'body')}
                   placeholder="Write the discussion thread content here"
                 />
+                <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                  <span>Quick insert:</span>
+                  {(teachers || []).slice(0, 6).map((teacher) => (
+                    <button
+                      key={teacher.id || teacher.email}
+                      type="button"
+                      onClick={() => insertTextAtCursor(newBodyRef, setNewBody, `@${teacher.full_name || teacher.email.split('@')[0]} `)}
+                      className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+                    >
+                      @{teacher.full_name?.split(' ')[0] || teacher.email.split('@')[0]}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => insertTextAtCursor(newBodyRef, setNewBody, '😊 ')}
+                    className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+                  >😊</button>
+                  <button
+                    type="button"
+                    onClick={() => insertTextAtCursor(newBodyRef, setNewBody, '👍 ')}
+                    className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+                  >👍</button>
+                  <button
+                    type="button"
+                    onClick={() => insertTextAtCursor(newBodyRef, setNewBody, '🎉 ')}
+                    className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+                  >🎉</button>
+                </div>
+                {mentionState.open && mentionState.field === 'body' && (
+                  <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                    <div className="mb-2 text-xs font-semibold text-slate-600">Mention a teacher</div>
+                    {loadingTeachers ? (
+                      <div className="text-xs text-slate-500">Loading suggestions…</div>
+                    ) : mentionOptions.length === 0 ? (
+                      <div className="text-xs text-slate-500">No matching teachers found.</div>
+                    ) : (
+                      <div className="grid gap-2">
+                        {mentionOptions.map((teacher) => (
+                          <button
+                            key={teacher.id || teacher.email}
+                            type="button"
+                            onClick={() => applyMention(teacher, 'body')}
+                            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm hover:bg-slate-100"
+                          >
+                            @{teacher.full_name || teacher.email.split('@')[0]}
+                            <span className="block text-xs text-slate-500">{teacher.email}</span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               {error ? <p className="text-sm text-red-600">{error}</p> : null}
               <button
@@ -302,13 +451,68 @@ export default function TeacherDiscussions() {
               <MessageSquare className="h-5 w-5 text-slate-500" />
             </div>
             <textarea
+              ref={commentRef}
               value={commentText}
-              onChange={(event) => setCommentText(event.target.value)}
+              onChange={handleCommentChange}
+              onKeyUp={(event) => handleTextareaCaret(event, 'comment')}
+              onClick={(event) => handleTextareaCaret(event, 'comment')}
               rows={4}
               placeholder={selectedThread ? 'Write your response...' : 'Select a discussion first.'}
               disabled={!selectedThread}
               className="block w-full rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-900 shadow-sm focus:border-blue-400 focus:outline-none focus:ring-1 focus:ring-blue-400"
             />
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span>Quick insert:</span>
+              {(teachers || []).slice(0, 6).map((teacher) => (
+                <button
+                  key={teacher.id || teacher.email}
+                  type="button"
+                  onClick={() => insertTextAtCursor(commentRef, setCommentText, `@${teacher.full_name || teacher.email.split('@')[0]} `)}
+                  className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+                >
+                  @{teacher.full_name?.split(' ')[0] || teacher.email.split('@')[0]}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => insertTextAtCursor(commentRef, setCommentText, '😊 ')}
+                className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+              >😊</button>
+              <button
+                type="button"
+                onClick={() => insertTextAtCursor(commentRef, setCommentText, '👍 ')}
+                className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+              >👍</button>
+              <button
+                type="button"
+                onClick={() => insertTextAtCursor(commentRef, setCommentText, '🎉 ')}
+                className="rounded-full border border-slate-200 bg-slate-100 px-2 py-1 hover:bg-slate-200"
+              >🎉</button>
+            </div>
+            {mentionState.open && mentionState.field === 'comment' && (
+              <div className="mt-2 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-sm text-slate-700">
+                <div className="mb-2 text-xs font-semibold text-slate-600">Mention a teacher</div>
+                {loadingTeachers ? (
+                  <div className="text-xs text-slate-500">Loading suggestions…</div>
+                ) : mentionOptions.length === 0 ? (
+                  <div className="text-xs text-slate-500">No matching teachers found.</div>
+                ) : (
+                  <div className="grid gap-2">
+                    {mentionOptions.map((teacher) => (
+                      <button
+                        key={teacher.id || teacher.email}
+                        type="button"
+                        onClick={() => applyMention(teacher, 'comment')}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm hover:bg-slate-100"
+                      >
+                        @{teacher.full_name || teacher.email.split('@')[0]}
+                        <span className="block text-xs text-slate-500">{teacher.email}</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {commentError ? <p className="mt-3 text-sm text-red-600">{commentError}</p> : null}
             <button
               type="submit"

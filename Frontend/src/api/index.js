@@ -386,6 +386,10 @@ export function fetchLearningPaths({ level, subject, teacherEmail, search } = {}
   return request(`/learning-paths${query}`);
 }
 
+export function fetchLearningPath(id) {
+  return request(`/learning-paths/${id}`);
+}
+
 const learningPathPayloadFields = ['title', 'subject', 'level', 'description', 'milestones'];
 
 export function createLearningPath(data) {
@@ -454,6 +458,69 @@ export function updateExam(id, data) {
 
 export function deleteExam(id) {
   return request(`/exams/${id}`, { method: 'DELETE' });
+}
+
+export function fetchClassSchedules() {
+  return request('/class-schedules');
+}
+
+export function createClassSchedule(data) {
+  return request('/class-schedules', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateClassSchedule(id, data) {
+  return request(`/class-schedules/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function deleteClassSchedule(id) {
+  return request(`/class-schedules/${id}`, { method: 'DELETE' });
+}
+
+export function fetchChatMessages({ room } = {}) {
+  const params = new URLSearchParams();
+  if (room) params.set('room', room);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/chat-messages${query}`);
+}
+
+export function createChatMessage(data) {
+  return request('/chat-messages', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateChatMessage(id, data) {
+  return request(`/chat-messages/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function deleteChatMessage(id) {
+  return request(`/chat-messages/${id}`, { method: 'DELETE' });
+}
+
+export function fetchTeachers() {
+  return request('/users/teachers');
+}
+
+export function fetchSharedResources({ search, resourceType } = {}) {
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  if (resourceType && resourceType !== 'all') params.set('resource_type', resourceType);
+  const query = params.toString() ? `?${params.toString()}` : '';
+  return request(`/shared-resources${query}`);
+}
+
+export function createSharedResource(data) {
+  return request('/shared-resources', { method: 'POST', body: JSON.stringify(data) });
+}
+
+export function updateSharedResource(id, data) {
+  return request(`/shared-resources/${id}`, { method: 'PATCH', body: JSON.stringify(data) });
+}
+
+export function deleteSharedResource(id) {
+  return request(`/shared-resources/${id}`, { method: 'DELETE' });
+}
+
+export function uploadSharedResourceFile(formData) {
+  return request('/shared-resources/upload', { method: 'POST', body: formData });
 }
 
 export function fetchStudyGroupMessages({ groupId } = {}) {
