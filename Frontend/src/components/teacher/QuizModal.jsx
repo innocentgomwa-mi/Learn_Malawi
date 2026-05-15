@@ -32,7 +32,7 @@ import { createQuiz, updateQuiz } from '@/api';
  *     completion_time?: number;
  *   }>;
  * }} QuizExisting
- * @typedef {{ open: boolean; onClose: () => void; onSaved: () => void; existing?: QuizExisting }} QuizModalProps
+ * @typedef {{ open: boolean; onClose: () => void; onSaved: (createdQuiz?: any) => void; existing?: QuizExisting }} QuizModalProps
  */
 
 const defaultQuestion = () => ({
@@ -172,13 +172,14 @@ export default function QuizModal({ open, onClose, onSaved, existing }) {
         })),
       };
 
+      let savedQuiz = null;
       if (existing?.id) {
-        await updateQuiz(existing.id, payload);
+        savedQuiz = await updateQuiz(existing.id, payload);
       } else {
-        await createQuiz(payload);
+        savedQuiz = await createQuiz(payload);
       }
 
-      onSaved();
+      onSaved(savedQuiz);
     } catch (err) {
       console.error(err);
       setError('Unable to save quiz. Please try again.');

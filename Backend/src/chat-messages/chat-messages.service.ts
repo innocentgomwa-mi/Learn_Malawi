@@ -4,12 +4,18 @@ import { Repository } from 'typeorm';
 import { ChatMessage } from './chat-message.entity';
 import { CreateChatMessageDto } from './dto/create-chat-message.dto';
 import { UpdateChatMessageDto } from './dto/update-chat-message.dto';
+import { User, UserRole } from '../users/entities/user.entity';
+import { Announcement } from '../announcements/entities/announcement.entity';
 
 @Injectable()
 export class ChatMessagesService {
   constructor(
     @InjectRepository(ChatMessage)
     private readonly chatMessageRepository: Repository<ChatMessage>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Announcement)
+    private readonly announcementRepository: Repository<Announcement>,
   ) {}
 
   async create(createChatMessageDto: CreateChatMessageDto): Promise<ChatMessage> {
@@ -17,7 +23,60 @@ export class ChatMessagesService {
       ...createChatMessageDto,
       room: createChatMessageDto.room || 'general',
     });
-    return this.chatMessageRepository.save(message);
+    const savedMessage = await this.chatMessageRepository.save(message);
+    await this.createMentionNotifications(savedMessage);
+    return savedMessage;
+  }
+
+  private async createMentionNotifications(message: ChatMessage) {
+    const mentionPattern = /@([^\s]+)/g;
+    const mentions = new Set<string>();
+    let match: RegExpExecArray | null;
+    while ((match = mentionPattern.exec(message.message))) {
+      let token = match[1].trim();
+      token = token.replace(/[.,!?;:]+$/, '');
+      if (token) mentions.add(token);
+    }
+
+    if (mentions.size === 0) {
+      return;
+    }
+
+    const teachers = await this.userRepository.find({
+      where: { role: UserRole.TEACHER },
+      select: ['id', 'firstName', 'lastName', 'email'],
+    });
+
+    const notifiedTeacherEmails = new Set<string>();
+    const snippet = message.message.length > 120 ? `${message.message.slice(0, 120)}...` : message.message;
+
+    for (const token of mentions) {
+      const normalizedToken = token.trim().toLowerCase();
+      const resolved = teachers.find((teacher) => {
+        const teacherEmailLower = teacher.email.toLowerCase();
+        const teacherFullName = [teacher.firstName, teacher.lastName].filter(Boolean).join(' ').toLowerCase();
+        const normalizedName = normalizedToken.replace(/_/g, ' ').replace(/\s+/g, ' ').trim();
+
+        return teacherEmailLower === normalizedToken || teacherFullName === normalizedName;
+      });
+
+      if (!resolved || resolved.email === message.sender_email || notifiedTeacherEmails.has(resolved.email)) {
+        continue;
+      }
+
+      notifiedTeacherEmails.add(resolved.email);
+      const announcement = this.announcementRepository.create({
+        title: `${message.sender_name} mentioned you in teacher chat`,
+        body: `${message.sender_name} mentioned you in the teacher chat: "${snippet}"`,
+        targetAudience: 'teachers',
+        priority: 'normal',
+        isPublished: true,
+        teacherEmail: resolved.email,
+        link: '/teacher/collaboration',
+      });
+
+      await this.announcementRepository.save(announcement);
+    }
   }
 
   async findAll(room?: string): Promise<ChatMessage[]> {

@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, FileText, HelpCircle, Users, BarChart2,
   MessageSquare, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
-  GraduationCap, PlayCircle, CalendarCheck, TrendingUp, Briefcase
+  GraduationCap, PlayCircle, CalendarCheck, TrendingUp, Briefcase, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/lib/AuthContext';
@@ -128,6 +128,20 @@ export default function TeacherSidebar() {
         >
           <Settings className="w-4 h-4 shrink-0" />
           {!collapsed && 'Settings'}
+        </Link>
+        <Link
+          to="/teacher/history"
+          title={collapsed ? 'History' : undefined}
+          className={cn(
+            'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all',
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+            location.pathname === '/teacher/history'
+              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_8px_24px_rgba(59,130,246,0.18)]'
+              : 'text-blue-300 hover:bg-blue-900 hover:text-white'
+          )}
+        >
+          <Clock className="w-4 h-4 shrink-0" />
+          {!collapsed && 'History'}
         </Link>
         <button
           onClick={logout}

@@ -136,7 +136,7 @@ export default function LearningPaths() {
                 </div>
 
                 <Link
-                  to={`/learning-paths?path_id=${encodeURIComponent(path.id)}`}
+                  to={`/paths/${encodeURIComponent(path.id)}`}
                   className="inline-flex items-center justify-center gap-2 rounded-xl border border-blue-200 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700 hover:bg-blue-100 transition"
                 >
                   {startedPathIds.has(path.id) || progress > 0 ? 'Continue Path' : 'Start Path'}

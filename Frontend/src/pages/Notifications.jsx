@@ -144,7 +144,14 @@ export default function Notifications() {
                   {((announcement.targetAudience || announcement.target_audience) || 'all').toString()}
                 </span>
               </div>
-              <p className="mt-4 text-sm leading-7 text-foreground">{announcement.body || announcement.message}</p>
+              <div className="mt-4 flex flex-col gap-4">
+                <p className="text-sm leading-7 text-foreground">{announcement.body || announcement.message}</p>
+                {announcement.link && (
+                  <Link to={announcement.link} className="inline-flex items-center justify-center rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
+                    Open chat
+                  </Link>
+                )}
+              </div>
             </article>
           ))}
         </div>

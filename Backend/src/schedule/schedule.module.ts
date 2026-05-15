@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { AuthModule } from '../auth/auth.module';
 import { ScheduleService } from './schedule.service';
 import { StudyBlocksController } from './study-blocks.controller';
 import { ResourcesController } from './resources.controller';
@@ -11,7 +12,7 @@ import { Exam } from './entities/exam.entity';
 import { ClassSchedule } from './entities/class-schedule.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([StudyBlock, Resource, Exam, ClassSchedule])],
+  imports: [TypeOrmModule.forFeature([StudyBlock, Resource, Exam, ClassSchedule]), AuthModule],
   controllers: [StudyBlocksController, ResourcesController, ExamsController, ClassSchedulesController],
   providers: [ScheduleService],
   exports: [ScheduleService],

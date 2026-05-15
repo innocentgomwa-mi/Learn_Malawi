@@ -12,7 +12,7 @@ const getEntryRoute = (entry) => {
   const entryType = (entry.entry_type || "").toLowerCase();
 
   if ((entryType.includes("learning_path") || type.includes("learning_path")) && id) {
-    return `/learning-paths?path_id=${encodeURIComponent(id)}`;
+    return `/paths/${encodeURIComponent(id)}`;
   }
 
   if (entryType === "study" || type.includes("study") || type.includes("study_note") || type.includes("study-notes")) {

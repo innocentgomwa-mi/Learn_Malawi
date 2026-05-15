@@ -42,9 +42,12 @@ import TeachersAnalytics from './components/teachersdashboard/TeachersAnalytics'
 import TeachersDiscussions from './components/teachersdashboard/TeachersDiscussions';
 import TeacherAnnouncements from './components/teachersdashboard/TeacherAnnouncements';
 import TeacherSettings from './components/teachersdashboard/TeacherSettings';
+import History from './components/teachersdashboard/History';
 import StudyGroupsAdmin from './components/teacher/StudyGroupsAdmin';
 import LearningPathsAdmin from './components/teacher/LearningPathsAdmin';
 import LearningPaths from './pages/LearningPaths';
+import PathDetail from './pages/PathDetail';
+import ModuleDetails from './pages/ModuleDetails';
 import LearningHistory from './pages/LearningHistory';
 import TeacherSchedule from './pages/TeacherSchedule';
 import TeacherCollaboration from './pages/TeacherCollaboration';
@@ -112,6 +115,9 @@ const AuthenticatedApp = () => {
         <Route path="/my-schedule" element={<ProtectedRoute requiredRoles={[]}><MySchedule /></ProtectedRoute>} />
         <Route path="/achievements" element={<ProtectedRoute requiredRoles={[]}><Achievements /></ProtectedRoute>} />
         <Route path="/learning-paths" element={<LearningPaths />} />
+        <Route path="/paths" element={<LearningPaths />} />
+        <Route path="/paths/:pathId" element={<PathDetail />} />
+        <Route path="/paths/:pathId/module/:moduleId" element={<ModuleDetails />} />
         <Route path="/learning-history" element={<LearningHistory />} />
         <Route path="/teacher" element={<ProtectedRoute><TeachersDashboard /></ProtectedRoute>}>
           <Route index element={<TeachersDashboardOverview />} />
@@ -125,6 +131,7 @@ const AuthenticatedApp = () => {
           <Route path="learning-paths" element={<LearningPathsAdmin />} />
           <Route path="quizzes" element={<QuizzesAdmin />} />
           <Route path="students" element={<TeachersStudents />} />
+          <Route path="history" element={<History />} />
           <Route path="attendance" element={<TeachersAttendance />} />
           <Route path="insights" element={<Insight />} />
           <Route path="analytics" element={<TeachersAnalytics />} />

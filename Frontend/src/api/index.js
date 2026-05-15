@@ -386,6 +386,10 @@ export function fetchLearningPaths({ level, subject, teacherEmail, search } = {}
   return request(`/learning-paths${query}`);
 }
 
+export function fetchLearningPath(id) {
+  return request(`/learning-paths/${id}`);
+}
+
 const learningPathPayloadFields = ['title', 'subject', 'level', 'description', 'milestones'];
 
 export function createLearningPath(data) {

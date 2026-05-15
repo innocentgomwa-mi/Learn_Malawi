@@ -108,6 +108,12 @@ export default function LearningPaths() {
 
   const navigate = useNavigate();
 
+  useEffect(() => {
+    if (selectedPathId) {
+      navigate(`/paths/${selectedPathId}`);
+    }
+  }, [selectedPathId, navigate]);
+
   const getResourceRoute = (resource) => {
     if (!resource) return null;
     const type = (resource.type || '').toLowerCase();
@@ -170,7 +176,7 @@ export default function LearningPaths() {
 
   const handleViewPath = async (path) => {
     await startPath(path);
-    navigate(`/learning-paths?path_id=${encodeURIComponent(path.id)}`);
+    navigate(`/paths/${encodeURIComponent(path.id)}`);
   };
 
   const toggleMilestone = async (path, milestone, completed, milestoneId) => {
@@ -221,118 +227,129 @@ export default function LearningPaths() {
           <ChevronRight className="h-4 w-4 rotate-180" /> Back to Learning Paths
         </button>
 
-        <div className="bg-card border border-border rounded-2xl p-6 mb-6">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <span className={`text-xs font-semibold px-2 py-1 rounded-full border ${LEVEL_COLORS[activePath.level]}`}>{activePath.level}</span>
-              <h1 className="font-poppins text-2xl font-bold text-foreground mt-2">{activePath.title}</h1>
-              <p className="text-muted-foreground text-sm mt-1">{activePath.subject}</p>
-              {activePath.description && <p className="text-sm text-muted-foreground mt-2">{activePath.description}</p>}
-              <p className="text-xs uppercase tracking-[0.3em] font-semibold mt-3 text-primary">
-                {hasStartedPath(activePath, done) ? 'Path started' : 'Not started yet'}
-              </p>
-            </div>
-            <div className="text-center flex-shrink-0">
-              <div className="relative w-16 h-16">
-                <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
-                  <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--muted))" strokeWidth="6" />
-                  <circle cx="32" cy="32" r="28" fill="none" stroke="hsl(var(--primary))" strokeWidth="6"
-                    strokeDasharray={`${2 * Math.PI * 28}`}
-                    strokeDashoffset={`${2 * Math.PI * 28 * (1 - pct / 100)}`}
-                    strokeLinecap="round" />
-                </svg>
-                <span className="absolute inset-0 flex items-center justify-center font-poppins font-bold text-sm text-foreground">{pct}%</span>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">{done}/{total} done</p>
-            </div>
-          </div>
-          <div className="rounded-2xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900 mb-6">
-            Milestones are fixed learning checkpoints. Mark each one complete when you finish it, and your progress will be stored.
-          </div>
-        </div>
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="rounded-[2rem] overflow-hidden bg-gradient-to-br from-rose-600 via-pink-600 to-orange-500 text-white shadow-2xl shadow-rose-500/20">
+            <div className="p-8 sm:p-10">
+              <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.28em] font-semibold text-white/90">
+                {activePath.level}
+              </span>
+              <h1 className="mt-6 text-4xl sm:text-5xl font-bold leading-tight tracking-tight">{activePath.title}</h1>
+              <p className="mt-4 max-w-2xl text-sm sm:text-base text-rose-100/90">{activePath.description || `Follow this structured path to master ${activePath.subject}.`}</p>
 
-        {/* Roadmap */}
-        <div className="space-y-2">
-          {milestones.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              <p>No milestones added to this path yet.</p>
-            </div>
-          )}
-          {milestones.map((m, i) => {
-            const ids = m.resource_ids || [];
-            const mDone = normalizeMilestone(activePath.id, m, completedResourceIds, completedMilestoneIds, i);
-            const prevDone = i === 0 || (() => {
-              const prev = milestones[i - 1];
-              const prevIds = prev?.resource_ids || [];
-              return prevIds.length === 0 || normalizeMilestone(activePath.id, prev, completedResourceIds, completedMilestoneIds, i - 1);
-            })();
-            const locked = !prevDone && i > 0;
-
-            const relatedResources = ids.map(id => allResourceMap.get(id)).filter(Boolean);
-
-            return (
-              <div key={i} className="flex gap-4">
-                {/* Timeline */}
-                <div className="flex flex-col items-center">
-                  <div className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 border-2 ${mDone ? "bg-primary border-primary text-primary-foreground" : locked ? "bg-muted border-border text-muted-foreground" : "bg-card border-primary text-primary"}`}>
-                    {mDone ? <CheckCircle className="h-5 w-5" /> : locked ? <Lock className="h-4 w-4" /> : <Circle className="h-5 w-5" />}
-                  </div>
-                  {i < milestones.length - 1 && (
-                    <div className={`w-0.5 flex-1 my-1 ${mDone ? "bg-primary" : "bg-border"}`} style={{ minHeight: 32 }} />
-                  )}
+              <div className="mt-8 grid gap-3 sm:grid-cols-2">
+                <div className="rounded-[1.5rem] border border-white/20 bg-white/10 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-white/70">Modules</p>
+                  <p className="mt-2 text-2xl font-semibold">{milestones.length}</p>
                 </div>
+                <div className="rounded-[1.5rem] border border-white/20 bg-white/10 p-4">
+                  <p className="text-[11px] uppercase tracking-[0.28em] text-white/70">Progress</p>
+                  <p className="mt-2 text-2xl font-semibold">{pct}%</p>
+                </div>
+              </div>
 
-                {/* Content */}
-                <div className={`flex-1 bg-card border rounded-2xl p-4 mb-2 ${mDone ? "border-primary/30" : locked ? "border-border opacity-60" : "border-primary/20"}`}>
-                  <div className="flex items-center justify-between mb-1">
-                    <h3 className="font-semibold text-foreground">{m.title || `Milestone ${i + 1}`}</h3>
-                    <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${mDone ? "bg-sky-100 text-sky-700" : locked ? "bg-muted text-muted-foreground" : "bg-primary/10 text-primary"}`}>
-                      {mDone ? "Completed" : locked ? "Locked" : "In Progress"}
-                    </span>
+              <div className="mt-8 rounded-[1.5rem] bg-white/10 p-4 border border-white/15">
+                <div className="flex items-center justify-between gap-4 text-sm text-white/80">
+                  <div>{done}/{total} completed</div>
+                  <div className="rounded-full bg-white/10 px-3 py-1 text-[11px] uppercase tracking-[0.2em] font-semibold">{activePath.subject}</div>
+                </div>
+                <div className="mt-3 h-3 overflow-hidden rounded-full bg-white/20">
+                  <div className="h-full rounded-full bg-white transition-all" style={{ width: `${pct}%` }} />
+                </div>
+              </div>
+
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.28em] text-white/70">Roadmap status</p>
+                  <p className="mt-1 text-sm text-white/90">{hasStartedPath(activePath, done) ? 'Keep going — you are building mastery step by step.' : 'Start the first milestone to begin your journey.'}</p>
+                </div>
+                <button onClick={() => startPath(activePath)}
+                  className="inline-flex items-center justify-center rounded-full bg-white px-5 py-3 text-sm font-semibold text-rose-600 shadow-lg shadow-rose-500/20 transition hover:bg-rose-50">
+                  {hasStartedPath(activePath, done) ? 'Continue Path' : 'Start Path'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-6">
+            <div className="rounded-[1.75rem] border border-border bg-card p-6 shadow-sm">
+              <div className="flex items-center justify-between gap-4 mb-5">
+                <div>
+                  <h2 className="text-lg font-semibold text-foreground">Learning Roadmap</h2>
+                  <p className="text-sm text-muted-foreground mt-1">Complete each milestone in sequence to advance through this path.</p>
+                </div>
+                <div className="text-xs uppercase tracking-[0.2em] font-semibold text-muted-foreground">{milestones.length} milestones</div>
+              </div>
+
+              <div className="space-y-4">
+                {milestones.length === 0 && (
+                  <div className="rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                    No milestones added to this path yet.
                   </div>
-                  {m.description && <p className="text-sm text-muted-foreground mb-2">{m.description}</p>}
-                  {relatedResources.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="text-xs font-semibold text-foreground mb-1">Assigned resources</div>
-                      <div className="space-y-2">
-                        {relatedResources.map((resource) => {
-                          const href = getResourceUrl(resource) || getResourceRoute(resource);
-                          return (
-                            <div key={resource.id} className="flex items-center gap-2 text-xs text-muted-foreground">
-                              {completedResourceIds.has(resource.id) ? <CheckCircle className="h-3.5 w-3.5 text-blue-600 flex-shrink-0" /> : <BookOpen className="h-3.5 w-3.5 flex-shrink-0" />}
-                              <span className={completedResourceIds.has(resource.id) ? "line-through" : ""}>{getResourceLabel(resource)}</span>
-                              <div className="ml-auto flex items-center gap-2">
-                                {href && (
-                                  <button type="button" onClick={() => openResource(resource)}
-                                    className="text-[10px] font-semibold text-primary hover:underline">
-                                    Open
-                                  </button>
-                                )}
-                                <span className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">{resource.type || resource.subject || ''}</span>
-                              </div>
-                            </div>
-                          );
-                        })}
+                )}
+                {milestones.map((m, i) => {
+                  const ids = m.resource_ids || [];
+                  const mDone = normalizeMilestone(activePath.id, m, completedResourceIds, completedMilestoneIds, i);
+                  const prevDone = i === 0 || (() => {
+                    const prev = milestones[i - 1];
+                    const prevIds = prev?.resource_ids || [];
+                    return prevIds.length === 0 || normalizeMilestone(activePath.id, prev, completedResourceIds, completedMilestoneIds, i - 1);
+                  })();
+                  const locked = !prevDone && i > 0;
+                  const relatedResources = ids.map(id => allResourceMap.get(id)).filter(Boolean);
+
+                  return (
+                    <div key={i} className={`rounded-[1.5rem] border p-5 ${mDone ? 'border-emerald-200 bg-emerald-50/80' : locked ? 'border-border bg-muted/80 opacity-80' : 'border-border bg-white'} shadow-sm`}>
+                      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                          <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-muted-foreground">
+                            <span className={mDone ? 'text-emerald-700' : locked ? 'text-muted-foreground' : 'text-primary'}>{locked ? 'Locked' : mDone ? 'Completed' : 'Milestone'}</span>
+                            <span className="h-1.5 w-1.5 rounded-full bg-current inline-block" />
+                            <span>{`Step ${i + 1}`}</span>
+                          </div>
+                          <h3 className="mt-2 text-lg font-semibold text-foreground">{m.title || `Milestone ${i + 1}`}</h3>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="rounded-full bg-muted px-3 py-1 text-[11px] uppercase tracking-[0.18em] font-semibold text-muted-foreground">{relatedResources.length} resource{relatedResources.length === 1 ? '' : 's'}</span>
+                          <span className="text-xs text-muted-foreground">{mDone ? 'Done' : locked ? 'Wait for previous step' : 'Ready to start'}</span>
+                        </div>
                       </div>
-                    </div>
-                  )}
-                  {!locked && (
-                    <div className="space-y-2">
-                      {relatedResources.length > 0 ? (
-                        <p className="text-xs text-muted-foreground">Open the assigned resources and mark this milestone complete when you finish them.</p>
-                      ) : (
-                        <p className="text-xs text-muted-foreground">This milestone has no assigned resources yet. Mark it complete once you finish the topic.</p>
+                      {m.description && <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{m.description}</p>}
+
+                      {relatedResources.length > 0 && (
+                        <div className="mt-4 space-y-3">
+                          {relatedResources.map((resource) => {
+                            const href = getResourceUrl(resource) || getResourceRoute(resource);
+                            return (
+                              <button key={resource.id} type="button" onClick={() => openResource(resource)}
+                                className="w-full rounded-2xl border border-border bg-white px-4 py-3 text-left transition hover:border-primary/50 hover:bg-primary/5">
+                                <div className="flex items-center justify-between gap-4">
+                                  <div>
+                                    <p className="font-medium text-foreground">{getResourceLabel(resource)}</p>
+                                    <p className="mt-1 text-xs text-muted-foreground">{resource.type || resource.subject || 'Resource'}</p>
+                                  </div>
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
                       )}
-                      <button onClick={() => toggleMilestone(activePath, m, !mDone, milestoneResourceId(activePath.id, m, i))}
-                        className={`inline-flex items-center justify-center rounded-full px-3 py-1.5 text-xs font-semibold transition ${mDone ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
-                        {mDone ? 'Mark milestone incomplete' : 'Mark milestone complete'}
-                      </button>
+
+                      {!locked && (
+                        <div className="mt-4 flex items-center justify-between gap-3">
+                          <p className="text-xs text-muted-foreground">Mark this milestone complete when you finish the assigned resources.</p>
+                          <button onClick={() => toggleMilestone(activePath, m, !mDone, milestoneResourceId(activePath.id, m, i))}
+                            className={`rounded-full px-4 py-2 text-xs font-semibold transition ${mDone ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'bg-primary text-primary-foreground hover:bg-primary/90'}`}>
+                            {mDone ? 'Mark incomplete' : 'Complete milestone'}
+                          </button>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  );
+                })}
               </div>
-            );
-          })}
+            </div>
+          </div>
         </div>
       </div>
     );
