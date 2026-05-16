@@ -418,6 +418,11 @@ export default function StudyGroups() {
                       <Trash className="h-4 w-4" />
                     </button>
                   )}
+                  {user?.role === 'Teacher' && (
+                    <button onClick={() => handleDelete(group)} title="Delete group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50">
+                      <Trash className="h-4 w-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             );
