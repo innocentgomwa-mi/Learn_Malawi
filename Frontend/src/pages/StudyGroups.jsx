@@ -131,11 +131,16 @@ export default function StudyGroups() {
       payload.mentor_email = user.email;
       payload.mentor_name = user.full_name || user.email.split('@')[0];
       if (!members.includes(user.email)) {
+        // add teacher to members and update on server
         payload.members = [...members, user.email];
+        const updated = await updateStudyGroup(group.id, payload);
+        setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
+        setActiveGroup(updated);
+      } else {
+        // Teacher already a member — inform them
+        alert('You have already joined this group.');
+        setActiveGroup(group);
       }
-      const updated = await updateStudyGroup(group.id, payload);
-      setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
-      setActiveGroup(updated);
       return;
     }
 
