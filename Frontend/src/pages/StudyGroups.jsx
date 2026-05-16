@@ -124,6 +124,14 @@ export default function StudyGroups() {
       return;
     }
 
+    // If user is already a member, inform them and open the group
+    const isMember = members.includes(user.email);
+    if (isMember) {
+      alert('You have already joined this group.');
+      setActiveGroup(group);
+      return;
+    }
+
     // If current user is a Teacher and group has no mentor, make teacher the mentor when joining.
     if (user.role === 'Teacher') {
       const payload = {};
