@@ -1,0 +1,43 @@
+{
+  "name": "Exam",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Exam name"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Subject"
+    },
+    "exam_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Date and time of the exam"
+    },
+    "location": {
+      "type": "string",
+      "description": "Exam location"
+    },
+    "notify_days_before": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Days before exam to send notification"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color label"
+    }
+  },
+  "required": [
+    "title",
+    "subject",
+    "exam_date"
+  ]
+}

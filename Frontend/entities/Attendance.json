@@ -1,0 +1,71 @@
+{
+  "name": "Attendance",
+  "type": "object",
+  "properties": {
+    "course": {
+      "type": "string",
+      "title": "Course / Subject"
+    },
+    "class_level": {
+      "type": "string",
+      "title": "Class Level"
+    },
+    "date": {
+      "type": "string",
+      "title": "Date (YYYY-MM-DD)"
+    },
+    "teacher_email": {
+      "type": "string",
+      "title": "Teacher Email"
+    },
+    "records": {
+      "type": "array",
+      "title": "Student Records",
+      "items": {
+        "type": "object",
+        "properties": {
+          "student_id": {
+            "type": "string"
+          },
+          "student_name": {
+            "type": "string"
+          },
+          "class_id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "Present",
+              "Absent",
+              "Late"
+            ]
+          },
+          "login_time": {
+            "type": "string"
+          },
+          "logout_time": {
+            "type": "string"
+          },
+          "duration": {
+            "type": "number"
+          },
+          "method": {
+            "type": "string"
+          },
+          "engagement_score": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "course",
+    "date",
+    "teacher_email"
+  ]
+}

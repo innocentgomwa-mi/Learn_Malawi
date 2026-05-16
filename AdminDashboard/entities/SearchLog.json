@@ -1,0 +1,37 @@
+{
+  "name": "SearchLog",
+  "type": "object",
+  "properties": {
+    "query": {
+      "type": "string",
+      "description": "The search term entered by the user"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_role": {
+      "type": "string",
+      "enum": [
+        "student",
+        "teacher",
+        "admin"
+      ]
+    },
+    "results_count": {
+      "type": "number",
+      "description": "Number of results returned for this search"
+    },
+    "subject_filter": {
+      "type": "string"
+    },
+    "level_filter": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "query"
+  ]
+}
