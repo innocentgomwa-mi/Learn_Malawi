@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ChatMessage } from './chat-message.entity';
@@ -6,9 +6,12 @@ import { CreateChatMessageDto } from './dto/create-chat-message.dto';
 import { UpdateChatMessageDto } from './dto/update-chat-message.dto';
 import { User, UserRole } from '../users/entities/user.entity';
 import { Announcement } from '../announcements/entities/announcement.entity';
+import { EmailService } from '../auth/email.service';
 
 @Injectable()
 export class ChatMessagesService {
+  private readonly logger = new Logger(ChatMessagesService.name);
+
   constructor(
     @InjectRepository(ChatMessage)
     private readonly chatMessageRepository: Repository<ChatMessage>,
@@ -16,6 +19,7 @@ export class ChatMessagesService {
     private readonly userRepository: Repository<User>,
     @InjectRepository(Announcement)
     private readonly announcementRepository: Repository<Announcement>,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(createChatMessageDto: CreateChatMessageDto): Promise<ChatMessage> {
@@ -76,6 +80,31 @@ export class ChatMessagesService {
       });
 
       await this.announcementRepository.save(announcement);
+      await this.notifyTeacherMentionByEmail(resolved.email, message.sender_name, snippet, announcement.link);
+    }
+  }
+
+  private async notifyTeacherMentionByEmail(
+    email: string,
+    senderName: string,
+    snippet: string,
+    link?: string,
+  ) {
+    const subject = `${senderName} mentioned you in teacher chat`;
+    const body = `Hello,
+
+${senderName} mentioned you in teacher chat.
+
+"${snippet}"
+
+${link ? `Visit: ${link}` : 'Open the app to view the chat.'}`;
+
+    try {
+      await this.emailService.sendEmail(email, subject, body);
+    } catch (error) {
+      this.logger.warn(
+        `Unable to deliver mention email to ${email}: ${error instanceof Error ? error.message : 'unknown error'}`,
+      );
     }
   }
 

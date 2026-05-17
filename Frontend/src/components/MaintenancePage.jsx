@@ -7,7 +7,6 @@ export default function MaintenancePage({ message }) {
         <h1 className="text-4xl font-bold text-slate-900 mb-4">Maintenance Mode</h1>
         <p className="text-lg text-slate-600 mb-6">The platform is currently unavailable while we perform updates.</p>
         <div className="rounded-2xl bg-slate-100 p-6 text-left">
-          <p className="text-sm text-slate-500 uppercase tracking-wide mb-2">Message for users</p>
           <p className="text-base text-slate-800">{message || "We'll be back shortly. Thank you for your patience."}</p>
         </div>
       </div>

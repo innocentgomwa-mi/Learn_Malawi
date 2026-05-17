@@ -196,6 +196,10 @@ const Announcement = {
   delete: async (id) => fetchJson(`/announcements/${id}`, { method: 'DELETE' }),
 };
 
+const AdminNotifications = {
+  list: async () => tryFetchJson('/admin/notifications', []),
+};
+
 const PasswordReminder = {
   send: async (data) => {
     if (!hasAuthToken()) {
@@ -291,9 +295,9 @@ export const apiClient = {
     Teacher,
     Student,
     Announcement,
+    AdminNotifications,
     PasswordReminder,
     TeacherPost,
-    ResourceRating,
     StudyNote,
     Tutorial,
     PastPaper,

@@ -25,8 +25,8 @@ import { cn } from '@/lib/utils';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const COLORS = [
-  { value: 'emerald', bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', dot: 'bg-emerald-500' },
   { value: 'blue', bg: 'bg-blue-100', text: 'text-blue-800', border: 'border-blue-300', dot: 'bg-blue-500' },
+  { value: 'emerald', bg: 'bg-emerald-100', text: 'text-emerald-800', border: 'border-emerald-300', dot: 'bg-emerald-500' },
   { value: 'purple', bg: 'bg-purple-100', text: 'text-purple-800', border: 'border-purple-300', dot: 'bg-purple-500' },
   { value: 'orange', bg: 'bg-orange-100', text: 'text-orange-800', border: 'border-orange-300', dot: 'bg-orange-500' },
   { value: 'pink', bg: 'bg-pink-100', text: 'text-pink-800', border: 'border-pink-300', dot: 'bg-pink-500' },
@@ -45,7 +45,7 @@ const REMINDER_OPTIONS = [
 const EMPTY_FORM = /** @type {ScheduleSessionForm} */ ({
   title: '', subject: '', class_level: '', day_of_week: /** @type {DayOfWeek | ''} */ (''),
   start_time: '', end_time: '', room: '', is_recurring: true,
-  color: 'emerald', reminder_minutes: 15, notes: '',
+  color: 'blue', reminder_minutes: 15, notes: '',
 });
 
 /**
@@ -169,7 +169,7 @@ export default function TeacherSchedule() {
           <h1 className="text-2xl font-bold">Class Schedule</h1>
           <p className="text-muted-foreground text-sm mt-0.5">Your weekly timetable with recurring sessions and reminders</p>
         </div>
-        <Button onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-700">
+        <Button onClick={openCreate} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="w-4 h-4 mr-2" /> Add Session
         </Button>
       </div>
@@ -308,7 +308,7 @@ export default function TeacherSchedule() {
             <div className="flex justify-end gap-2 pt-1">
               <Button variant="outline" onClick={() => setShowModal(false)}>Cancel</Button>
               <Button onClick={handleSave} disabled={saving || !form.title || !form.day_of_week || !form.start_time || !form.end_time}
-                className="bg-emerald-600 hover:bg-emerald-700">
+                className="bg-blue-600 hover:bg-blue-700">
                 {saving ? 'Saving...' : editing ? 'Save Changes' : 'Add Session'}
               </Button>
             </div>

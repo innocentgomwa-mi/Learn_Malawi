@@ -259,24 +259,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* AI Tutor Banner */}
-      <section className="w-full px-4 pb-16">
-        <div className="bg-primary rounded-3xl p-8 md:p-12 text-primary-foreground relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary/20 rounded-full blur-3xl" />
-          <div className="relative max-w-2xl">
-            <span className="inline-block bg-secondary text-secondary-foreground text-xs font-bold px-3 py-1 rounded-full mb-4">AI-Powered Learning</span>
-            <h2 className="font-poppins text-3xl font-bold mb-3">Meet Your AI Study Tutor</h2>
-            <p className="text-primary-foreground/80 mb-6">
-              Available 24/7, your personal AI tutor can explain any concept, solve problems step-by-step, and give you culturally relevant examples from Malawi. Click the chat button in the corner to get started!
-            </p>
-            <div className="flex flex-wrap gap-3 text-sm">
-              {["24/7 Available", "Instant Answers", "Chichewa Context", "All Subjects"].map((b) => (
-                <span key={b} className="bg-primary-foreground/10 border border-primary-foreground/20 px-3 py-1.5 rounded-full">{b}</span>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }

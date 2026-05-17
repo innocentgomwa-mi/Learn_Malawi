@@ -137,6 +137,7 @@ const AuthenticatedApp = () => {
           <Route path="analytics" element={<TeachersAnalytics />} />
           <Route path="discussions" element={<TeachersDiscussions />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />
+          <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<TeacherSettings />} />
         </Route>
         <Route path="/teachersdashboard" element={<Navigate to="/teacher" replace />} />

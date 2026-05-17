@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState, useRef } from 'react';
 import { MessageSquare, Plus, UploadCloud, Send, RefreshCcw } from 'lucide-react';
 import { fetchDiscussions, fetchDiscussion, createDiscussion, addDiscussionComment, fetchTeachers } from '@/api';
 import { useAuth } from '@/lib/AuthContext';
+import { markDiscussionThreadsAsRead } from '@/lib/notificationStorage';
 
 export default function TeacherDiscussions() {
   const { user } = useAuth();
@@ -38,7 +39,11 @@ export default function TeacherDiscussions() {
     try {
       const teacherEmail = user?.email;
       const response = await fetchDiscussions({ teacherEmail });
-      setThreads(Array.isArray(response) ? response : []);
+      const fetchedThreads = Array.isArray(response) ? response : [];
+      setThreads(fetchedThreads);
+      if (user?.email && fetchedThreads.length > 0) {
+        markDiscussionThreadsAsRead(user.email, fetchedThreads.map((thread) => thread?.id).filter(Boolean));
+      }
     } catch (fetchError) {
       const message =
         fetchError instanceof Error

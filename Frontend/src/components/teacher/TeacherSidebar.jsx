@@ -62,7 +62,7 @@ export default function TeacherSidebar() {
 
   return (
     <aside className={cn(
-      'min-h-screen bg-blue-950 text-blue-100 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
+      'sticky top-0 h-screen flex-shrink-0 bg-blue-950 text-blue-100 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
       collapsed ? 'w-[68px]' : 'w-64'
     )}>
       {/* Logo */}

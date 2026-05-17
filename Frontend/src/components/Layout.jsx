@@ -10,8 +10,8 @@ import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
 import { useAccessibility } from '@/lib/AccessibilityContext';
-import { fetchAnnouncements } from "@/api";
-import { getSeenNotificationIds } from "@/lib/notificationStorage";
+import { fetchAnnouncements, fetchChatMessages } from "@/api";
+import { getSeenNotificationIds, getLastSeenChatMessageDate } from "@/lib/notificationStorage";
 
 const navItems = [
   { path: "/abouts", label: "About", icon: Info, guestOnly: true },
@@ -90,22 +90,37 @@ export default function Layout() {
     let active = true;
     const loadUnreadCount = async () => {
       try {
-        const announcements = await fetchAnnouncements({ published: true });
-        if (!active || !Array.isArray(announcements)) return;
+        const [announcements, chatMessages] = await Promise.all([
+          fetchAnnouncements({ published: true }),
+          fetchChatMessages({ room: 'general' }),
+        ]);
 
-        const filtered = announcements.filter((announcement) => {
-          const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+        if (!active) return;
 
-          if (isTeacher) {
-            return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
-          }
+        const filteredAnnouncements = Array.isArray(announcements)
+          ? announcements.filter((announcement) => {
+              const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
 
-          return audience === 'all' || audience === 'students';
-        });
+              if (isTeacher) {
+                return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+              }
+
+              return audience === 'all' || audience === 'students';
+            })
+          : [];
 
         const seenIds = getSeenNotificationIds(user?.email);
-        const unread = filtered.filter((announcement) => !seenIds.includes(String(announcement.id))).length;
-        if (active) setUnreadNotificationCount(unread);
+        const unreadAnnouncements = filteredAnnouncements.filter((announcement) => announcement?.id && !seenIds.includes(String(announcement.id))).length;
+
+        const messages = Array.isArray(chatMessages) ? chatMessages : [];
+        const lastSeenChatAt = getLastSeenChatMessageDate(user?.email, 'general');
+        const unreadChats = messages.filter((message) => {
+          if (message.sender_email === user?.email) return false;
+          const createdAt = new Date(message.created_date || message.createdAt || message.created_at);
+          return !Number.isNaN(createdAt.getTime()) && (!lastSeenChatAt || createdAt > lastSeenChatAt);
+        }).length;
+
+        if (active) setUnreadNotificationCount(unreadAnnouncements + unreadChats);
       } catch (error) {
         if (active) setUnreadNotificationCount(0);
       }
@@ -113,7 +128,7 @@ export default function Layout() {
 
     loadUnreadCount();
     return () => { active = false; };
-  }, [isAuthenticated, isTeacher, user?.email, isNotificationsPage]);
+  }, [isAuthenticated, isTeacher, user?.email, isNotificationsPage, isTeacherAnnouncementsPage]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !settings?.screenReader || !('speechSynthesis' in window)) return;
