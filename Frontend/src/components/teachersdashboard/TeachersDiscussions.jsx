@@ -42,7 +42,7 @@ export default function TeacherDiscussions() {
       const fetchedThreads = Array.isArray(response) ? response : [];
       setThreads(fetchedThreads);
       if (user?.email && fetchedThreads.length > 0) {
-        markDiscussionThreadsAsRead(user.email, fetchedThreads.map((thread) => thread?.id).filter(Boolean));
+        markDiscussionThreadsAsRead(user.email, fetchedThreads.map((thread) => thread?.id).filter(Boolean), user?.role);
       }
     } catch (fetchError) {
       const message =

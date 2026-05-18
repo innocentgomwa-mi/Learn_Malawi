@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
-import { Bell, Calendar, Megaphone, MessageSquare } from 'lucide-react';
+import { Bell, Calendar, Megaphone, MessageSquare, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { useRefreshRate } from '@/lib/RefreshRateContext';
 import { fetchAnnouncements, fetchChatMessages, fetchDiscussions, fetchClassSchedules } from '@/api';
@@ -11,8 +11,8 @@ function parseMessageDate(message) {
   return Number.isNaN(createdAt.getTime()) ? null : createdAt;
 }
 
-function getUnreadChatMessages(messages, userEmail) {
-  const lastSeen = getLastSeenChatMessageDate(userEmail, 'general');
+function getUnreadChatMessages(messages, userEmail, role) {
+  const lastSeen = getLastSeenChatMessageDate(userEmail, 'general', role);
   return Array.isArray(messages)
     ? messages
         .filter((message) => {
@@ -36,6 +36,11 @@ export default function Notifications() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastRefreshed, setLastRefreshed] = useState(null);
+  const [expandedItemId, setExpandedItemId] = useState(null);
+
+  const toggleExpandedItem = (id) => {
+    setExpandedItemId((current) => (current === id ? null : id));
+  };
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -124,7 +129,7 @@ export default function Notifications() {
     return audience === 'all';
   });
 
-  const unreadChatMessages = useMemo(() => getUnreadChatMessages(chatMessages, user?.email), [chatMessages, user?.email]);
+  const unreadChatMessages = useMemo(() => getUnreadChatMessages(chatMessages, user?.email, role), [chatMessages, user?.email, role]);
   const isTeacherPage = location.pathname.startsWith('/teacher');
   const pageTitle = isTeacherPage ? 'Teacher notifications' : 'Notifications';
   const pageSubtitle = isTeacherPage
@@ -214,14 +219,14 @@ export default function Notifications() {
     if (!user?.email) return;
 
     if (item.type === 'announcement' && item.announcement?.id) {
-      markNotificationsAsRead(user.email, [item.announcement.id]);
+      markNotificationsAsRead(user.email, [item.announcement.id], user?.role);
       return;
     }
 
     if (item.type === 'discussion') {
       const discussionId = item.id?.toString().replace('discussion-', '');
       if (discussionId) {
-        markDiscussionThreadsAsRead(user.email, [discussionId]);
+        markDiscussionThreadsAsRead(user.email, [discussionId], user?.role);
       }
       return;
     }
@@ -230,13 +235,13 @@ export default function Notifications() {
       const latestUnread = unreadChatMessages[0];
       const latestDate = latestUnread ? parseMessageDate(latestUnread) : null;
       if (latestDate) {
-        markChatMessagesAsSeen(user.email, 'general', latestDate);
+        markChatMessagesAsSeen(user.email, 'general', latestDate, user?.role);
       }
     }
   };
 
   return (
-    <div className="w-full px-4 py-8">
+    <div className="w-full max-w-6xl mx-auto px-4 py-8">
       <div className={`rounded-3xl p-6 mb-8 shadow-lg ${isTeacherPage ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white' : 'bg-primary/10 text-primary'} `}>
         <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-3xl">
@@ -301,59 +306,67 @@ export default function Notifications() {
         </div>
       ) : (
         <div className="space-y-4">
-          {notificationItems.map((item) => (
-            <article key={item.id} className={`rounded-3xl border p-6 shadow-sm transition ${isTeacherPage ? 'border-blue-100 bg-white hover:shadow-lg' : 'border-border bg-card'}`}>
-              <div className="flex flex-col gap-4">
-                <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
-                  <div className="min-w-0">
-                    <div className="inline-flex items-center gap-2 text-sm font-semibold mb-2 text-slate-900">
-                      {item.type === 'chat' ? (
-                        <MessageSquare className="w-4 h-4 text-emerald-600" />
-                      ) : item.type === 'discussion' ? (
-                        <Megaphone className="w-4 h-4 text-amber-600" />
-                      ) : item.type === 'schedule' ? (
-                        <Calendar className="w-4 h-4 text-slate-600" />
-                      ) : (
-                        <Bell className="w-4 h-4 text-blue-600" />
-                      )}
-                      <span>
-                        {item.type === 'chat'
-                          ? 'Teacher Chat'
-                          : item.type === 'discussion'
-                          ? 'Discussion'
-                          : item.type === 'schedule'
-                          ? 'Schedule Reminder'
-                          : 'Announcement'}
-                      </span>
-                    </div>
-                    <h2 className="text-xl font-semibold text-slate-900 truncate">{item.title}</h2>
-                    <p className="text-sm text-slate-500 mt-1">
-                      {item.subtitle} · {item.createdAt.toLocaleDateString()}
-                    </p>
-                  </div>
-                  <Link
-                    to={item.path}
-                    onClick={() => handleNotificationOpen(item)}
-                    className="inline-flex shrink-0 items-center justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+          {notificationItems.map((item) => {
+            const isOpen = expandedItemId === item.id;
+            return (
+              <article key={item.id} className={`rounded-3xl border p-6 shadow-sm transition ${isTeacherPage ? 'border-blue-100 bg-white hover:shadow-lg' : 'border-border bg-card'}`}>
+                <div className="flex flex-col gap-4">
+                  <button
+                    type="button"
+                    onClick={() => toggleExpandedItem(item.id)}
+                    className="flex w-full items-center justify-between gap-4 text-left"
+                    aria-expanded={isOpen}
                   >
-                    {item.type === 'chat'
-                      ? 'Open collaboration'
-                      : item.type === 'discussion'
-                      ? 'Open discussion'
-                      : item.type === 'schedule'
-                      ? 'Open schedule'
-                      : 'Open announcement'}
-                  </Link>
+                    <div className="flex items-center gap-3 min-w-0">
+                      {item.type === 'chat' ? (
+                        <MessageSquare className="w-5 h-5 text-emerald-600" />
+                      ) : item.type === 'discussion' ? (
+                        <Megaphone className="w-5 h-5 text-amber-600" />
+                      ) : item.type === 'schedule' ? (
+                        <Calendar className="w-5 h-5 text-slate-600" />
+                      ) : (
+                        <Bell className="w-5 h-5 text-blue-600" />
+                      )}
+                      <div className="min-w-0">
+                        <h2 className="text-xl font-semibold text-slate-900 truncate">{item.title}</h2>
+                        <p className="text-xs text-slate-500 mt-1">
+                          {item.createdAt.toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                    <ChevronDown className={`h-5 w-5 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {isOpen && (
+                    <div className="space-y-4 pt-4 border-t border-border/70">
+                      <div className="flex flex-wrap items-center gap-3">
+                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase text-blue-700">
+                          {item.type === 'chat' ? 'Chat' : item.audience || 'All'}
+                        </span>
+                        <span className="text-sm text-slate-500">{item.subtitle}</span>
+                      </div>
+                      <p className="text-sm leading-7 text-slate-700">{item.body}</p>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <Link
+                          to={item.path}
+                          onClick={() => handleNotificationOpen(item)}
+                          className="inline-flex items-center justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                        >
+                          {item.type === 'chat'
+                            ? 'Open collaboration'
+                            : item.type === 'discussion'
+                            ? 'Open discussion'
+                            : item.type === 'schedule'
+                            ? 'Open schedule'
+                            : 'Open announcement'}
+                        </Link>
+                      </div>
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-wrap items-center gap-3">
-                  <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase text-blue-700">
-                    {item.type === 'chat' ? 'Chat' : item.audience || 'All'}
-                  </span>
-                </div>
-                <p className="text-sm leading-7 text-slate-700">{item.body}</p>
-              </div>
-            </article>
-          ))}
+              </article>
+            );
+          })}
         </div>
       )}
     </div>

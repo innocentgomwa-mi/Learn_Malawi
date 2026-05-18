@@ -73,8 +73,8 @@ export default function TeacherChat({ user }) {
     const latestMessage = messages[messages.length - 1];
     if (!latestMessage) return;
     const lastSeen = latestMessage.created_date || latestMessage.createdAt || latestMessage.created_at || new Date().toISOString();
-    markChatMessagesAsSeen(user.email, 'general', lastSeen);
-  }, [messages, user?.email]);
+    markChatMessagesAsSeen(user.email, 'general', lastSeen, user?.role);
+  }, [messages, user?.email, user?.role]);
 
   const handleTextChange = (e) => {
     const val = e.target.value;

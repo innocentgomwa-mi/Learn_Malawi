@@ -109,11 +109,11 @@ export default function Layout() {
             })
           : [];
 
-        const seenIds = getSeenNotificationIds(user?.email);
+        const seenIds = getSeenNotificationIds(user?.email, user?.role);
         const unreadAnnouncements = filteredAnnouncements.filter((announcement) => announcement?.id && !seenIds.includes(String(announcement.id))).length;
 
         const messages = Array.isArray(chatMessages) ? chatMessages : [];
-        const lastSeenChatAt = getLastSeenChatMessageDate(user?.email, 'general');
+        const lastSeenChatAt = getLastSeenChatMessageDate(user?.email, 'general', user?.role);
         const unreadChats = messages.filter((message) => {
           if (message.sender_email === user?.email) return false;
           const createdAt = new Date(message.created_date || message.createdAt || message.created_at);

@@ -46,7 +46,7 @@ export default function TeacherTopBar() {
         const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
         return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user.email;
       });
-      const seenIds = getSeenNotificationIds(user.email);
+      const seenIds = getSeenNotificationIds(user.email, user.role);
       const unread = filtered.filter((announcement) => announcement?.id && !seenIds.includes(String(announcement.id))).length;
       setUnreadAnnouncements(unread);
     };
@@ -64,7 +64,7 @@ export default function TeacherTopBar() {
             .filter((announcement) => announcement?.id)
             .map((announcement) => announcement.id);
           if (announcementIds.length > 0) {
-            markNotificationsAsRead(user.email, announcementIds);
+            markNotificationsAsRead(user.email, announcementIds, user.role);
           }
         })
         .catch(() => {});
@@ -98,7 +98,7 @@ export default function TeacherTopBar() {
         const response = await fetchChatMessages({ room: 'general' });
         if (!active) return;
         const messages = Array.isArray(response) ? response : [];
-        const lastSeen = getLastSeenChatMessageDate(user.email, 'general');
+        const lastSeen = getLastSeenChatMessageDate(user.email, 'general', user.role);
         const unread = messages.filter((message) => {
           if (message.sender_email === user.email) return false;
           const createdAt = new Date(message.created_date || message.createdAt || message.created_at);
@@ -140,7 +140,7 @@ export default function TeacherTopBar() {
           return;
         }
 
-        const seenIds = getSeenDiscussionIds(user.email);
+        const seenIds = getSeenDiscussionIds(user.email, user.role);
         const unread = threads.filter((thread) => thread?.id && !seenIds.includes(String(thread.id))).length;
         setUnreadDiscussionCount(unread);
       } catch {
