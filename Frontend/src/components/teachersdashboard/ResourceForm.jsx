@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X } from "lucide-react";
+import { X, CalendarDays } from "lucide-react";
 
 export default function ResourceForm({ fields, initial = {}, onSave, onCancel, title }) {
   const [data, setData] = useState(initial);
@@ -46,13 +46,83 @@ export default function ResourceForm({ fields, initial = {}, onSave, onCancel, t
                   ))}
                 </select>
               ) : (
-                <input
-                  type={type}
-                  value={data[key] || ""}
-                  onChange={(e) => handle(key, type === "number" ? Number(e.target.value) : e.target.value)}
-                  required={required}
-                  className="w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground outline-none focus:ring-2 focus:ring-primary"
-                />
+                (() => {
+                  const commonProps = {
+                    value: data[key] || "",
+                    required,
+                    className: "w-full border border-border rounded-lg px-3 py-2 text-sm bg-background text-foreground outline-none focus:ring-2 focus:ring-primary",
+                  };
+
+                  // For datetime/date inputs: prevent manual typing and open native picker on focus/click
+                  if (type === "date" || type === "datetime-local" || type === "time") {
+                    commonProps.id = `input-${key}`;
+                    // For the scheduled_date field show a calendar button next to the input
+                    if (key === 'scheduled_date') {
+                      return (
+                        <div className="flex items-center gap-2">
+                          <input
+                            {...commonProps}
+                            type={type}
+                            onChange={(e) => handle(key, e.target.value)}
+                            onKeyDown={(e) => e.preventDefault()}
+                            inputMode="none"
+                            readOnly
+                            onFocus={(e) => e.target.showPicker?.()}
+                            onClick={(e) => e.target.showPicker?.()}
+                            className={commonProps.className + " flex-1"}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const el = document.getElementById('input-scheduled_date');
+                              if (!el) return;
+                              // Prefer showPicker when available
+                              if (el.showPicker) {
+                                try { el.showPicker(); el.focus(); } catch (e) { el.focus(); }
+                                return;
+                              }
+                              // Fallback: temporarily make editable and click/focus
+                              const prevReadOnly = el.readOnly;
+                              try {
+                                el.readOnly = false;
+                                el.click?.();
+                                el.focus();
+                              } finally {
+                                el.readOnly = prevReadOnly;
+                              }
+                            }}
+                            className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-muted"
+                            title="Open calendar"
+                          >
+                            <CalendarDays className="w-4 h-4" />
+                          </button>
+                        </div>
+                      );
+                    }
+
+                    // For other date/time fields (e.g., scheduled_time) keep read-only picker behavior
+                    return (
+                      <input
+                        {...commonProps}
+                        type={type}
+                        onChange={(e) => handle(key, e.target.value)}
+                        onKeyDown={(e) => e.preventDefault()}
+                        inputMode="none"
+                        readOnly
+                        onFocus={(e) => e.target.showPicker?.()}
+                        onClick={(e) => e.target.showPicker?.()}
+                      />
+                    );
+                  }
+
+                  return (
+                    <input
+                      {...commonProps}
+                      type={type}
+                      onChange={(e) => handle(key, type === "number" ? Number(e.target.value) : e.target.value)}
+                    />
+                  );
+                })()
               )}
             </div>
           ))}

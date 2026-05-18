@@ -256,7 +256,8 @@ export default function StudyGroups() {
     ]},
     { key: "description", label: "Description", type: "textarea" },
     { key: "mentor_email", label: "Mentor Email" },
-    { key: "scheduled_at", label: "Scheduled Date/Time" },
+    { key: "scheduled_date", label: "Scheduled Date", type: "date" },
+    { key: "scheduled_time", label: "Scheduled Time", type: "time" },
   ];
 
   const handleCreate = async (data) => {
@@ -265,6 +266,21 @@ export default function StudyGroups() {
       mentor_email: data.mentor_email?.trim() || user?.email,
       mentor_name: data.mentor_name?.trim?.() || user?.full_name || user?.email?.split('@')[0],
     };
+
+    // Combine separate date and time into ISO datetime for scheduled_at
+    if (data.scheduled_date) {
+      const date = data.scheduled_date; // YYYY-MM-DD
+      const time = data.scheduled_time || '00:00'; // HH:MM
+      prepared.scheduled_at = `${date}T${time}`;
+    } else if (data.scheduled_time && !data.scheduled_date) {
+      const today = new Date().toISOString().slice(0, 10);
+      prepared.scheduled_at = `${today}T${data.scheduled_time}`;
+    }
+
+    // remove auxiliary fields
+    delete prepared.scheduled_date;
+    delete prepared.scheduled_time;
+
     await createStudyGroup(prepared);
     setForm(null);
     try {
