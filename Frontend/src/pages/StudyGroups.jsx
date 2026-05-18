@@ -413,11 +413,6 @@ export default function StudyGroups() {
                     <MessageSquare className="h-4 w-4" />
                     {joined ? "Open Discussion" : "Join & Discuss"}
                   </button>
-                  {user?.role === 'Student' && group.creator_email === user?.email && (
-                    <button onClick={() => handleDelete(group)} title="Delete group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50">
-                      <Trash className="h-4 w-4" />
-                    </button>
-                  )}
                   {user?.role === 'Teacher' && (
                     <button onClick={() => handleDelete(group)} title="Delete group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50">
                       <Trash className="h-4 w-4" />
