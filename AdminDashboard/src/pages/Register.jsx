@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [secretKey, setSecretKey] = useState('');
+  const [agreementChecked, setAgreementChecked] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,6 +31,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!agreementChecked) {
+      setErrorMessage('You must agree to the admin terms and conditions before registering.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await register({
@@ -39,8 +45,9 @@ export default function RegisterPage() {
         password,
         role: 'Admin',
         secretKey,
+        agreeTerms: agreementChecked,
       });
-      navigate('/');
+      navigate('/verify-email', { state: { email } });
     } catch (error) {
       console.error('Admin registration failed', error);
       setErrorMessage(error?.data?.message || error?.message || 'Registration failed.');
@@ -126,6 +133,20 @@ export default function RegisterPage() {
               className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
             />
             <p className="mt-2 text-xs text-slate-500">Enter the admin registration secret key to complete signup.</p>
+          </div>
+
+          <div className="flex items-start rounded-2xl border border-slate-300 bg-slate-50 p-4">
+            <label className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                checked={agreementChecked}
+                onChange={(event) => setAgreementChecked(event.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+              />
+              <span className="text-sm leading-5 text-slate-700">
+                I agree to the <span className="font-semibold text-slate-900">admin terms and conditions</span> and understand that this account is for administrative use only.
+              </span>
+            </label>
           </div>
 
           {errorMessage && (

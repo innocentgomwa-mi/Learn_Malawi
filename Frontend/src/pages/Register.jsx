@@ -248,21 +248,18 @@ const Register = () => {
                 </select>
               </label>
 
-              <div className="space-y-3">
-                <button
-                  type="button"
-                  onClick={() => setAgreeTerms((prev) => !prev)}
-                  className={`inline-flex w-full items-center justify-center rounded-3xl px-5 py-3 text-sm font-semibold transition ${agreeTerms ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
-                  aria-pressed={agreeTerms}
-                >
-                  {agreeTerms ? 'Terms agreed ✓' : 'Agree to terms'}
-                </button>
-                <p className="text-sm text-muted-foreground">
-                  By clicking above, you accept the{' '}
-                  <Link to="/terms-and-conditions" className="font-medium text-primary hover:text-primary/90 hover:underline">
-                    Terms & Conditions
-                  </Link>.
-                </p>
+              <div className="flex items-start rounded-2xl border border-slate-300 bg-slate-50 p-4">
+                <label className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    checked={agreeTerms}
+                    onChange={(event) => setAgreeTerms(event.target.checked)}
+                    className="mt-1 h-4 w-4 rounded border-slate-300 text-slate-900 focus:ring-slate-900"
+                  />
+                  <span className="text-sm leading-5 text-slate-700">
+                    I agree to the <Link to="/terms-and-conditions" className="font-semibold text-slate-900 hover:underline">Terms & Conditions</Link> and understand that this account is for personal educational use only.
+                  </span>
+                </label>
               </div>
 
               <button

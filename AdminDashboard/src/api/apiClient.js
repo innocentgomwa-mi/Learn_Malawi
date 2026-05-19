@@ -254,6 +254,12 @@ const auth = {
     }
     return response;
   },
+  verifyEmail: async (data) => {
+    return fetchJson('/auth/verify-email', { method: 'POST', body: data });
+  },
+  resendVerification: async (data) => {
+    return fetchJson('/auth/resend-verification', { method: 'POST', body: data });
+  },
   refresh: async () => {
     const refreshToken = typeof window !== 'undefined' ? window.localStorage.getItem(REFRESH_TOKEN_KEY) : null;
     if (!refreshToken) {
