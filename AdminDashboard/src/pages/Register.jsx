@@ -13,6 +13,7 @@ export default function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [secretKey, setSecretKey] = useState('');
+  const [agreeTerms, setAgreeTerms] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -30,6 +31,11 @@ export default function RegisterPage() {
       return;
     }
 
+    if (!agreeTerms) {
+      setErrorMessage('You must agree to the terms and conditions.');
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       await register({
@@ -39,6 +45,7 @@ export default function RegisterPage() {
         password,
         role: 'Admin',
         secretKey,
+        agreeTerms: Boolean(agreeTerms), // Ensure agreeTerms is a boolean
       });
       navigate('/');
     } catch (error) {
@@ -126,6 +133,18 @@ export default function RegisterPage() {
               className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
             />
             <p className="mt-2 text-xs text-slate-500">Enter the admin registration secret key to complete signup.</p>
+          </div>
+
+          <div>
+            <label className="flex items-center text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={agreeTerms}
+                onChange={(event) => setAgreeTerms(event.target.checked)}
+                className="mr-2 rounded border-slate-300 text-slate-900 focus:ring-slate-400"
+              />
+              I agree to the terms and conditions
+            </label>
           </div>
 
           {errorMessage && (

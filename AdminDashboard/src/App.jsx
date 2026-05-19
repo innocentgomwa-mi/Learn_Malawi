@@ -8,7 +8,7 @@ import { RefreshRateProvider } from '@/lib/RefreshRateContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoginPage from '@/pages/Login';
 import RegisterPage from '@/pages/Register';
-// Add page imports here
+import VerifyTokenPage from '@/pages/VerifyToken';
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
 
@@ -44,6 +44,7 @@ const AuthenticatedApp = () => {
       {/* Add your page Route elements here */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-token" element={<VerifyTokenPage />} /> {/* Added VerifyTokenPage route */}
       <Route path="/" element={<AdminDashboard />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/student" element={<StudentDashboard />} />
