@@ -67,8 +67,8 @@ export default function ResourceForm({ fields, initial = {}, onSave, onCancel, t
                             onKeyDown={(e) => e.preventDefault()}
                             inputMode="none"
                             readOnly
-                            onFocus={(e) => e.target.showPicker?.()}
-                            onClick={(e) => e.target.showPicker?.()}
+                            onFocus={(e) => { if (e.target.showPicker) e.target.showPicker(); }}
+                            onClick={(e) => { if (e.target.showPicker) e.target.showPicker(); }}
                             className={commonProps.className + " flex-1"}
                           />
                           <button
@@ -85,7 +85,7 @@ export default function ResourceForm({ fields, initial = {}, onSave, onCancel, t
                               const prevReadOnly = el.readOnly;
                               try {
                                 el.readOnly = false;
-                                el.click?.();
+                                if (el.click) el.click();
                                 el.focus();
                               } finally {
                                 el.readOnly = prevReadOnly;
@@ -109,8 +109,8 @@ export default function ResourceForm({ fields, initial = {}, onSave, onCancel, t
                         onKeyDown={(e) => e.preventDefault()}
                         inputMode="none"
                         readOnly
-                        onFocus={(e) => e.target.showPicker?.()}
-                        onClick={(e) => e.target.showPicker?.()}
+                        onFocus={(e) => { if (e.target.showPicker) e.target.showPicker(); }}
+                        onClick={(e) => { if (e.target.showPicker) e.target.showPicker(); }}
                       />
                     );
                   }
