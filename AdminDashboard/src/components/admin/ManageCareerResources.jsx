@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { CareerResource } from '@/api/apiClient';
+import { apiClient } from '@/api/apiClient';
 
 export default function ManageCareerResources() {
   const [resources, setResources] = useState([]);
@@ -12,7 +12,7 @@ export default function ManageCareerResources() {
     let mounted = true;
     (async () => {
       try {
-        const list = await CareerResource.list();
+        const list = await apiClient.entities.CareerResource.list();
         if (mounted) setResources(list);
       } catch (err) {
         console.error(err);
@@ -46,8 +46,8 @@ export default function ManageCareerResources() {
         if (!res.ok) throw new Error(await res.text());
         const created = await res.json();
         setResources((r) => [created, ...r]);
-      } else {
-        const created = await CareerResource.create(form);
+        } else {
+        const created = await apiClient.entities.CareerResource.create(form);
         setResources((r) => [created, ...r]);
       }
 
