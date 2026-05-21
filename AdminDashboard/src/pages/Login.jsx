@@ -22,7 +22,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #0c4a6e 45%, #2563eb 100%)' }}>
       <div className="w-full max-w-md bg-white rounded-3xl border border-slate-200 p-10 shadow-xl">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold text-slate-900">Sign in to Learn Malawi</h1>
@@ -37,7 +37,7 @@ export default function LoginPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
@@ -48,7 +48,7 @@ export default function LoginPage() {
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               required
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
@@ -59,7 +59,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={isLoadingAuth}
-            className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
+            className="w-full rounded-2xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50"
           >
             {isLoadingAuth ? 'Signing in…' : 'Sign in'}
           </button>

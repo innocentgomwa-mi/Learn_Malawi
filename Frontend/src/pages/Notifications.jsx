@@ -1,374 +1,305 @@
-import { useEffect, useState, useMemo } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
-import { Bell, Calendar, Megaphone, MessageSquare, ChevronDown } from 'lucide-react';
-import { useAuth } from '@/lib/AuthContext';
-import { useRefreshRate } from '@/lib/RefreshRateContext';
-import { fetchAnnouncements, fetchChatMessages, fetchDiscussions, fetchClassSchedules } from '@/api';
-import { markNotificationsAsRead, getLastSeenChatMessageDate, markChatMessagesAsSeen, markDiscussionThreadsAsRead } from '@/lib/notificationStorage';
+import { useEffect, useState, useMemo } from "react";
+import { useAuth } from "@/lib/AuthContext";
+import { Bell, BookOpen, MessageCircle, CalendarCheck, Clock, Megaphone, ChevronDown, CheckCheck } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { fetchResources, fetchStudyBlocks, fetchExams, fetchChatMessages, fetchAnnouncements, fetchTeachers } from "@/api";
+import { markNotificationsAsRead, markChatMessagesAsSeen } from "@/lib/notificationStorage";
 
-function parseMessageDate(message) {
-  const createdAt = new Date(message.created_date || message.createdAt || message.created_at);
-  return Number.isNaN(createdAt.getTime()) ? null : createdAt;
-}
+const TYPE_CONFIG = {
+  exam:      { icon: CalendarCheck,   color: "bg-rose-500",   badge: "bg-rose-50 text-rose-700 border-rose-200",   label: "Exam" },
+  resource:  { icon: BookOpen,        color: "bg-blue-500",   badge: "bg-blue-50 text-blue-700 border-blue-200",   label: "Resource" },
+  study:     { icon: Clock,           color: "bg-slate-500",  badge: "bg-slate-50 text-slate-700 border-slate-100", label: "Study Block" },
+  message:   { icon: MessageCircle,   color: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border-emerald-100", label: "Message" },
+};
 
-function getUnreadChatMessages(messages, userEmail, role) {
-  const lastSeen = getLastSeenChatMessageDate(userEmail, 'general', role);
-  return Array.isArray(messages)
-    ? messages
-        .filter((message) => {
-          if (message.sender_email === userEmail) return false;
-          const createdAt = parseMessageDate(message);
-          return createdAt && (!lastSeen || createdAt > lastSeen);
-        })
-        .sort((a, b) => parseMessageDate(b) - parseMessageDate(a))
-    : [];
-}
+/**
+ * @typedef {{
+ *   id: string;
+ *   type: 'exam' | 'resource' | 'study';
+ *   title: string;
+ *   subtitle?: string;
+ *   body: string;
+ *   date?: string;
+ *   url?: string;
+ *   urgent: boolean;
+ * }} NotificationItem
+ */
+
+/** @param {string | number | null | undefined} v */
+const formatDate = (v) => {
+  if (!v) return "—";
+  const d = new Date(v);
+  return Number.isNaN(d.getTime()) ? v : d.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+};
+
+/** @param {string | number | null | undefined} dateStr */
+const daysUntil = (dateStr) => {
+  if (!dateStr) return null;
+  const diff = Number(new Date(dateStr)) - Date.now();
+  return Math.ceil(diff / 86400000);
+};
 
 export default function Notifications() {
-  const { user, isAuthenticated } = useAuth();
-  const role = user?.role?.toLowerCase();
-  const { refreshSeconds } = useRefreshRate();
-  const location = useLocation();
-  const [announcements, setAnnouncements] = useState([]);
-  const [chatMessages, setChatMessages] = useState([]);
-  const [discussionThreads, setDiscussionThreads] = useState([]);
-  const [schedules, setSchedules] = useState([]);
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [lastRefreshed, setLastRefreshed] = useState(null);
-  const [expandedItemId, setExpandedItemId] = useState(null);
-
-  const toggleExpandedItem = (id) => {
-    setExpandedItemId((current) => (current === id ? null : id));
-  };
+  const [items, setItems] = useState(/** @type {Array<{ id: string; type: 'exam' | 'resource' | 'study' | 'message'; title: string; subtitle?: string; body: string; date?: string; url?: string; urgent: boolean; }>} */ ([]));
+  const [expanded, setExpanded] = useState(/** @type {string | null} */ (null));
+  const [filter, setFilter] = useState("All");
 
   useEffect(() => {
-    if (!isAuthenticated) {
-      return;
-    }
-
     let active = true;
-
     const load = async () => {
       setLoading(true);
-      setError(null);
-
       try {
-        const [announcementsResponse, chatResponse, discussionsResponse, scheduleResponse] = await Promise.all([
-          fetchAnnouncements({ published: true }),
+        const teacherFetchPromise = user?.role?.toLowerCase() !== 'student' ? fetchTeachers() : Promise.resolve([]);
+        const [resources, studyBlocks, exams, chatMessages, teachers, announcements] = await Promise.all([
+          fetchResources(),
+          fetchStudyBlocks(),
+          fetchExams(),
           fetchChatMessages({ room: 'general' }),
-          role === 'teacher' ? fetchDiscussions({ teacherEmail: user?.email }) : Promise.resolve([]),
-          role === 'teacher' ? fetchClassSchedules() : Promise.resolve([]),
+          teacherFetchPromise.catch(() => []),
+          fetchAnnouncements({ published: true }),
         ]);
-
         if (!active) return;
 
-        setAnnouncements(Array.isArray(announcementsResponse) ? announcementsResponse : []);
-        setChatMessages(Array.isArray(chatResponse) ? chatResponse : []);
-        setDiscussionThreads(Array.isArray(discussionsResponse) ? discussionsResponse : []);
-        setSchedules(Array.isArray(scheduleResponse) ? scheduleResponse : []);
-      } catch (fetchError) {
-        if (!active) return;
-        setError(fetchError.message ?? 'Unable to load notifications.');
+        const supportedResources = Array.isArray(resources) ? resources : [];
+        const supportedStudyBlocks = Array.isArray(studyBlocks) ? studyBlocks : [];
+        const supportedExams = Array.isArray(exams) ? exams : [];
+        const supportedChatMessages = Array.isArray(chatMessages) ? chatMessages : [];
+        const supportedTeachers = Array.isArray(teachers) ? teachers : [];
+        const supportedAnnouncements = Array.isArray(announcements) ? announcements : [];
+        const teacherEmails = new Set(supportedTeachers.map((teacher) => String(teacher.email || '').toLowerCase()));
+
+        const notifs = [
+        ...supportedExams.map((e) => {
+          const days = daysUntil(e.exam_date || e.created_date || e.createdAt || e.updatedAt);
+          const urgent = days !== null && days <= 7 && days >= 0;
+          return {
+            id: `exam-${e.id}`,
+            type: "exam",
+            title: `Upcoming exam: ${e.title}`,
+            subtitle: e.subject,
+            body: `${e.subject} exam${e.location ? ` at ${e.location}` : ""}. ${days === 0 ? "Today!" : days === 1 ? "Tomorrow!" : days !== null && days > 0 ? `In ${days} days.` : "Check your schedule."}`,
+            date: e.exam_date || e.created_date || e.createdAt || e.updatedAt || "",
+            urgent,
+          };
+        }),
+        ...supportedResources.map((r) => ({
+          id: `resource-${r.id}`,
+          type: "resource",
+          title: `New resource added: ${r.name || r.title || "Resource"}`,
+          subtitle: r.subject || "General",
+          body: `A new ${String(r.type || r.resource_type || "resource").replace(/_/g, " ")} has been added${r.subject ? ` for ${r.subject}` : ""}. ${r.url ? "Click to open the resource." : ""}`,
+          date: r.created_date || r.createdAt || r.updatedAt || "",
+          url: r.url,
+          urgent: false,
+        })),
+        ...supportedStudyBlocks.map((s) => ({
+          id: `study-${s.id}`,
+          type: "study",
+          title: `Study block: ${s.title || s.name || "Study session"}`,
+          subtitle: s.subject || s.day_of_week,
+          body: `Scheduled for ${s.day_of_week || "a day"} from ${s.start_time || "?"} to ${s.end_time || "?"}${s.subject ? ` — ${s.subject}` : ""}.${s.notes ? ` Notes: ${s.notes}` : ""}`,
+          date: s.created_date || s.createdAt || s.updatedAt || "",
+          urgent: false,
+        })),
+        ...supportedChatMessages
+          .filter((m) => {
+            if (!user) return true;
+            const isSelf = m.sender_email === user.email;
+            const isTeacher = teacherEmails.has(String(m.sender_email || '').toLowerCase());
+            return !isSelf && !isTeacher;
+          })
+          .map((m) => ({
+            id: `message-${m.id}`,
+            type: "message",
+            title: `New message from ${m.sender_name || m.sender_email || "Someone"}`,
+            subtitle: m.room || "General chat",
+            body: m.message || "",
+            date: m.created_date || m.createdAt || m.created_at || "",
+            urgent: false,
+          })),
+      ];
+
+      const sortedNotifs = notifs.sort((a, b) => Number(new Date(b.date || "")) - Number(new Date(a.date || "")));
+
+      if (user?.email) {
+        const announcementIds = supportedAnnouncements
+          .filter((announcement) => {
+            const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+            if (user.role?.toLowerCase() === 'teacher') {
+              return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user.email;
+            }
+            return audience === 'all' || audience === 'students';
+          })
+          .map((announcement) => announcement?.id)
+          .filter(Boolean);
+
+        if (announcementIds.length > 0) {
+          markNotificationsAsRead(user.email, announcementIds, user.role);
+        }
+
+        const chatDates = supportedChatMessages
+          .map((message) => new Date(message.created_date || message.createdAt || message.created_at))
+          .filter((date) => !Number.isNaN(date.getTime()));
+
+        if (chatDates.length > 0) {
+          const latestChatDate = new Date(Math.max(...chatDates.map((date) => date.getTime())));
+          markChatMessagesAsSeen(user.email, 'general', latestChatDate, user.role);
+        }
+      }
+
+      setItems(/** @type {NotificationItem[]} */ (sortedNotifs));
+      } catch (error) {
+        console.error('Failed loading notifications', error);
+        if (active) {
+          setItems([]);
+        }
       } finally {
         if (active) {
           setLoading(false);
-          setLastRefreshed(new Date());
         }
       }
     };
-
     load();
-    return () => {
-      active = false;
-    };
-  }, [isAuthenticated]);
+    return () => { active = false; };
+  }, [user?.email, user?.role]);
+  const FILTERS = ["All", "Exam", "Resource", "Study Block", "Messages"];
 
-  useEffect(() => {
-    if (!refreshSeconds || !isAuthenticated) {
-      return;
-    }
+  const filtered = useMemo(() => items.filter((i) => {
+    if (filter === "All") return true;
+    return TYPE_CONFIG[i.type]?.label === filter;
+  }), [items, filter]);
 
-    const intervalId = setInterval(async () => {
-      try {
-        const [announcementsResponse, chatResponse, discussionsResponse, scheduleResponse] = await Promise.all([
-          fetchAnnouncements({ published: true }),
-          fetchChatMessages({ room: 'general' }),
-          role === 'teacher' ? fetchDiscussions({ teacherEmail: user?.email }) : Promise.resolve([]),
-          role === 'teacher' ? fetchClassSchedules() : Promise.resolve([]),
-        ]);
-
-        setAnnouncements(Array.isArray(announcementsResponse) ? announcementsResponse : []);
-        setChatMessages(Array.isArray(chatResponse) ? chatResponse : []);
-        setDiscussionThreads(Array.isArray(discussionsResponse) ? discussionsResponse : []);
-        setSchedules(Array.isArray(scheduleResponse) ? scheduleResponse : []);
-        setLastRefreshed(new Date());
-      } catch (error) {
-        // keep existing notifications if refresh fails
-      }
-    }, refreshSeconds * 1000);
-
-    return () => clearInterval(intervalId);
-  }, [refreshSeconds, isAuthenticated]);
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  const filteredAnnouncements = announcements.filter((announcement) => {
-    const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
-
-    if (role === 'teacher') {
-      return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
-    }
-
-    if (role === 'student') {
-      return audience === 'all' || audience === 'students';
-    }
-
-    return audience === 'all';
-  });
-
-  const unreadChatMessages = useMemo(() => getUnreadChatMessages(chatMessages, user?.email, role), [chatMessages, user?.email, role]);
-  const isTeacherPage = location.pathname.startsWith('/teacher');
-  const pageTitle = isTeacherPage ? 'Teacher notifications' : 'Notifications';
-  const pageSubtitle = isTeacherPage
-    ? 'Unified teacher alerts from announcements, discussions, and collaboration chat.'
-    : 'Unified alerts from announcements and collaboration chat, with direct links to the related page.';
-
-  const discussionItems = useMemo(() => {
-    if (role !== 'teacher') return [];
-    const threads = Array.isArray(discussionThreads) ? discussionThreads : [];
-    return threads.map((thread) => ({
-      id: `discussion-${thread.id}`,
-      type: 'discussion',
-      title: thread.title || 'New discussion thread',
-      subtitle: thread.comments && thread.comments.length > 0 ? `Latest from ${thread.comments[thread.comments.length - 1].author}` : 'Discussion thread',
-      body: thread.body || 'Open the discussion to continue.',
-      createdAt: new Date(thread.createdAt || thread.created_at || Date.now()),
-      path: '/teacher/discussions',
-      audience: 'Discussion',
-    }));
-  }, [discussionThreads, role]);
-
-  const scheduledReminderItems = useMemo(() => {
-    if (role !== 'teacher') return [];
-    const now = new Date();
-    const dayMap = { Monday: 1, Tuesday: 2, Wednesday: 3, Thursday: 4, Friday: 5, Saturday: 6 };
-
-    return (Array.isArray(schedules) ? schedules : [])
-      .filter((session) => session.reminder_minutes > 0)
-      .map((session) => {
-        const sessionDayIdx = dayMap[session.day_of_week] ?? -1;
-        let daysUntil = sessionDayIdx - now.getDay();
-        if (daysUntil < 0) daysUntil += 7;
-        const [hours, minutes] = (session.start_time || '00:00').split(':').map(Number);
-        const sessionDate = new Date(now);
-        sessionDate.setDate(now.getDate() + daysUntil);
-        sessionDate.setHours(hours, minutes, 0, 0);
-        const reminderTime = new Date(sessionDate.getTime() - (session.reminder_minutes || 0) * 60000);
-        const msUntilReminder = reminderTime.getTime() - now.getTime();
-        return { session, sessionDate, reminderTime, msUntilReminder, daysUntil };
-      })
-      .filter((reminder) => reminder.msUntilReminder > 0)
-      .sort((a, b) => a.msUntilReminder - b.msUntilReminder)
-      .slice(0, 4)
-      .map((reminder) => {
-        const label = reminder.daysUntil === 0 ? 'Today' : reminder.daysUntil === 1 ? 'Tomorrow' : reminder.session.day_of_week;
-        return {
-          id: `schedule-reminder-${reminder.session.id}`,
-          type: 'schedule',
-          title: `Upcoming class reminder: ${reminder.session.title}`,
-          subtitle: `${label} at ${reminder.session.start_time}`,
-          body: `Your ${reminder.session.subject || reminder.session.title} class for ${reminder.session.class_level || 'your students'} starts soon.`,
-          createdAt: reminder.reminderTime,
-          path: '/teacher/schedule',
-          audience: 'Schedule',
-          session: reminder.session,
-        };
-      });
-  }, [role, schedules]);
-
-  const notificationItems = useMemo(() => {
-    const chatItem = unreadChatMessages.length > 0 ? [{
-      id: 'chat-notification',
-      type: 'chat',
-      title: `${unreadChatMessages.length} new teacher chat ${unreadChatMessages.length === 1 ? 'message' : 'messages'}`,
-      subtitle: `Latest from ${unreadChatMessages[0].sender_name || unreadChatMessages[0].sender_email}`,
-      body: unreadChatMessages[0].message || 'Open the collaboration chat to reply.',
-      createdAt: parseMessageDate(unreadChatMessages[0]) || new Date(),
-      path: '/teacher/collaboration',
-    }] : [];
-
-    const announcementItems = filteredAnnouncements.map((announcement) => ({
-      id: `announcement-${announcement.id}`,
-      type: 'announcement',
-      title: announcement.title || 'New announcement',
-      subtitle: announcement.teacherEmail || 'Administration',
-      body: announcement.body || announcement.message || 'No description available.',
-      createdAt: new Date(announcement.createdAt || announcement.created_at || Date.now()),
-      path: announcement.link || (role === 'teacher' ? '/teacher/announcements' : '/notifications'),
-      audience: ((announcement.targetAudience || announcement.target_audience) || 'all').toString(),
-      announcement,
-    }));
-
-    return [...chatItem, ...announcementItems, ...discussionItems, ...scheduledReminderItems].sort((a, b) => b.createdAt - a.createdAt);
-  }, [filteredAnnouncements, role, unreadChatMessages, discussionItems, scheduledReminderItems]);
-
-  const handleNotificationOpen = (item) => {
-    if (!user?.email) return;
-
-    if (item.type === 'announcement' && item.announcement?.id) {
-      markNotificationsAsRead(user.email, [item.announcement.id], user?.role);
-      return;
-    }
-
-    if (item.type === 'discussion') {
-      const discussionId = item.id?.toString().replace('discussion-', '');
-      if (discussionId) {
-        markDiscussionThreadsAsRead(user.email, [discussionId], user?.role);
-      }
-      return;
-    }
-
-    if (item.type === 'chat') {
-      const latestUnread = unreadChatMessages[0];
-      const latestDate = latestUnread ? parseMessageDate(latestUnread) : null;
-      if (latestDate) {
-        markChatMessagesAsSeen(user.email, 'general', latestDate, user?.role);
-      }
-    }
-  };
+  const summary = useMemo(() => ({
+    total: items.length,
+    urgent: items.filter((i) => i.urgent).length,
+    exams: items.filter((i) => i.type === "exam").length,
+    resources: items.filter((i) => i.type === "resource").length,
+    messages: items.filter((i) => i.type === "message").length,
+  }), [items]);
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 py-8">
-      <div className={`rounded-3xl p-6 mb-8 shadow-lg ${isTeacherPage ? 'bg-gradient-to-r from-blue-700 via-blue-600 to-cyan-500 text-white' : 'bg-primary/10 text-primary'} `}>
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-          <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-4 py-2 text-sm font-semibold shadow-sm backdrop-blur-sm">
-              <Bell className="h-4 w-4" /> {pageTitle}
-            </div>
-            <h1 className="mt-5 text-3xl font-bold leading-tight">{pageTitle}</h1>
-            <p className="mt-3 max-w-2xl text-sm leading-7 opacity-90">{pageSubtitle}</p>
-            {lastRefreshed && (
-              <p className="mt-4 text-xs opacity-80">
-                Last refreshed at {lastRefreshed.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
-              </p>
-            )}
-          </div>
-          <Link
-            to={isTeacherPage ? '/teacher' : '/'}
-            className={`inline-flex items-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold transition ${isTeacherPage ? 'bg-white text-slate-900 shadow-lg shadow-black/10 hover:bg-slate-100' : 'border border-border bg-card text-foreground hover:border-primary hover:text-primary'}`}
-          >
-            <Calendar className="h-4 w-4" /> {isTeacherPage ? 'Back to teacher dashboard' : 'Back to home'}
-          </Link>
-        </div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
 
-        {isTeacherPage && (
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            <div className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.16em] text-white/80">Total alerts</p>
-              <p className="mt-3 text-3xl font-bold">{notificationItems.length}</p>
+        {/* Hero header */}
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-blue-600 to-accent p-6 sm:p-8 text-white">
+          <div className="absolute inset-0 pointer-events-none">
+            <div className="absolute -top-12 -right-12 w-48 h-48 rounded-full bg-white/10" />
+            <div className="absolute -bottom-8 -left-8 w-32 h-32 rounded-full bg-white/5" />
+          </div>
+          <div className="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <div className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold mb-3">
+                <Bell className="h-3.5 w-3.5" /> Notification Centre
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-heading font-bold">Your Notifications</h1>
+              <p className="mt-1 text-white/70 text-sm">Stay on top of exams, resources and study sessions.</p>
             </div>
-            <div className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.16em] text-white/80">Announcements</p>
-              <p className="mt-3 text-3xl font-bold">{notificationItems.filter((item) => item.type === 'announcement').length}</p>
-            </div>
-            <div className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.16em] text-white/80">Chat updates</p>
-              <p className="mt-3 text-3xl font-bold">{notificationItems.filter((item) => item.type === 'chat').length}</p>
-            </div>
-            <div className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.16em] text-white/80">Discussion threads</p>
-              <p className="mt-3 text-3xl font-bold">{notificationItems.filter((item) => item.type === 'discussion').length}</p>
-            </div>
-            <div className="rounded-3xl border border-white/20 bg-white/10 p-5 shadow-sm">
-              <p className="text-xs uppercase tracking-[0.16em] text-white/80">Schedule reminders</p>
-              <p className="mt-3 text-3xl font-bold">{notificationItems.filter((item) => item.type === 'schedule').length}</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-5 gap-3 shrink-0">
+              {[
+                { label: "Total", value: summary.total },
+                { label: "Urgent", value: summary.urgent },
+                { label: "Exams", value: summary.exams },
+                { label: "Resources", value: summary.resources },
+                { label: "Messages", value: summary.messages },
+              ].map(({ label, value }) => (
+                <div key={label} className="rounded-xl bg-white/15 backdrop-blur-sm px-4 py-3 text-center">
+                  <p className="text-xl font-heading font-bold">{value}</p>
+                  <p className="text-[10px] text-white/70 uppercase tracking-wide mt-0.5">{label}</p>
+                </div>
+              ))}
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {loading ? (
-        <div className="rounded-3xl border border-border bg-card p-10 text-center text-sm text-muted-foreground">
-          Loading notifications…
+        {/* Filter tabs */}
+        <div className="flex gap-2 overflow-x-auto pb-1">
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                filter === f ? "bg-primary text-primary-foreground border-primary" : "bg-card text-muted-foreground border-border hover:text-foreground"
+              }`}
+            >{f}</button>
+          ))}
+          <div className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+            <CheckCheck className="h-3.5 w-3.5" />
+            {filtered.length} notifications
+          </div>
         </div>
-      ) : error ? (
-        <div className="rounded-3xl border border-rose-200 bg-rose-50 p-8 text-sm text-rose-700">
-          {error}
-        </div>
-      ) : notificationItems.length === 0 ? (
-        <div className={`rounded-3xl border p-10 text-center text-sm transition ${isTeacherPage ? 'border-blue-100 bg-blue-50 text-slate-900' : 'border-border bg-card text-muted-foreground'}`}>
-          <Megaphone className={`mx-auto mb-3 h-10 w-10 ${isTeacherPage ? 'text-blue-600' : 'text-primary'}`} />
-          <p className="font-medium text-foreground">No notifications right now.</p>
-          <p className="mt-2">Check back later for announcements and collaboration updates.</p>
-        </div>
-      ) : (
-        <div className="space-y-4">
-          {notificationItems.map((item) => {
-            const isOpen = expandedItemId === item.id;
-            return (
-              <article key={item.id} className={`rounded-3xl border p-6 shadow-sm transition ${isTeacherPage ? 'border-blue-100 bg-white hover:shadow-lg' : 'border-border bg-card'}`}>
-                <div className="flex flex-col gap-4">
+
+        {/* List */}
+        {loading ? (
+          <div className="bg-card border rounded-2xl p-12 text-center text-muted-foreground">
+            <div className="w-7 h-7 border-4 border-border border-t-primary rounded-full animate-spin mx-auto mb-3" />
+            Loading notifications…
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="bg-card border rounded-2xl p-12 text-center">
+            <Megaphone className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+            <p className="font-medium">No notifications</p>
+            <p className="text-sm text-muted-foreground mt-1">Nothing to show for this filter.</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((item) => {
+              const cfg = TYPE_CONFIG[item.type];
+              const Icon = cfg.icon;
+              const isOpen = expanded === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  className={`bg-card border rounded-2xl overflow-hidden transition-all duration-200 hover:shadow-md ${item.urgent ? "border-rose-300 ring-1 ring-rose-200" : ""}`}
+                >
                   <button
-                    type="button"
-                    onClick={() => toggleExpandedItem(item.id)}
-                    className="flex w-full items-center justify-between gap-4 text-left"
-                    aria-expanded={isOpen}
+                    onClick={() => setExpanded(isOpen ? null : item.id)}
+                    className="w-full flex items-center gap-4 p-4 text-left"
                   >
-                    <div className="flex items-center gap-3 min-w-0">
-                      {item.type === 'chat' ? (
-                        <MessageSquare className="w-5 h-5 text-emerald-600" />
-                      ) : item.type === 'discussion' ? (
-                        <Megaphone className="w-5 h-5 text-amber-600" />
-                      ) : item.type === 'schedule' ? (
-                        <Calendar className="w-5 h-5 text-slate-600" />
-                      ) : (
-                        <Bell className="w-5 h-5 text-blue-600" />
-                      )}
-                      <div className="min-w-0">
-                        <h2 className="text-xl font-semibold text-slate-900 truncate">{item.title}</h2>
-                        <p className="text-xs text-slate-500 mt-1">
-                          {item.createdAt.toLocaleDateString()}
-                        </p>
-                      </div>
+                    {/* Icon */}
+                    <div className={`w-10 h-10 rounded-xl ${cfg.color} flex items-center justify-center shrink-0`}>
+                      <Icon className="h-4.5 w-4.5 text-white" />
                     </div>
-                    <ChevronDown className={`h-5 w-5 text-slate-500 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <p className="text-sm font-semibold font-heading truncate">{item.title}</p>
+                        {item.urgent && (
+                          <Badge variant="outline" className="text-[10px] px-1.5 py-0 bg-rose-50 text-rose-700 border-rose-200 border shrink-0">Urgent</Badge>
+                        )}
+                        <Badge variant="outline" className={`text-[10px] px-1.5 py-0 border shrink-0 ${cfg.badge}`}>{cfg.label}</Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">{item.subtitle} · {formatDate(item.date)}</p>
+                    </div>
+
+                    <ChevronDown className={`h-4 w-4 text-muted-foreground shrink-0 transition-transform ${isOpen ? "rotate-180" : ""}`} />
                   </button>
 
                   {isOpen && (
-                    <div className="space-y-4 pt-4 border-t border-border/70">
-                      <div className="flex flex-wrap items-center gap-3">
-                        <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold uppercase text-blue-700">
-                          {item.type === 'chat' ? 'Chat' : item.audience || 'All'}
-                        </span>
-                        <span className="text-sm text-slate-500">{item.subtitle}</span>
-                      </div>
-                      <p className="text-sm leading-7 text-slate-700">{item.body}</p>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <Link
-                          to={item.path}
-                          onClick={() => handleNotificationOpen(item)}
-                          className="inline-flex items-center justify-center rounded-full bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700 transition-colors"
+                    <div className="px-4 pb-4 pt-0 border-t border-border/60">
+                      <p className="text-sm text-muted-foreground leading-relaxed mt-3">{item.body}</p>
+                      {item.url && (
+                        <a
+                          href={item.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1.5 mt-3 text-xs font-semibold text-primary hover:underline"
                         >
-                          {item.type === 'chat'
-                            ? 'Open collaboration'
-                            : item.type === 'discussion'
-                            ? 'Open discussion'
-                            : item.type === 'schedule'
-                            ? 'Open schedule'
-                            : 'Open announcement'}
-                        </Link>
-                      </div>
+                          Open Resource →
+                        </a>
+                      )}
                     </div>
                   )}
                 </div>
-              </article>
-            );
-          })}
-        </div>
-      )}
+              );
+            })}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

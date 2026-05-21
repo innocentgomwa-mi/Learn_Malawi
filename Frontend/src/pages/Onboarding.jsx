@@ -57,53 +57,82 @@ export default function Onboarding() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center bg-primary rounded-2xl p-3 mb-4">
-            <GraduationCap className="h-10 w-10 text-primary-foreground" />
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center filter blur-sm"
+        style={{ backgroundImage: "url('/images/forgot%20password.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-slate-950/25" />
+
+      <div className="relative w-full max-w-2xl">
+        <div className="flex justify-center mb-[-2.5rem] relative z-10">
+          <div
+            className="h-24 w-20 rounded-3xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(180,180,255,0.45) 0%, rgba(130,100,220,0.55) 100%)',
+              boxShadow: '0 0 32px 8px rgba(130,100,255,0.35), inset 0 1px 1px rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.25)',
+            }}
+          >
+            <GraduationCap className="h-10 w-10 text-white/90" />
           </div>
-          <h1 className="font-poppins text-3xl font-bold text-foreground mb-2">Welcome to Learn Malawi!</h1>
-          <p className="text-muted-foreground">
-            Hi {user?.firstName || 'there'}, tell us who you are to get started.
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
-          {roles.map(({ id, icon: Icon, title, desc, color, activeColor }) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setSelected(/** @type {'student' | 'teacher'} */ (id))}
-              className={`relative text-left border-2 rounded-2xl p-6 transition-all ${color} ${selected === id ? activeColor : 'border-border hover:border-primary/50'}`}
-            >
-              {selected === id && (
-                <CheckCircle className="absolute top-4 right-4 h-5 w-5 text-primary" />
-              )}
-              <Icon className={`h-10 w-10 mb-4 ${id === 'student' ? 'text-emerald-600' : 'text-blue-600'}`} />
-              <h2 className="font-poppins font-bold text-xl text-foreground mb-2">{title}</h2>
-              <p className="text-sm text-muted-foreground leading-relaxed">{desc}</p>
-            </button>
-          ))}
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-            {error}
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={handleContinue}
-          disabled={!selected || saving}
-          className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground font-semibold py-3.5 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-40 disabled:cursor-not-allowed"
+        <div
+          className="rounded-3xl px-8 pt-14 pb-8"
+          style={{
+            background: 'rgba(100, 80, 180, 0.25)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            boxShadow: '0 8px 48px rgba(0,0,0,0.3)',
+          }}
         >
-          {saving ? 'Setting up your account…' : 'Continue'}
-          {!saving && <ChevronRight className="h-5 w-5" />}
-        </button>
+          <div className="text-center mb-7">
+            <h1 className="text-2xl font-bold text-white mb-3">Welcome to Learn Malawi</h1>
+            <p className="text-white/65 text-sm leading-relaxed">
+              Hi {user?.firstName || 'there'}, choose your role and finish setting up your account.
+            </p>
+          </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">You can always update this in your profile settings.</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+            {roles.map(({ id, icon: Icon, title, desc, color, activeColor }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => setSelected(/** @type {'student' | 'teacher'} */ (id))}
+                className={`relative text-left rounded-3xl p-6 transition-all border-2 ${selected === id ? activeColor : 'border-white/10 hover:border-white/30'} ${color}`}
+              >
+                {selected === id && (
+                  <CheckCircle className="absolute top-4 right-4 h-5 w-5 text-white" />
+                )}
+                <Icon className={`h-10 w-10 mb-4 ${id === 'student' ? 'text-emerald-700' : 'text-blue-700'}`} />
+                <h2 className="font-poppins font-bold text-xl text-slate-950 mb-2">{title}</h2>
+                <p className="text-sm text-slate-700 leading-relaxed">{desc}</p>
+              </button>
+            ))}
+          </div>
+
+          {error && (
+            <div className="mb-5 rounded-2xl bg-rose-500/20 border border-rose-400/30 px-4 py-3 text-sm text-rose-200 text-center">
+              {error}
+            </div>
+          )}
+
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={!selected || saving}
+            className="w-full flex items-center justify-center gap-2 rounded-full py-3.5 text-sm font-bold text-slate-900 transition hover:opacity-90 disabled:opacity-60"
+            style={{ background: 'linear-gradient(90deg, #00e5cc, #00cfff)' }}
+          >
+            {saving ? 'Setting up your account…' : 'Continue'}
+            {!saving && <ChevronRight className="h-5 w-5" />}
+          </button>
+
+          <p className="mt-6 text-center text-xs text-white/70">You can always update this in your profile settings.</p>
+        </div>
       </div>
     </div>
   );

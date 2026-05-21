@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { GraduationCap, Plus, Search, Trash2 } from "lucide-react";
+import { GraduationCap, Plus, Search, Trash2, Ban, CheckCircle } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { apiClient } from "@/api/apiClient";
+import { toast } from "@/components/ui/use-toast";
 
 const LEVEL_COLORS = {
   PSLC: "bg-blue-100 text-blue-700",
@@ -19,13 +20,16 @@ const LEVEL_COLORS = {
   MSCE: "bg-green-100 text-green-700",
 };
 
-const getTeacherName = (teacher) =>
-  teacher.full_name || [teacher.firstName, teacher.lastName].filter(Boolean).join(' ') || teacher.email;
+const getTeacherName = (teacher) => {
+  if (!teacher) return "";
+  return teacher.full_name || [teacher.firstName, teacher.lastName].filter(Boolean).join(' ') || teacher.email || "";
+};
 
 export default function ManageTeachers() {
   const [search, setSearch] = useState("");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", school: "", level: "JCE", password: "" });
+  const [deleteTeacher, setDeleteTeacher] = useState(null);
   const qc = useQueryClient();
 
   const { data: teachers = [], isLoading } = useQuery({
@@ -42,9 +46,42 @@ export default function ManageTeachers() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }) => apiClient.entities.Teacher.update(id, data),
+    onSuccess: (data, variables) => {
+      qc.invalidateQueries({ queryKey: ["teachers"] });
+      toast({
+        title: variables.data.is_active === false ? "Teacher suspended" : "Teacher reactivated",
+        description:
+          variables.data.is_active === false
+            ? "The teacher account is now suspended and cannot sign in."
+            : "The teacher account is now active again.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Update failed",
+        description: error?.message || "Unable to change teacher status.",
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => apiClient.entities.Teacher.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["teachers"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["teachers"] });
+      toast({
+        title: "Teacher deleted",
+        description: "The teacher account and any associated content have been removed.",
+      });
+      setDeleteTeacher(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error?.message || "Unable to delete this teacher.",
+      });
+    },
   });
 
   const filtered = teachers.filter((teacher) => {
@@ -111,18 +148,31 @@ export default function ManageTeachers() {
                 </div>
 
                 <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100">
-                  <div className="flex gap-3 text-xs text-gray-500">
+                  <div className="flex gap-3 text-xs text-gray-500 items-center">
                     <span>{teacher.createdAt ? new Date(teacher.createdAt).toLocaleDateString() : "Joined"}</span>
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${LEVEL_COLORS[teacher.level] || "bg-slate-100 text-slate-600"}`}>
                       {teacher.level || "Level not set"}
+                    </span>
+                    <span className={`text-xs px-2 py-1 rounded-full font-medium ${teacher.is_active !== false ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
+                      {teacher.is_active !== false ? "Active" : "Suspended"}
                     </span>
                   </div>
                   <div className="flex gap-1">
                     <Button
                       size="sm"
                       variant="outline"
+                      className={`h-7 text-xs ${teacher.is_active !== false ? "text-amber-500 border-amber-200 hover:bg-amber-50" : "text-emerald-500 border-emerald-200 hover:bg-emerald-50"}`}
+                      onClick={() => updateMutation.mutate({ id: teacher.id, data: { is_active: teacher.is_active !== false ? false : true } })}
+                      disabled={updateMutation.isLoading}
+                    >
+                      {teacher.is_active !== false ? <Ban className="w-3 h-3" /> : <CheckCircle className="w-3 h-3" />}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
                       className="h-7 text-xs text-red-500 border-red-200 hover:bg-red-50"
-                      onClick={() => deleteMutation.mutate(teacher.id)}
+                      onClick={() => setDeleteTeacher(teacher)}
+                      disabled={deleteMutation.isLoading}
                     >
                       <Trash2 className="w-3 h-3" />
                     </Button>
@@ -133,6 +183,35 @@ export default function ManageTeachers() {
           ))}
         </div>
       )}
+
+      <Dialog open={!!deleteTeacher} onOpenChange={() => setDeleteTeacher(null)}>
+        <DialogContent className="max-w-lg rounded-3xl bg-sky-600 text-white shadow-2xl ring-1 ring-sky-500/30">
+          <DialogHeader>
+            <DialogTitle>Confirm teacher deletion</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-3 text-sm">
+            <p>
+              Are you sure you want to delete <span className="font-semibold">{getTeacherName(deleteTeacher)}</span>?
+            </p>
+            <p className="text-sky-100/90">
+              Deleting a teacher will remove their account, access rights, and any published content or assignments permanently.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-white/40 text-white hover:border-white hover:bg-white/10" onClick={() => setDeleteTeacher(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-white text-sky-700 hover:bg-slate-100"
+              onClick={() => deleteTeacher && deleteMutation.mutate(deleteTeacher.id)}
+              disabled={deleteMutation.isLoading}
+            >
+              Delete teacher
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent>

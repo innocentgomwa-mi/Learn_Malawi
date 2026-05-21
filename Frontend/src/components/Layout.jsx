@@ -36,8 +36,9 @@ export default function Layout() {
     : 'Account';
 
   const closeMenu = () => setMobileOpen(false);
-  const hideTopNav = location.pathname.startsWith('/teacher');
-  const hideFooter = isTeacher && location.pathname.startsWith('/teacher');
+  const authPathsWithoutNav = ['/login', '/register', '/forgot-password', '/onboarding', '/welcome'];
+  const hideTopNav = location.pathname.startsWith('/teacher') || authPathsWithoutNav.includes(location.pathname);
+  const hideFooter = (isTeacher && location.pathname.startsWith('/teacher')) || authPathsWithoutNav.includes(location.pathname);
   const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes', '/learning-paths'].some((path) => location.pathname.startsWith(path));
   const communityActive = ['/achievements', '/study-groups', '/discussions'].some((path) => location.pathname.startsWith(path));
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
@@ -721,7 +722,7 @@ export default function Layout() {
       <OfflineBanner />
 
       {/* AI Tutor floating widget */}
-      {!isTeacher && <AiTutor />}
+      {!isTeacher && !authPathsWithoutNav.includes(location.pathname) && <AiTutor />}
     </div>
   );
 }

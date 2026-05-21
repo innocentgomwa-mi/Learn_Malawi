@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, FileText, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
 import { apiClient } from "@/api/apiClient";
 
 const STATUS_COLORS = {
@@ -26,8 +27,17 @@ const TYPE_LABELS = {
   career_resource: "Career Resource",
 };
 
+const RESOURCE_DELETE_MAP = {
+  study_notes: ({ id }) => apiClient.entities.StudyNote.delete(id),
+  tutorial: ({ id }) => apiClient.entities.Tutorial.delete(id),
+  past_paper: ({ id }) => apiClient.entities.PastPaper.delete(id),
+  quiz: ({ id }) => apiClient.entities.Quiz.delete(id),
+  career_resource: ({ id }) => apiClient.entities.CareerResource.delete(id),
+};
+
 const normalizeResource = (item, type) => ({
   id: `${type}-${item.id}`,
+  originalId: item.id,
   title: item.title || item.name || `${TYPE_LABELS[type] || type} resource`,
   subject: item.subject || 'General',
   level: item.level || item.class || item.grade || 'All levels',
@@ -43,6 +53,33 @@ const normalizeResource = (item, type) => ({
 export default function PostApprovals() {
   const [filterType, setFilterType] = useState("all");
   const [selectedPost, setSelectedPost] = useState(null);
+  const [resourceToDelete, setResourceToDelete] = useState(null);
+  const queryClient = useQueryClient();
+
+  const deleteResourceMutation = useMutation({
+    mutationFn: async (resource) => {
+      const deleteFn = RESOURCE_DELETE_MAP[resource.resourceType];
+      if (!deleteFn) {
+        throw new Error(`Delete not supported for resource type: ${resource.resourceType}`);
+      }
+      return deleteFn({ id: resource.originalId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["published-resources"]);
+      toast({
+        title: "Resource deleted",
+        description: "The published resource has been removed successfully.",
+      });
+      setSelectedPost(null);
+      setResourceToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error?.message || 'Unable to delete this resource.',
+      });
+    },
+  });
 
   const { data: allResources = {}, isLoading } = useQuery({
     queryKey: ["published-resources"],
@@ -142,6 +179,14 @@ export default function PostApprovals() {
                     <Button size="sm" variant="outline" onClick={() => setSelectedPost(resource)}>
                       <Eye className="w-3.5 h-3.5 mr-1" /> View
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => setResourceToDelete(resource)}
+                      disabled={deleteResourceMutation.isLoading}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -189,6 +234,36 @@ export default function PostApprovals() {
           )}
           <DialogFooter className="gap-2">
             <Button variant="outline" onClick={() => setSelectedPost(null)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!resourceToDelete} onOpenChange={() => setResourceToDelete(null)}>
+        <DialogContent className="max-w-lg rounded-3xl bg-sky-600 text-white shadow-2xl ring-1 ring-sky-500/30">
+          <DialogHeader>
+            <DialogTitle>Confirm deletion</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-3 text-sm">
+            <p className="text-slate-100">
+              Are you sure you want to delete the published resource
+              <span className="font-semibold"> "{resourceToDelete?.title}"</span>?
+            </p>
+            <p className="text-sky-100/90">
+              This action will remove the resource permanently from the published list.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-white/40 text-white hover:border-white hover:bg-white/10" onClick={() => setResourceToDelete(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-white text-sky-700 hover:bg-slate-100"
+              onClick={() => resourceToDelete && deleteResourceMutation.mutate(resourceToDelete)}
+              disabled={deleteResourceMutation.isLoading}
+            >
+              Delete resource
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

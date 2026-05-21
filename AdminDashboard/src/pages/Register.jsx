@@ -57,7 +57,7 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 px-4 py-8">
+    <div className="min-h-screen flex items-center justify-center px-4 py-8" style={{ background: 'linear-gradient(180deg, #0f172a 0%, #0c4a6e 45%, #2563eb 100%)' }}>
       <div className="w-full max-w-xl bg-white rounded-3xl border border-slate-200 p-10 shadow-xl">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-semibold text-slate-900">Register as Admin</h1>
@@ -73,7 +73,7 @@ export default function RegisterPage() {
                 value={firstName}
                 onChange={(event) => setFirstName(event.target.value)}
                 required
-                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
               />
             </div>
             <div>
@@ -83,7 +83,7 @@ export default function RegisterPage() {
                 value={lastName}
                 onChange={(event) => setLastName(event.target.value)}
                 required
-                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+                className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
               />
             </div>
           </div>
@@ -95,7 +95,7 @@ export default function RegisterPage() {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               required
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
@@ -107,7 +107,7 @@ export default function RegisterPage() {
               onChange={(event) => setPassword(event.target.value)}
               required
               minLength={6}
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
@@ -119,7 +119,7 @@ export default function RegisterPage() {
               onChange={(event) => setConfirmPassword(event.target.value)}
               required
               minLength={6}
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
             />
           </div>
 
@@ -130,9 +130,9 @@ export default function RegisterPage() {
               value={secretKey}
               onChange={(event) => setSecretKey(event.target.value)}
               required
-              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-slate-400 focus:outline-none"
+              className="mt-2 w-full rounded-2xl border border-slate-300 bg-slate-50 px-4 py-3 text-slate-900 focus:border-sky-400 focus:outline-none"
             />
-            <p className="mt-2 text-xs text-slate-500">Enter the admin registration secret key to complete signup.</p>
+            <p className="mt-2 text-xs text-slate-300">Enter the admin registration secret key to complete signup.</p>
           </div>
 
           <div className="flex items-start rounded-2xl border border-slate-300 bg-slate-50 p-4">
@@ -156,7 +156,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={isSubmitting}
-            className="w-full rounded-2xl bg-slate-900 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-700 disabled:opacity-50"
+            className="w-full rounded-2xl bg-blue-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-blue-400 disabled:opacity-50"
           >
             {isSubmitting ? 'Registering…' : 'Register as Admin'}
           </button>

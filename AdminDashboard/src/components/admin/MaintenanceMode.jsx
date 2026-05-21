@@ -12,6 +12,7 @@ export default function MaintenanceMode() {
   const qc = useQueryClient();
   const { isAuthenticated } = useAuth();
   const [message, setMessage] = useState("We are performing scheduled maintenance. We'll be back shortly.");
+  const [downTime, setDownTime] = useState("");
 
   const { data: settings = [] } = useQuery({
     queryKey: ["system-settings"],
@@ -22,12 +23,16 @@ export default function MaintenanceMode() {
   const maintenanceSetting = settings.find(s => s.key === "maintenance_mode");
   const isMaintenanceOn = maintenanceSetting?.value === "true";
   const storedMessage = settings.find(s => s.key === "maintenance_message")?.value;
+  const storedDownTime = settings.find(s => s.key === "maintenance_downtime")?.value;
 
   useEffect(() => {
     if (storedMessage) {
       setMessage(storedMessage);
     }
-  }, [storedMessage]);
+    if (storedDownTime) {
+      setDownTime(storedDownTime);
+    }
+  }, [storedMessage, storedDownTime]);
 
   const toggle = useMutation({
     mutationFn: async () => {
@@ -49,6 +54,18 @@ export default function MaintenanceMode() {
         await apiClient.entities.SystemSettings.update(existing.id, { value: message });
       } else {
         await apiClient.entities.SystemSettings.create({ key: "maintenance_message", value: message, description: "Maintenance page message" });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["system-settings"] }),
+  });
+
+  const saveDowntime = useMutation({
+    mutationFn: async () => {
+      const existing = settings.find(s => s.key === "maintenance_downtime");
+      if (existing) {
+        await apiClient.entities.SystemSettings.update(existing.id, { value: downTime });
+      } else {
+        await apiClient.entities.SystemSettings.create({ key: "maintenance_downtime", value: downTime, description: "Maintenance estimated downtime" });
       }
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["system-settings"] }),
@@ -113,6 +130,24 @@ export default function MaintenanceMode() {
         </CardContent>
       </Card>
 
+      {isMaintenanceOn && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Estimated Downtime</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-500">Tell users how long maintenance is expected to last.</p>
+            <Input
+              value={downTime}
+              onChange={e => setDownTime(e.target.value)}
+              placeholder="e.g. 30 minutes, until 6:00 PM"
+            />
+            <Button size="sm" onClick={() => saveDowntime.mutate()} disabled={saveDowntime.isPending}>
+              {saveDowntime.isPending ? "Saving..." : "Save Estimated Downtime"}
+            </Button>
+            {saveDowntime.isSuccess && <p className="text-xs text-green-600">Downtime saved!</p>}
+          </CardContent>
+        </Card>
+      )}
+
       {/* Preview */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">User-Facing Preview</CardTitle></CardHeader>
@@ -121,6 +156,7 @@ export default function MaintenanceMode() {
             <Wrench className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
             <h3 className="text-xl font-bold mb-2">Learn Malawi</h3>
             <p className="text-blue-200 text-sm">{message}</p>
+            {downTime && <p className="text-blue-100 text-xs mt-3">Estimated downtime: {downTime}</p>}
             <p className="text-blue-300 text-xs mt-4">Thank you for your patience.</p>
           </div>
         </CardContent>

@@ -100,8 +100,8 @@ export default function TeacherStudents() {
   };
 
   return (
-    <div className="px-6 py-8 animate-fade-in">
-      <div className="mx-auto max-w-6xl space-y-6">
+    <div className="w-full px-6 py-8 animate-fade-in">
+      <div className="w-full space-y-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Students</h1>
           <p className="text-muted-foreground text-sm mt-1">Students registered in your study groups appear below.</p>
