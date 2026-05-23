@@ -28,8 +28,6 @@ const TimePicker = React.forwardRef(({ value, onChange, className, ...props }, r
     setSelectedHour(h ?? new Date().getHours())
   }, [value])
 
-  const minutes = [0, 15, 30, 45]
-
   const handlePick = (h, m) => {
     const formatted = formatTime(h, m)
     onChange && onChange(formatted)
@@ -49,8 +47,8 @@ const TimePicker = React.forwardRef(({ value, onChange, className, ...props }, r
         />
       </PopoverTrigger>
       <PopoverContent className="w-auto p-3">
-        <div className="flex flex-col gap-3">
-          <div className="grid grid-cols-6 gap-2 max-h-40 overflow-y-auto">
+        <div className="flex gap-4">
+          <div className="grid grid-cols-3 gap-2 max-h-56 overflow-y-auto w-32">
             {Array.from({ length: 24 }).map((_, i) => (
               <button
                 key={i}
@@ -62,23 +60,25 @@ const TimePicker = React.forwardRef(({ value, onChange, className, ...props }, r
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
-            {minutes.map((m) => (
+          <div className="grid grid-cols-6 gap-2 max-h-56 overflow-y-auto w-48">
+            {Array.from({ length: 60 }).map((_, m) => (
               <button
                 key={m}
                 type="button"
                 onClick={() => handlePick(selectedHour ?? new Date().getHours(), m)}
-                className="px-3 py-2 rounded bg-secondary/5 hover:bg-secondary">
+                className="px-2 py-1 rounded text-sm hover:bg-muted">
                 {pad(m)}
               </button>
             ))}
-            <button
-              type="button"
-              onClick={() => handlePick(new Date().getHours(), new Date().getMinutes())}
-              className="ml-auto px-3 py-2 rounded hover:bg-muted">
-              Now
-            </button>
           </div>
+        </div>
+        <div className="flex justify-end mt-2">
+          <button
+            type="button"
+            onClick={() => handlePick(new Date().getHours(), new Date().getMinutes())}
+            className="px-3 py-2 rounded hover:bg-muted">
+            Now
+          </button>
         </div>
       </PopoverContent>
     </Popover>
