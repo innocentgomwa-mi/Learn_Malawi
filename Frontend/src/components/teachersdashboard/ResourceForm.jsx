@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { X, CalendarDays } from "lucide-react";
+import { DatePicker } from "@/components/ui/date-picker";
 
 export default function ResourceForm({ fields, initial = {}, onSave, onCancel, title }) {
   const [data, setData] = useState(initial);
@@ -56,47 +57,13 @@ export default function ResourceForm({ fields, initial = {}, onSave, onCancel, t
                   // For datetime/date inputs: prevent manual typing and open native picker on focus/click
                   if (type === "date" || type === "datetime-local" || type === "time") {
                     commonProps.id = `input-${key}`;
-                    // For the scheduled_date field show a calendar button next to the input
-                    if (key === 'scheduled_date') {
+                    if (type === "date") {
                       return (
-                        <div className="flex items-center gap-2">
-                          <input
-                            {...commonProps}
-                            type={type}
-                            onChange={(e) => handle(key, e.target.value)}
-                            onKeyDown={(e) => e.preventDefault()}
-                            inputMode="none"
-                            readOnly
-                            onFocus={(e) => { if (e.target.showPicker) e.target.showPicker(); }}
-                            onClick={(e) => { if (e.target.showPicker) e.target.showPicker(); }}
-                            className={commonProps.className + " flex-1"}
-                          />
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const el = document.getElementById('input-scheduled_date');
-                              if (!el) return;
-                              // Prefer showPicker when available
-                              if (el.showPicker) {
-                                try { el.showPicker(); el.focus(); } catch (e) { el.focus(); }
-                                return;
-                              }
-                              // Fallback: temporarily make editable and click/focus
-                              const prevReadOnly = el.readOnly;
-                              try {
-                                el.readOnly = false;
-                                if (el.click) el.click();
-                                el.focus();
-                              } finally {
-                                el.readOnly = prevReadOnly;
-                              }
-                            }}
-                            className="inline-flex items-center gap-2 px-3 py-2 border border-border rounded-lg text-sm text-foreground hover:bg-muted"
-                            title="Open calendar"
-                          >
-                            <CalendarDays className="w-4 h-4" />
-                          </button>
-                        </div>
+                        <DatePicker
+                          value={data[key] || ""}
+                          onChange={(val) => handle(key, val)}
+                          className={commonProps.className + " flex-1"}
+                        />
                       );
                     }
 
