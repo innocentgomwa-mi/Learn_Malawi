@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { X, CalendarDays } from "lucide-react";
 import { DatePicker } from "@/components/ui/date-picker";
+import { TimePicker } from "@/components/ui/time-picker";
 
 export default function ResourceForm({ fields, initial = {}, onSave, onCancel, title }) {
   const [data, setData] = useState(initial);
@@ -67,7 +68,17 @@ export default function ResourceForm({ fields, initial = {}, onSave, onCancel, t
                       );
                     }
 
-                    // For other date/time fields (e.g., scheduled_time) keep read-only picker behavior
+                    if (type === "time") {
+                      return (
+                        <TimePicker
+                          value={data[key] || ""}
+                          onChange={(val) => handle(key, val)}
+                          className={commonProps.className + " flex-1"}
+                        />
+                      );
+                    }
+
+                    // For other date/time fields (e.g., datetime-local) keep read-only picker behavior
                     return (
                       <input
                         {...commonProps}
