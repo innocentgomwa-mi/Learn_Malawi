@@ -16,13 +16,20 @@
  * }} LoginResult
  *
  * @typedef {{
+ *   key: string,
+ *   value: string,
+ *   label?: string,
+ *   description?: string,
+ * }} AppPublicSetting
+ *
+ * @typedef {{
  *   user: User | null,
  *   isAuthenticated: boolean,
  *   isLoadingAuth: boolean,
  *   isLoadingPublicSettings: boolean,
  *   loading: boolean,
- *   error: string | null,
- *   appPublicSettings: any,
+ *   error: string | { type?: string, message?: string } | null,
+ *   appPublicSettings: AppPublicSetting[] | null,
  *   login: (email: string, password: string) => Promise<LoginResult>,
  *   logout: () => Promise<void>,
  *   navigateToLogin: () => void,
@@ -89,8 +96,8 @@ export function AuthProvider(props) {
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
   const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(/** @type {string | null} */ (null));
-  const [appPublicSettings, setAppPublicSettings] = useState(/** @type {any} */ (null));
+  const [error, setError] = useState(/** @type {string | { type?: string, message?: string } | null} */ (null));
+  const [appPublicSettings, setAppPublicSettings] = useState(/** @type {AppPublicSetting[] | null} */ (null));
 
   const refreshPublicSettings = async () => {
     try {

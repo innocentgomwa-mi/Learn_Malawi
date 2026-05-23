@@ -162,10 +162,25 @@ const buildEntity = (basePath) => ({
   },
 });
 
+const normalizeUserRole = (role) => {
+  if (typeof role !== 'string') return role;
+  const normalized = role.trim().toLowerCase();
+  if (normalized === 'admin') return 'Admin';
+  if (normalized === 'teacher') return 'Teacher';
+  if (normalized === 'student' || normalized === 'user') return 'Student';
+  return role;
+};
+
 const User = {
   list: async () => fetchJson('/users'),
   create: async (data) => fetchJson('/users', { method: 'POST', body: data }),
-  update: async (id, data) => fetchJson(`/users/${id}`, { method: 'PATCH', body: data }),
+  update: async (id, data) => {
+    const payload = data && typeof data === 'object' ? { ...data } : data;
+    if (payload && payload.role) {
+      payload.role = normalizeUserRole(payload.role);
+    }
+    return fetchJson(`/users/${id}`, { method: 'PATCH', body: payload });
+  },
   delete: async (id) => fetchJson(`/users/${id}`, { method: 'DELETE' }),
 };
 

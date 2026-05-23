@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
@@ -29,6 +29,75 @@ const Register = () => {
   const [registeredEmail, setRegisteredEmail] = useState('');
   const [pendingPassword, setPendingPassword] = useState('');
   const [timeLeft, setTimeLeft] = useState(60);
+  const codeLength = 6;
+  const inputRefs = useRef(/** @type {Array<HTMLInputElement | null>} */ ([]));
+  const codeDigits = Array.from({ length: codeLength }, (_, index) => verificationCode[index] || '');
+
+  /** @param {number} index */
+  const focusInput = (index) => {
+    const input = inputRefs.current[index];
+    if (input) {
+      input.focus();
+    }
+  };
+
+  /**
+   * @param {number} index
+   * @param {string} value
+   */
+  const handleCodeChange = (index, value) => {
+    const sanitized = value.replace(/\D/g, '');
+    const nextCode = verificationCode.split('');
+
+    if (sanitized) {
+      nextCode[index] = sanitized.slice(-1);
+      const updated = nextCode.join('').slice(0, codeLength);
+      setVerificationCode(updated);
+      if (index < codeLength - 1) {
+        focusInput(index + 1);
+      }
+    } else {
+      nextCode[index] = '';
+      setVerificationCode(nextCode.join(''));
+    }
+  };
+
+  /**
+   * @param {number} index
+   * @param {React.KeyboardEvent<HTMLInputElement>} event
+   */
+  const handleCodeKeyDown = (index, event) => {
+    if (event.key === 'Backspace') {
+      event.preventDefault();
+      const nextCode = verificationCode.split('');
+      if (nextCode[index]) {
+        nextCode[index] = '';
+        setVerificationCode(nextCode.join(''));
+        return;
+      }
+
+      if (index > 0) {
+        nextCode[index - 1] = '';
+        setVerificationCode(nextCode.join(''));
+        focusInput(index - 1);
+      }
+    }
+  };
+
+  /**
+   * @param {React.ClipboardEvent<HTMLInputElement>} event
+   */
+  const handleCodePaste = (event) => {
+    event.preventDefault();
+    const pasted = event.clipboardData.getData('text').replace(/\D/g, '').slice(0, codeLength);
+    if (!pasted) {
+      return;
+    }
+
+    setVerificationCode(pasted);
+    const nextIndex = Math.min(pasted.length, codeLength - 1);
+    focusInput(nextIndex);
+  };
 
   /**
    * @param {React.FormEvent<HTMLFormElement>} event
@@ -341,18 +410,30 @@ const Register = () => {
                 Code expires in <strong>{timeLeft}</strong> second{timeLeft === 1 ? '' : 's'}.
               </p>
 
-              <label className="block text-sm font-medium text-white">
-                Verification code
-                <input
-                  type="text"
-                  value={verificationCode}
-                  onChange={(event) => setVerificationCode(event.target.value)}
-                  maxLength={6}
-                  required
-                  className="mt-3 w-full rounded-full px-5 py-3.5 text-sm text-white placeholder-white/50 outline-none transition"
-                  style={{ background: 'rgba(255,255,255,0.08)', border: '1.5px solid rgba(0,220,255,0.5)' }}
-                />
-              </label>
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-white">Verification code</label>
+                <div className="grid grid-cols-6 gap-3">
+                  {codeDigits.map((digit, index) => (
+                    <input
+                      key={index}
+                      ref={(el) => (inputRefs.current[index] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={1}
+                      value={digit}
+                      onChange={(event) => handleCodeChange(index, event.target.value)}
+                      onKeyDown={(event) => handleCodeKeyDown(index, event)}
+                      onPaste={handleCodePaste}
+                      placeholder="-"
+                      required
+                      disabled={loading}
+                      className="h-14 rounded-3xl border border-white/20 bg-white/10 text-center text-sm font-semibold text-white outline-none transition focus:border-cyan-300 focus:ring-2 focus:ring-cyan-300/20"
+                      style={{ background: 'rgba(255,255,255,0.08)' }}
+                    />
+                  ))}
+                </div>
+              </div>
 
               <button
                 type="submit"

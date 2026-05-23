@@ -44,6 +44,7 @@ export default function Layout() {
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const isNotificationsPage = location.pathname === '/notifications';
   const isTeacherAnnouncementsPage = location.pathname === '/teacher/announcements';
+  const showTopNav = !hideTopNav && isAuthenticated;
 
   useEffect(() => {
     setResourcesOpen(false);
@@ -178,9 +179,9 @@ export default function Layout() {
   }, [settings?.screenReader, location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen h-screen flex flex-col">
       <div aria-live="polite" className="sr-only">{screenReaderAnnouncement}</div>
-      {!hideTopNav && (
+      {showTopNav && (
         <>
           {/* Top Nav */}
           <header className="relative bg-primary/95 text-primary-foreground sticky top-0 z-40 border-b border-primary-foreground/10 shadow-[0_25px_50px_-25px_rgba(15,23,42,0.45)] backdrop-blur-xl">
