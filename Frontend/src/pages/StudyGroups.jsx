@@ -315,6 +315,16 @@ export default function StudyGroups() {
               {activeGroup.subject} · {activeGroup.level} · {(activeGroup.members || []).length} members {isMentor && "· You are the mentor"}
               {isBanned && !isMentor && " · You were removed from this group"}
             </p>
+            {user?.role === 'Teacher' && (activeGroup.members_names || (activeGroup.members || []).length > 0) && (
+              <div className="mt-2 text-sm text-muted-foreground">
+                <div className="font-medium text-xs text-foreground mb-1">Members</div>
+                <ul className="list-disc list-inside text-sm">
+                  {(activeGroup.members_names || (activeGroup.members || [])).map((m, i) => (
+                    <li key={i}>{m}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           {isMember && (
             <div className="ml-auto">

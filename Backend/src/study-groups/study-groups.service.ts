@@ -39,13 +39,42 @@ export class StudyGroupsService {
       query.andWhere('studyGroup.mentor_email = :mentorEmail', { mentorEmail });
     }
 
-    return query.orderBy('studyGroup.createdDate', 'DESC').getMany();
+    const groups = await query.orderBy('studyGroup.createdDate', 'DESC').getMany();
+
+    // Enrich groups with member display names when available
+    const allMemberEmails = Array.from(new Set((groups || []).flatMap(g => g.members || [])));
+    if (allMemberEmails.length === 0) return groups;
+
+    const users = await this.userRepository
+      .createQueryBuilder('user')
+      .where('user.email IN (:...emails)', { emails: allMemberEmails })
+      .getMany();
+
+    const nameMap = new Map(users.map(u => [u.email, u.full_name || u.email.split('@')[0]]));
+
+    return groups.map(g => ({
+      ...g,
+      members_names: (g.members || []).map(m => nameMap.get(m) || m),
+    } as any));
   }
 
   async findOne(id: string): Promise<StudyGroup> {
     const studyGroup = await this.studyGroupRepository.findOne({ where: { id } });
     if (!studyGroup) {
       throw new NotFoundException(`Study group with ID ${id} not found`);
+    }
+    // Resolve member display names
+    const memberEmails = (studyGroup.members || []);
+    if (memberEmails.length > 0) {
+      const users = await this.userRepository
+        .createQueryBuilder('user')
+        .where('user.email IN (:...emails)', { emails: memberEmails })
+        .getMany();
+      const nameMap = new Map(users.map(u => [u.email, u.full_name || u.email.split('@')[0]]));
+      return {
+        ...studyGroup,
+        members_names: memberEmails.map(m => nameMap.get(m) || m),
+      } as any;
     }
     return studyGroup;
   }
