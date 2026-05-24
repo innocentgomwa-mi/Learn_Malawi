@@ -10,6 +10,8 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
   const { data: studyNotes = [] } = useQuery({ queryKey: ["study-notes"], queryFn: () => apiClient.entities.StudyNote.list(), refetchInterval: intervalMs });
   const { data: tutorials = [] } = useQuery({ queryKey: ["tutorials"], queryFn: () => apiClient.entities.Tutorial.list(), refetchInterval: intervalMs });
   const { data: pastPapers = [] } = useQuery({ queryKey: ["past-papers"], queryFn: () => apiClient.entities.PastPaper.list(), refetchInterval: intervalMs });
+  const { data: quizzes = [] } = useQuery({ queryKey: ["quizzes"], queryFn: () => apiClient.entities.Quiz.list(), refetchInterval: intervalMs });
+  const { data: careerResources = [] } = useQuery({ queryKey: ["career-resources"], queryFn: () => apiClient.entities.CareerResource.list(), refetchInterval: intervalMs });
   const { data: teachers = [] } = useQuery({ queryKey: ["teachers"], queryFn: () => apiClient.entities.Teacher.list(), refetchInterval: intervalMs });
   const { data: students = [] } = useQuery({ queryKey: ["students"], queryFn: () => apiClient.entities.Student.list(), refetchInterval: intervalMs });
   const { data: announcements = [] } = useQuery({ queryKey: ["announcements"], queryFn: () => apiClient.entities.Announcement.list({ published: true }), refetchInterval: intervalMs });
@@ -17,7 +19,9 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
   const publishedResourceCount = (Array.isArray(posts) ? posts.length : 0)
     + (Array.isArray(studyNotes) ? studyNotes.length : 0)
     + (Array.isArray(tutorials) ? tutorials.length : 0)
-    + (Array.isArray(pastPapers) ? pastPapers.length : 0);
+    + (Array.isArray(pastPapers) ? pastPapers.length : 0)
+    + (Array.isArray(quizzes) ? quizzes.length : 0)
+    + (Array.isArray(careerResources) ? careerResources.length : 0);
 
   const stats = [
     { label: "Total Students", value: students.length, icon: Users, color: "bg-slate-500", light: "bg-slate-50 text-slate-700" },
@@ -45,6 +49,8 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
     ...(Array.isArray(studyNotes) ? studyNotes.map((note) => normalizeUpload(note, 'Study Note')) : []),
     ...(Array.isArray(tutorials) ? tutorials.map((tutorial) => normalizeUpload(tutorial, 'Tutorial')) : []),
     ...(Array.isArray(pastPapers) ? pastPapers.map((paper) => normalizeUpload(paper, 'Past Paper')) : []),
+    ...(Array.isArray(quizzes) ? quizzes.map((quiz) => normalizeUpload(quiz, 'Quiz')) : []),
+    ...(Array.isArray(careerResources) ? careerResources.map((resource) => normalizeUpload(resource, 'Career Resource')) : []),
   ]
     .sort((a, b) => b.sortDate - a.sortDate)
     .slice(0, 5);
@@ -89,8 +95,10 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
               { label: "Study Notes", count: studyNotes.length, color: "bg-emerald-400" },
               { label: "Tutorials", count: tutorials.length, color: "bg-blue-400" },
               { label: "Past Papers", count: pastPapers.length, color: "bg-violet-400" },
+              { label: "Quizzes", count: quizzes.length, color: "bg-orange-400" },
+              { label: "Career Resources", count: careerResources.length, color: "bg-fuchsia-400" },
             ].map(({ label, count, color }) => {
-              const total = Math.max(posts.length + studyNotes.length + tutorials.length + pastPapers.length, 1);
+              const total = Math.max(posts.length + studyNotes.length + tutorials.length + pastPapers.length + quizzes.length + careerResources.length, 1);
               return (
                 <div key={label}>
                   <div className="flex justify-between text-sm mb-1">
@@ -109,7 +117,7 @@ export default function AdminOverview({ refreshSeconds = 0 }) {
         {/* Recent uploads */}
         <Card className="border-0 shadow-sm lg:col-span-2">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold text-gray-800">Latest Teacher Uploads</CardTitle>
+            <CardTitle className="text-base font-semibold text-gray-800">Latest Resources</CardTitle>
           </CardHeader>
           <CardContent>
             {recentUploads.length === 0 ? (

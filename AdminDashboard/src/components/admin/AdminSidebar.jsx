@@ -30,6 +30,7 @@ const SECTIONS = [
       { id: "overview", label: "Dashboard", icon: LayoutDashboard },
       { id: "notifications", label: "Notifications", icon: Bell },
       { id: "reports", label: "Reports & Analytics", icon: BarChart2 },
+      { id: "insights", label: "Insights", icon: ClipboardCheck },
       { id: "search-analytics", label: "Search Analytics", icon: Search },
     ]
   },

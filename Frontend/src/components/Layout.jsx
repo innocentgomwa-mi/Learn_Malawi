@@ -25,9 +25,9 @@ export default function Layout() {
   const [communityOpen, setCommunityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState('');
-  const resourcesRef = useRef(null);
-  const communityRef = useRef(null);
-  const settingsRef = useRef(null);
+  const resourcesRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const communityRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const settingsRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const { user, isAuthenticated, logout } = useAuth();
   const { settings } = useAccessibility();
   const isTeacher = user?.role?.toLowerCase() === 'teacher';
@@ -55,6 +55,7 @@ export default function Layout() {
   useEffect(() => {
     if (!resourcesOpen && !communityOpen && !settingsOpen) return;
 
+    /** @param {MouseEvent} event */
     const handleClickAway = (event) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
@@ -135,6 +136,7 @@ export default function Layout() {
   useEffect(() => {
     if (typeof window === 'undefined' || !settings?.screenReader || !('speechSynthesis' in window)) return;
 
+    /** @param {string} message */
     const speak = (message) => {
       if (!message) return;
       setScreenReaderAnnouncement(message);
@@ -154,6 +156,7 @@ export default function Layout() {
       speak([intro, description].filter(Boolean).join('. '));
     };
 
+    /** @param {FocusEvent} event */
     const handleFocus = (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;

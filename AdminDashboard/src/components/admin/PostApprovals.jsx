@@ -11,6 +11,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
 import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { apiClient } from "@/api/apiClient";
 
 const STATUS_COLORS = {
@@ -53,7 +54,6 @@ const normalizeResource = (item, type) => ({
 export default function PostApprovals() {
   const [filterType, setFilterType] = useState("all");
   const [selectedPost, setSelectedPost] = useState(null);
-  const [resourceToDelete, setResourceToDelete] = useState(null);
   const queryClient = useQueryClient();
 
   const deleteResourceMutation = useMutation({
@@ -69,9 +69,9 @@ export default function PostApprovals() {
       toast({
         title: "Resource deleted",
         description: "The published resource has been removed successfully.",
+        duration: 5000,
       });
       setSelectedPost(null);
-      setResourceToDelete(null);
     },
     onError: (error) => {
       toast({
@@ -80,6 +80,27 @@ export default function PostApprovals() {
       });
     },
   });
+
+  const confirmResourceDeletion = (resource) => {
+    if (!resource) return;
+
+    const confirmToast = toast({
+      title: "Confirm deletion",
+      description: `Delete \"${resource.title}\" permanently?`,
+      duration: 0,
+      action: (
+        <ToastAction
+          className="bg-white text-sky-700 hover:bg-slate-100"
+          onClick={() => {
+            deleteResourceMutation.mutate(resource);
+            confirmToast.dismiss();
+          }}
+        >
+          Confirm
+        </ToastAction>
+      ),
+    });
+  };
 
   const { data: allResources = {}, isLoading } = useQuery({
     queryKey: ["published-resources"],
@@ -182,7 +203,7 @@ export default function PostApprovals() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => setResourceToDelete(resource)}
+                      onClick={() => confirmResourceDeletion(resource)}
                       disabled={deleteResourceMutation.isLoading}
                     >
                       Delete
@@ -238,35 +259,6 @@ export default function PostApprovals() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!resourceToDelete} onOpenChange={() => setResourceToDelete(null)}>
-        <DialogContent className="max-w-lg rounded-3xl bg-sky-600 text-white shadow-2xl ring-1 ring-sky-500/30">
-          <DialogHeader>
-            <DialogTitle>Confirm deletion</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 py-3 text-sm">
-            <p className="text-slate-100">
-              Are you sure you want to delete the published resource
-              <span className="font-semibold"> "{resourceToDelete?.title}"</span>?
-            </p>
-            <p className="text-sky-100/90">
-              This action will remove the resource permanently from the published list.
-            </p>
-          </div>
-          <DialogFooter className="gap-2">
-            <Button variant="outline" className="border-white/40 text-white hover:border-white hover:bg-white/10" onClick={() => setResourceToDelete(null)}>
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
-              className="bg-white text-sky-700 hover:bg-slate-100"
-              onClick={() => resourceToDelete && deleteResourceMutation.mutate(resourceToDelete)}
-              disabled={deleteResourceMutation.isLoading}
-            >
-              Delete resource
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
