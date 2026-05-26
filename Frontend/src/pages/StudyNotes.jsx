@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from '@tanstack/react-query';
 import { useSearchParams } from 'react-router-dom';
 import { useAuth } from "@/lib/AuthContext";
-import { fetchStudyNotes, fetchStudentProgress, recordStudentProgress } from "@/api";
+import { fetchStudyNotes, fetchStudentProgress, recordStudentProgress, logActivity } from "@/api";
 import { loadUserProgress, saveUserProgress } from "@/lib/dashboardStorage";
 import { getSavedNotes, saveNoteOffline, removeNoteOffline } from "@/lib/offlineCache";
 import NoteQuiz from "@/components/NoteQuiz";
@@ -66,6 +66,7 @@ export default function StudyNotes() {
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState("All");
   const [selected, setSelected] = useState(null);
+  const [lastSearchSignature, setLastSearchSignature] = useState("");
   const [savedNotes, setSavedNotes] = useState([]);
   const [isDeviceOnline, setIsDeviceOnline] = useState(typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [searchParams] = useSearchParams();
@@ -83,6 +84,27 @@ export default function StudyNotes() {
     retry: 1,
     enabled: isAuthenticated && isDeviceOnline,
   });
+
+  useEffect(() => {
+    const signature = `${search.trim()}|${level}|${subjectFilter}`;
+    if (signature === lastSearchSignature) return;
+    if (!search.trim() && level === 'All' && !subjectFilter) return;
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: user?.email || 'anonymous',
+        user_name: user?.full_name || '',
+        user_role: user?.role || 'student',
+        resource_title: 'Study Notes',
+        subject: search.trim() || 'all',
+        metadata: JSON.stringify({ query: search.trim(), level, subjectFilter }),
+      }).catch(() => {});
+      setLastSearchSignature(signature);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, level, subjectFilter, user?.email, user?.full_name, user?.role, lastSearchSignature]);
 
   useEffect(() => {
     const userKey = user?.id || user?.email;
@@ -334,7 +356,19 @@ export default function StudyNotes() {
             return (
               <div
                 key={note.id}
-                onClick={() => setSelected(note)}
+                onClick={() => {
+                  setSelected(note);
+                  logActivity({
+                    action: 'resource_viewed',
+                    user_email: user?.email || 'anonymous',
+                    user_name: user?.full_name || '',
+                    user_role: user?.role || 'student',
+                    resource_title: note.title,
+                    subject: note.subject,
+                    level: note.level,
+                    metadata: JSON.stringify({ resource_id: note.id, resource_type: 'study_note' }),
+                  }).catch(() => {});
+                }}
                 className="group cursor-pointer flex flex-col basis-full overflow-hidden rounded-[1.75rem] border border-slate-200/70 bg-white shadow-[0_12px_30px_-20px_rgba(15,23,42,0.35)] transition duration-300 hover:-translate-y-1 hover:shadow-[0_18px_45px_-25px_rgba(15,23,42,0.4)]"
               >
                       <div className="relative h-56 overflow-hidden" style={getCoverStyle(note)}>

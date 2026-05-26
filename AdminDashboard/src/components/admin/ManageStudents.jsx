@@ -12,12 +12,15 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { apiClient } from "@/api/apiClient";
 
 export default function ManageStudents() {
   const [search, setSearch] = useState("");
   const [filterLevel, setFilterLevel] = useState("all");
   const [showAdd, setShowAdd] = useState(false);
   const [form, setForm] = useState({ firstName: "", lastName: "", email: "", level: "JCE", school: "", district: "" });
+  const [deleteStudent, setDeleteStudent] = useState(null);
   const qc = useQueryClient();
 
   const { data: students = [], isLoading } = useQuery({
@@ -37,7 +40,20 @@ export default function ManageStudents() {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => apiClient.entities.Student.delete(id),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["students"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["students"] });
+      toast({
+        title: "Student deleted",
+        description: "The student and their associated progress records have been removed.",
+      });
+      setDeleteStudent(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error?.message || "Unable to delete this student.",
+      });
+    },
   });
 
   const filtered = students.filter(s => {
@@ -132,7 +148,8 @@ export default function ManageStudents() {
                         {student.is_active !== false ? <Ban className="w-3.5 h-3.5" /> : <CheckCircle className="w-3.5 h-3.5" />}
                       </Button>
                       <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-gray-400 hover:text-red-500"
-                        onClick={() => deleteMutation.mutate(student.id)}>
+                        onClick={() => setDeleteStudent(student)}
+                        disabled={deleteMutation.isLoading}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -145,6 +162,35 @@ export default function ManageStudents() {
       )}
 
       {/* Add Student Dialog */}
+      <Dialog open={!!deleteStudent} onOpenChange={() => setDeleteStudent(null)}>
+        <DialogContent className="max-w-lg rounded-3xl bg-sky-600 text-white shadow-2xl ring-1 ring-sky-500/30">
+          <DialogHeader>
+            <DialogTitle>Confirm student deletion</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-3 text-sm">
+            <p>
+              Are you sure you want to delete <span className="font-semibold">{deleteStudent?.full_name || [deleteStudent?.firstName, deleteStudent?.lastName].filter(Boolean).join(' ') || deleteStudent?.email}</span>?
+            </p>
+            <p className="text-sky-100/90">
+              Deleting a student will remove their account, progress records, schedule data, and any associated learning history permanently.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="border-white/40 text-white hover:border-white hover:bg-white/10" onClick={() => setDeleteStudent(null)}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              className="bg-white text-sky-700 hover:bg-slate-100"
+              onClick={() => deleteStudent && deleteMutation.mutate(deleteStudent.id)}
+              disabled={deleteMutation.isLoading}
+            >
+              Delete student
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showAdd} onOpenChange={setShowAdd}>
         <DialogContent>
           <DialogHeader><DialogTitle>Add New Student</DialogTitle></DialogHeader>

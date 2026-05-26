@@ -1,0 +1,48 @@
+{
+  "name": "StudyNote",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Title"
+    },
+    "subject": {
+      "type": "string",
+      "title": "Subject"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "PSLC",
+        "JCE",
+        "MSCE"
+      ],
+      "title": "Level"
+    },
+    "grade": {
+      "type": "string",
+      "title": "Grade/Form"
+    },
+    "content": {
+      "type": "string",
+      "title": "Content"
+    },
+    "summary": {
+      "type": "string",
+      "title": "Summary"
+    },
+    "topic": {
+      "type": "string",
+      "title": "Topic"
+    },
+    "file_url": {
+      "type": "string",
+      "title": "File URL"
+    }
+  },
+  "required": [
+    "title",
+    "subject",
+    "level"
+  ]
+}

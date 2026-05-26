@@ -1,0 +1,177 @@
+import React, { useMemo } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { apiClient } from "@/api/apiClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
+import { TrendingUp, BookOpen, Users, Award } from "lucide-react";
+
+const PIE_COLORS = ["#3B82F6", "#10B981", "#F59E0B", "#EF4444", "#8B5CF6", "#06B6D4"];
+
+export default function ReportsAnalytics() {
+  const { data: teacherPosts = [] } = useQuery({ queryKey: ["report-posts"], queryFn: () => apiClient.entities.TeacherPost.list() });
+  const { data: studyNotes = [] } = useQuery({ queryKey: ["report-study-notes"], queryFn: () => apiClient.entities.StudyNote.list() });
+  const { data: tutorials = [] } = useQuery({ queryKey: ["report-tutorials"], queryFn: () => apiClient.entities.Tutorial.list() });
+  const { data: pastPapers = [] } = useQuery({ queryKey: ["report-past-papers"], queryFn: () => apiClient.entities.PastPaper.list() });
+  const { data: careerResources = [] } = useQuery({ queryKey: ["report-career-resources"], queryFn: () => apiClient.entities.CareerResource.list() });
+  const { data: quizzes = [] } = useQuery({ queryKey: ["report-quizzes"], queryFn: () => apiClient.entities.Quiz.list() });
+  const { data: students = [] } = useQuery({ queryKey: ["report-students"], queryFn: () => apiClient.entities.Student.list() });
+  const { data: logs = [] } = useQuery({ queryKey: ["report-logs"], queryFn: () => apiClient.entities.ActivityLog.list() });
+  const { data: progress = [] } = useQuery({ queryKey: ["report-progress"], queryFn: () => apiClient.entities.StudentProgress.list() });
+
+  const resources = useMemo(() => {
+    const normalize = (items) => Array.isArray(items) ? items : [];
+    return [
+      ...normalize(teacherPosts),
+      ...normalize(studyNotes),
+      ...normalize(tutorials),
+      ...normalize(pastPapers),
+      ...normalize(careerResources),
+      ...normalize(quizzes),
+    ];
+  }, [teacherPosts, studyNotes, tutorials, pastPapers, careerResources, quizzes]);
+
+  // Resources by subject
+  const bySubject = useMemo(() => {
+    const map = {};
+    resources.forEach(item => {
+      const subject = item?.subject || item?.topic || 'Unknown';
+      map[subject] = (map[subject] || 0) + 1;
+    });
+    return Object.entries(map)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 10)
+      .map(([subject, count]) => ({ subject: String(subject).substring(0, 12), count }));
+  }, [resources]);
+
+  // Students by level
+  const byLevel = useMemo(() => {
+    const map = {};
+    students.forEach(s => { map[s.level || "Unknown"] = (map[s.level || "Unknown"] || 0) + 1; });
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [students]);
+
+  // Content type breakdown
+  const byType = useMemo(() => {
+    const labels = { study_notes: "Study Notes", past_paper: "Past Paper", tutorial: "Tutorial", quiz: "Quiz", career_resource: "Career" };
+    const map = {};
+    resources.forEach(item => {
+      const type = item?.content_type || item?.type || "Unknown";
+      const label = labels[type] || type;
+      map[label] = (map[label] || 0) + 1;
+    });
+    return Object.entries(map).map(([name, value]) => ({ name, value }));
+  }, [resources]);
+
+  // Average quiz scores per subject
+  const quizPerformance = useMemo(() => {
+    const map = {};
+    progress.forEach(p => {
+      if (p.average_score > 0) map[p.subject] = { total: (map[p.subject]?.total || 0) + p.average_score, count: (map[p.subject]?.count || 0) + 1 };
+    });
+    return Object.entries(map).map(([subject, { total, count }]) => ({ subject: subject.substring(0, 8), avg: Math.round(total / count) }));
+  }, [progress]);
+
+  const statCards = [
+    { label: "Published Teacher Posts", value: teacherPosts.length, icon: BookOpen, color: "text-slate-700 bg-slate-50" },
+    { label: "Registered Students", value: students.length, icon: Users, color: "text-green-600 bg-green-50" },
+    { label: "Platform Events", value: logs.length, icon: TrendingUp, color: "text-purple-600 bg-purple-50" },
+    { label: "Quiz Records", value: progress.length, icon: Award, color: "text-amber-600 bg-amber-50" },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Reports & Analytics</h2>
+        <p className="text-sm text-gray-500 mt-0.5">Platform-wide insights across content, users, and engagement</p>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {statCards.map(({ label, value, icon: Icon, color }) => (
+          <Card key={label} className="border-0 shadow-sm">
+            <CardContent className="p-4 flex items-center gap-3">
+              <div className={`p-2.5 rounded-xl ${color}`}><Icon className="w-5 h-5" /></div>
+              <div><p className="text-xs text-gray-500">{label}</p><p className="text-xl font-bold">{value}</p></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Resources by Subject</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <BarChart data={bySubject}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                <XAxis dataKey="subject" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="count" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Students by Level</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie
+                  data={byLevel}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={50}
+                  outerRadius={70}
+                  paddingAngle={2}
+                  labelLine={true}
+                  label={({ name, value }) => `${name}: ${value}`}
+                >
+                  {byLevel.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                </Pie>
+                <Legend verticalAlign="bottom" height={36} />
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Content Type Breakdown</CardTitle></CardHeader>
+          <CardContent>
+            <ResponsiveContainer width="100%" height={220}>
+              <PieChart>
+                <Pie data={byType} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}>
+                  {byType.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                </Pie>
+                <Legend />
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </CardContent>
+        </Card>
+
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Avg Quiz Score by Subject</CardTitle></CardHeader>
+          <CardContent>
+            {quizPerformance.length === 0 ? (
+              <div className="flex items-center justify-center h-52 text-gray-400 text-sm">No quiz data yet</div>
+            ) : (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={quizPerformance}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                  <XAxis dataKey="subject" tick={{ fontSize: 11 }} />
+                  <YAxis domain={[0, 100]} tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  <Bar dataKey="avg" fill="#10B981" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}

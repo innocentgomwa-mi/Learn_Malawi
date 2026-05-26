@@ -1,0 +1,173 @@
+.about-wrapper {
+  max-width: 1140px;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 4rem;
+  color: #1f2937;
+}
+
+.about-hero {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(320px, 1.2fr) minmax(320px, 0.8fr);
+  margin-bottom: 3rem;
+}
+
+.section-label {
+  display: inline-block;
+  margin-bottom: 1rem;
+  padding: 0.45rem 0.9rem;
+  background: #eff6ff;
+  color: #1d4ed8;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: 9999px;
+}
+
+.about-wrapper h2 {
+  font-size: clamp(1.9rem, 2.4vw, 2.75rem);
+  margin-bottom: 1rem;
+  color: #111827;
+}
+
+.about-wrapper p {
+  line-height: 1.85;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.story-section,
+.mission-vision,
+.values-section,
+.philosophy-section,
+.contact-section {
+  margin-bottom: 2.5rem;
+}
+
+.story-section,
+.mission-vision,
+.value-card,
+.mv-card,
+.philosophy-list li,
+.contact-section {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 1.25rem;
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.05);
+}
+
+.story-section,
+.mission-vision {
+  padding: 2rem;
+}
+
+.mv-grid,
+.values-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.value-card {
+  padding: 1.5rem;
+}
+
+.mv-card {
+  padding: 1.5rem;
+}
+
+.mv-icon,
+.value-icon,
+.philosophy-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #2563eb;
+  margin-bottom: 1rem;
+  flex-shrink: 0;
+}
+
+.value-card h3,
+.mv-card h3 {
+  margin-top: 0.8rem;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  color: #111827;
+}
+
+.value-card p,
+.mv-card p {
+  color: #4b5563;
+}
+
+.philosophy-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.philosophy-list li {
+  display: flex;
+  gap: 0.95rem;
+  align-items: flex-start;
+  padding: 1.2rem;
+  border-radius: 1rem;
+  border: 1px solid #e5e7eb;
+  background: #f8fafc;
+}
+
+.philosophy-list span {
+  color: #374151;
+}
+
+.contact-section {
+  padding: 2rem;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1.2fr 0.8fr;
+}
+
+.contact-copy h2 {
+  margin-top: 0;
+}
+
+.contact-copy p {
+  color: #4b5563;
+}
+
+.contact-form {
+  display: grid;
+  gap: 1rem;
+}
+
+.contact-form input,
+.contact-form textarea {
+  width: 100%;
+  padding: 1rem 1.1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 1rem;
+  background: #f8fafc;
+  color: #111827;
+}
+
+.contact-form textarea {
+  min-height: 170px;
+}
+
+.contact-form button {
+  width: fit-content;
+  padding: 0.95rem 1.75rem;
+  border: none;
+  border-radius: 1rem;
+  background: #2563eb;
+  color: white;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+@media (max-width: 940px) {
+  .about-hero,
+  .contact-section {
+    grid-template-columns: 1fr;
+  }
+}

@@ -10,11 +10,11 @@ import ThemeToggle from "./ThemeToggle";
 import GlobalSearch from "./GlobalSearch";
 import { useAuth } from "@/lib/AuthContext";
 import { useAccessibility } from '@/lib/AccessibilityContext';
-import { fetchAnnouncements } from "@/api";
-import { getSeenNotificationIds } from "@/lib/notificationStorage";
+import { fetchAnnouncements, fetchChatMessages } from "@/api";
+import { getSeenNotificationIds, getLastSeenChatMessageDate } from "@/lib/notificationStorage";
 
 const navItems = [
-  { path: "/abouts", label: "About", icon: Info },
+  { path: "/abouts", label: "About", icon: Info, guestOnly: true },
   { path: "/career", label: "Career Resources", icon: Briefcase, authRequired: true },
 ];
 
@@ -25,9 +25,9 @@ export default function Layout() {
   const [communityOpen, setCommunityOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [screenReaderAnnouncement, setScreenReaderAnnouncement] = useState('');
-  const resourcesRef = useRef(null);
-  const communityRef = useRef(null);
-  const settingsRef = useRef(null);
+  const resourcesRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const communityRef = useRef(/** @type {HTMLDivElement | null} */ (null));
+  const settingsRef = useRef(/** @type {HTMLDivElement | null} */ (null));
   const { user, isAuthenticated, logout } = useAuth();
   const { settings } = useAccessibility();
   const isTeacher = user?.role?.toLowerCase() === 'teacher';
@@ -36,13 +36,15 @@ export default function Layout() {
     : 'Account';
 
   const closeMenu = () => setMobileOpen(false);
-  const hideTopNav = location.pathname.startsWith('/teacher');
-  const hideFooter = isTeacher && location.pathname.startsWith('/teacher');
+  const authPathsWithoutNav = ['/login', '/register', '/forgot-password', '/onboarding', '/welcome'];
+  const hideTopNav = location.pathname.startsWith('/teacher') || authPathsWithoutNav.includes(location.pathname);
+  const hideFooter = (isTeacher && location.pathname.startsWith('/teacher')) || authPathsWithoutNav.includes(location.pathname);
   const resourceActive = ['/study-notes', '/past-papers', '/tutorials', '/quizzes', '/learning-paths'].some((path) => location.pathname.startsWith(path));
   const communityActive = ['/achievements', '/study-groups', '/discussions'].some((path) => location.pathname.startsWith(path));
   const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
   const isNotificationsPage = location.pathname === '/notifications';
   const isTeacherAnnouncementsPage = location.pathname === '/teacher/announcements';
+  const showTopNav = !hideTopNav && isAuthenticated;
 
   useEffect(() => {
     setResourcesOpen(false);
@@ -53,6 +55,7 @@ export default function Layout() {
   useEffect(() => {
     if (!resourcesOpen && !communityOpen && !settingsOpen) return;
 
+    /** @param {MouseEvent} event */
     const handleClickAway = (event) => {
       const target = event.target;
       if (!(target instanceof Node)) return;
@@ -90,22 +93,37 @@ export default function Layout() {
     let active = true;
     const loadUnreadCount = async () => {
       try {
-        const announcements = await fetchAnnouncements({ published: true });
-        if (!active || !Array.isArray(announcements)) return;
+        const [announcements, chatMessages] = await Promise.all([
+          fetchAnnouncements({ published: true }),
+          fetchChatMessages({ room: 'general' }),
+        ]);
 
-        const filtered = announcements.filter((announcement) => {
-          const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+        if (!active) return;
 
-          if (isTeacher) {
-            return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
-          }
+        const filteredAnnouncements = Array.isArray(announcements)
+          ? announcements.filter((announcement) => {
+              const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
 
-          return audience === 'all' || audience === 'students';
-        });
+              if (isTeacher) {
+                return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user?.email;
+              }
 
-        const seenIds = getSeenNotificationIds(user?.email);
-        const unread = filtered.filter((announcement) => !seenIds.includes(String(announcement.id))).length;
-        if (active) setUnreadNotificationCount(unread);
+              return audience === 'all' || audience === 'students';
+            })
+          : [];
+
+        const seenIds = getSeenNotificationIds(user?.email, user?.role);
+        const unreadAnnouncements = filteredAnnouncements.filter((announcement) => announcement?.id && !seenIds.includes(String(announcement.id))).length;
+
+        const messages = Array.isArray(chatMessages) ? chatMessages : [];
+        const lastSeenChatAt = getLastSeenChatMessageDate(user?.email, 'general', user?.role);
+        const unreadChats = messages.filter((message) => {
+          if (message.sender_email === user?.email) return false;
+          const createdAt = new Date(message.created_date || message.createdAt || message.created_at);
+          return !Number.isNaN(createdAt.getTime()) && (!lastSeenChatAt || createdAt > lastSeenChatAt);
+        }).length;
+
+        if (active) setUnreadNotificationCount(unreadAnnouncements + unreadChats);
       } catch (error) {
         if (active) setUnreadNotificationCount(0);
       }
@@ -113,11 +131,12 @@ export default function Layout() {
 
     loadUnreadCount();
     return () => { active = false; };
-  }, [isAuthenticated, isTeacher, user?.email, isNotificationsPage]);
+  }, [isAuthenticated, isTeacher, user?.email, isNotificationsPage, isTeacherAnnouncementsPage]);
 
   useEffect(() => {
     if (typeof window === 'undefined' || !settings?.screenReader || !('speechSynthesis' in window)) return;
 
+    /** @param {string} message */
     const speak = (message) => {
       if (!message) return;
       setScreenReaderAnnouncement(message);
@@ -137,6 +156,7 @@ export default function Layout() {
       speak([intro, description].filter(Boolean).join('. '));
     };
 
+    /** @param {FocusEvent} event */
     const handleFocus = (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
@@ -162,9 +182,9 @@ export default function Layout() {
   }, [settings?.screenReader, location.pathname]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen h-screen flex flex-col">
       <div aria-live="polite" className="sr-only">{screenReaderAnnouncement}</div>
-      {!hideTopNav && (
+      {showTopNav && (
         <>
           {/* Top Nav */}
           <header className="relative bg-primary/95 text-primary-foreground sticky top-0 z-40 border-b border-primary-foreground/10 shadow-[0_25px_50px_-25px_rgba(15,23,42,0.45)] backdrop-blur-xl">
@@ -383,6 +403,13 @@ export default function Layout() {
                       >
                         Settings
                       </Link>
+                      <Link
+                        to="/abouts"
+                        onClick={() => setSettingsOpen(false)}
+                        className={`block px-4 py-3 text-sm text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/abouts' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                      >
+                        About
+                      </Link>
                       <button
                         type="button"
                         onClick={async () => {
@@ -531,6 +558,13 @@ export default function Layout() {
                       Settings
                     </Link>
                     <Link
+                      to="/abouts"
+                      onClick={closeMenu}
+                      className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/abouts' ? 'bg-secondary text-secondary-foreground' : ''}`}
+                    >
+                      About
+                    </Link>
+                    <Link
                       to="/my-schedule"
                       onClick={closeMenu}
                       className={`mt-1 block rounded-lg px-3 py-3 text-sm font-medium text-primary-foreground hover:bg-primary-foreground/10 ${location.pathname === '/my-schedule' ? 'bg-secondary text-secondary-foreground' : ''}`}
@@ -623,8 +657,6 @@ export default function Layout() {
                 { label: "Study Groups", to: "/study-groups" },
                 { label: "Achievements", to: "/achievements" },
                 { label: "Leaderboard", to: "/quizzes" },
-                { label: "Parent Portal", to: "/parent-portal" },
-                { label: "Teacher Dashboard", to: "/teacher" },
               ].map(({ label, to }) => (
                 <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
               ))}
@@ -650,10 +682,9 @@ export default function Layout() {
             <h4 className="font-poppins font-bold text-sm uppercase tracking-wider text-primary-foreground mb-4 border-b border-primary-foreground/20 pb-2">Platform</h4>
             <ul className="space-y-2">
               {[
-                { label: "Dashboard", to: "/dashboard" },
                 { label: "AI Tutor (24/7)", to: "/" },
-                { label: "Onboarding", to: "/onboarding" },
-                { label: "Admin Panel", to: "/admin" },
+                { label: "Terms & Conditions", to: "/terms-and-conditions" },
+                { label: "Privacy Policy", to: "/privacy-policy" },
               ].map(({ label, to }) => (
                 <li key={label}><Link to={to} className="text-sm text-primary-foreground/70 hover:text-primary-foreground transition-colors">{label}</Link></li>
               ))}
@@ -695,7 +726,7 @@ export default function Layout() {
       <OfflineBanner />
 
       {/* AI Tutor floating widget */}
-      {!isTeacher && <AiTutor />}
+      {!isTeacher && !authPathsWithoutNav.includes(location.pathname) && <AiTutor />}
     </div>
   );
 }

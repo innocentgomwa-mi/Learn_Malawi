@@ -14,15 +14,17 @@
  * }} Quiz
  */
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy, Sparkles } from "lucide-react";
+import { Brain, Search, CheckCircle, XCircle, Loader2, RotateCcw, Trophy } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
+import { fetchQuizzes, fetchStudentProgress, fetchAiChat, recordStudentProgress, logActivity } from "@/api";
 import RequireAccount from "@/components/RequireAccount";
 import { saveUserAttempt } from "@/lib/dashboardStorage";
-import { fetchQuizzes, fetchStudentProgress, fetchAiChat, recordStudentProgress } from "@/api";
 import Leaderboard from "../components/Leaderboard";
 
+/** @type {Array<'All' | string>} */
 const LEVELS = ["All", "PSLC", "JCE", "MSCE"];
 const LEVEL_COLORS = {
   PSLC: "bg-emerald-100 text-emerald-700",
@@ -30,328 +32,312 @@ const LEVEL_COLORS = {
   MSCE: "bg-purple-100 text-purple-700",
 };
 
-const GEN_LEVELS = [
-  { value: "level1", label: "Level 1 — Beginner", color: "bg-green-100 text-green-700" },
-  { value: "level2", label: "Level 2 — Intermediate", color: "bg-yellow-100 text-yellow-700" },
-  { value: "level3", label: "Level 3 — Advanced", color: "bg-blue-100 text-blue-700" },
-];
 
 export default function Quizzes() {
   const { user, isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
-  const [level, setLevel] = useState("All");
-  const [activeQuiz, setActiveQuiz] = useState(null);
-  const [answers, setAnswers] = useState({});
+  const [level, setLevel] = useState(/** @type {'All' | string} */ ("All"));
+  const [activeQuiz, setActiveQuiz] = useState(/** @type {Quiz | null} */ (null));
+  const [lastSearchSignature, setLastSearchSignature] = useState("");
+  const [answers, setAnswers] = useState(/** @type {{ [index: number]: string }} */ ({}));
+  const [searchParams] = useSearchParams();
+  const selectedQuizId = searchParams.get('selected_id') || '';
   const [submitted, setSubmitted] = useState(false);
   const [aiFeedback, setAiFeedback] = useState("");
   const [feedbackLoading, setFeedbackLoading] = useState(false);
 
-  // Generate quiz state
-  const [showGenerate, setShowGenerate] = useState(false);
-  const [genTopic, setGenTopic] = useState("");
-  const [genSubject, setGenSubject] = useState("");
-  const [genLevel, setGenLevel] = useState("level1");
-  const [genSchoolLevel, setGenSchoolLevel] = useState('JCE');
-  const [genCount, setGenCount] = useState(5);
-  const [generating, setGenerating] = useState(false);
-  const [genError, setGenError] = useState("");
-
   const queryResult = useQuery({
     queryKey: ['quizzes'],
-    queryFn: () => fetchQuizzes({ level: level === 'All' ? undefined : level, subject: search }),
+    queryFn: /** @type {() => Promise<Quiz[]>} */ (() => fetchQuizzes({ level: level === 'All' ? undefined : level, subject: search })),
     staleTime: 1000 * 60,
     retry: 1,
     enabled: isAuthenticated,
   });
 
-  const progressResult = useQuery({
-    queryKey: ['student-progress'],
-    queryFn: fetchStudentProgress,
-    staleTime: 1000 * 60 * 5,
-    retry: 1,
-    enabled: isAuthenticated,
+  const { data: quizzes = [], isLoading: loading } = /** @type {import('@tanstack/react-query').UseQueryResult<Quiz[], Error>} */ (queryResult);
+
+  useEffect(() => {
+    if (selectedQuizId && quizzes.length > 0) {
+      const selected = quizzes.find((quiz) => String(quiz.id) === selectedQuizId);
+      if (selected) {
+        setActiveQuiz(selected);
+      }
+    }
+  }, [selectedQuizId, quizzes]);
+
+  useEffect(() => {
+    const signature = `${search.trim()}|${level}`;
+    if (signature === lastSearchSignature) return;
+    if (!search.trim() && level === 'All') return;
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: user?.email || 'anonymous',
+        user_name: user?.full_name || '',
+        user_role: user?.role || 'student',
+        resource_title: 'Quizzes',
+        subject: search.trim() || 'all',
+        metadata: JSON.stringify({ query: search.trim(), level }),
+      }).catch(() => {});
+      setLastSearchSignature(signature);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, level, user?.email, user?.full_name, user?.role, lastSearchSignature]);
+
+  const progressQuery = useQuery({
+    queryKey: ['quizProgress', user?.email],
+    queryFn: () => fetchStudentProgress({ studentEmail: user?.email, entryType: 'quiz' }),
+    staleTime: 1000 * 60,
+    enabled: isAuthenticated && !!user?.email,
   });
 
-  const quizzes = queryResult.data || [];
-  const loading = queryResult.isLoading;
+  const completedQuizProgress = progressQuery.data || [];
+  const completedQuizIds = useMemo(
+    () => new Set((completedQuizProgress || []).map((entry) => String(entry.quiz_id))),
+    [completedQuizProgress],
+  );
 
-  const completedQuizIds = useMemo(() => {
-    const progress = progressResult.data || [];
-    return new Set(progress.map((p) => String(p.quiz_id || p.quizId)).filter(Boolean));
-  }, [progressResult.data]);
+  if (!isAuthenticated) {
+    return <RequireAccount resourceName="Quizzes" />;
+  }
 
-  const filtered = useMemo(() => {
-    return quizzes.filter((q) => {
-      const matchLevel = level === "All" || q.level === level;
-      const matchSearch = !search || q.title?.toLowerCase().includes(search.toLowerCase()) || q.subject?.toLowerCase().includes(search.toLowerCase());
-      return matchLevel && matchSearch;
-    });
-  }, [quizzes, level, search]);
+  const filtered = quizzes.filter((q) => {
+    const matchLevel = level === "All" || q.level === level;
+    const matchSearch = !search ||
+      q.title.toLowerCase().includes(search.toLowerCase()) ||
+      q.subject?.toLowerCase().includes(search.toLowerCase());
+    return matchLevel && matchSearch;
+  });
 
-  const [returnToGenerate, setReturnToGenerate] = useState(false);
-
-  const startQuiz = (quiz, fromGenerate = false) => {
+  /** @param {Quiz} quiz */
+  const startQuiz = (quiz) => {
     setActiveQuiz(quiz);
     setAnswers({});
     setSubmitted(false);
     setAiFeedback("");
-    setReturnToGenerate(fromGenerate);
+    logActivity({
+      action: 'resource_viewed',
+      user_email: user?.email || 'anonymous',
+      user_name: user?.full_name || '',
+      user_role: user?.role || 'student',
+      resource_title: quiz.title,
+      subject: quiz.subject,
+      level: quiz.level,
+      metadata: JSON.stringify({ resource_id: quiz.id, resource_type: 'quiz' }),
+    }).catch(() => {});
   };
 
-  const handleBackFromQuiz = () => {
-    setActiveQuiz(null);
-    if (returnToGenerate) {
-      setShowGenerate(true);
-      setReturnToGenerate(false);
+  const getNormalizedAnswer = (question, selected) => {
+    const answerValue = String(question.answer || '').trim();
+    const selectedValue = String(selected || '').trim();
+
+    if (!answerValue || !selectedValue) return false;
+
+    if (selectedValue === answerValue) return true;
+
+    const letterIndex = ['A', 'B', 'C', 'D'].indexOf(answerValue.toUpperCase());
+    if (letterIndex !== -1 && Array.isArray(question.options) && question.options[letterIndex]) {
+      return selectedValue === String(question.options[letterIndex]).trim();
     }
+
+    return selectedValue.toLowerCase() === answerValue.toLowerCase();
   };
 
-  const handleAnswer = (index, option) => {
-    if (!submitted) setAnswers((prev) => ({ ...prev, [index]: option }));
-  };
-
-  const handleSubmit = async () => {
+  const submitQuiz = async () => {
+    if (!activeQuiz) return;
     setSubmitted(true);
-    const questions = activeQuiz?.questions || [];
-    let score = 0;
+    const questions = activeQuiz.questions || [];
+    let correct = 0;
+    /** @type {string[]} */
     const wrongTopics = [];
 
     questions.forEach((q, i) => {
-      const correct = q.correctAnswer || q.answer;
-      const userAns = answers[i] || "";
-      const isCorrect = userAns.trim().charAt(0).toUpperCase() === correct?.trim().charAt(0).toUpperCase();
-      if (isCorrect) score++;
-      else wrongTopics.push(q.question?.slice(0, 40));
+      if (getNormalizedAnswer(q, answers[i])) {
+        correct++;
+      } else {
+        const snippet = q.question?.slice(0, 50);
+        if (snippet) {
+          wrongTopics.push(snippet);
+        }
+      }
     });
 
-    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    const score = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
+    const attempt = {
+      id: `${activeQuiz.id}-${Date.now()}`,
+      student_email: user?.email,
+      entry_type: 'quiz',
+      quiz_id: String(activeQuiz.id),
+      quiz_title: activeQuiz.title,
+      subject: activeQuiz.subject,
+      level: String(activeQuiz.level || ''),
+      score,
+      total_questions: questions.length,
+      correct_answers: correct,
+      topics_failed: wrongTopics,
+      completed: true,
+      completed_at: new Date().toISOString(),
+    };
 
-    try {
-      await recordStudentProgress({
-        subject: activeQuiz.subject,
-        level: activeQuiz.level,
-        average_score: percentage,
-      });
-      saveUserAttempt({ quizId: activeQuiz.id, score: percentage, date: new Date().toISOString() });
-    } catch {}
+    const userKey = user?.id || user?.email;
+    if (userKey) {
+      saveUserAttempt(userKey, attempt);
+    }
+
+    if (user?.email) {
+      try {
+        await recordStudentProgress({
+          student_email: attempt.student_email,
+          entry_type: attempt.entry_type,
+          quiz_id: attempt.quiz_id,
+          quiz_title: attempt.quiz_title,
+          subject: attempt.subject,
+          level: attempt.level,
+          score: attempt.score,
+          total_questions: attempt.total_questions,
+          correct_answers: attempt.correct_answers,
+          topics_failed: attempt.topics_failed,
+          completed_at: attempt.completed_at,
+        });
+      } catch (error) {
+        console.error('Unable to save quiz attempt to backend:', error);
+      }
+    }
 
     setFeedbackLoading(true);
     try {
-      const wrongList = wrongTopics.slice(0, 3).join(", ");
-      const prompt = `A student just completed a quiz on "${activeQuiz.title}" and scored ${percentage}%. They struggled with: ${wrongList || "none"}. Give 2-3 sentences of encouraging feedback and study tips.`;
-      const response = await fetchAiChat(prompt);
-      const feedbackText = response?.text || response?.content;
-      setAiFeedback(feedbackText || `Well done! You scored ${percentage}%. Keep practising the topics you found harder.`);
+      if (activeQuiz.teacherEmail) {
+        setAiFeedback(`Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongTopics.length ? wrongTopics.join(', ') : 'core concepts'}. You are making good progress!`);
+      } else {
+        const wrongList = wrongTopics.length > 0 ? wrongTopics.join(', ') : 'core concepts';
+        const prompt = `You are a friendly Malawi curriculum study tutor. A student completed the quiz titled "${activeQuiz.title}" in ${activeQuiz.subject} at ${activeQuiz.level} level and scored ${score}%. The questions they answered incorrectly are: ${wrongList}. Provide encouraging feedback, explain what to review next, and suggest one or two study tips.`;
+        const response = await fetchAiChat(prompt);
+        const feedbackText = typeof response === 'string' ? response : response?.text;
+        setAiFeedback(feedbackText || `Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongList}. You are making good progress!`);
+      }
     } catch {
-      setAiFeedback(`Well done! You scored ${percentage}%. Keep practising the topics you found harder.`);
+      setAiFeedback(`Well done! You scored ${score}%. Keep practising the topics you found harder and review your notes on ${wrongTopics.length ? wrongTopics.join(', ') : 'core concepts'}. You are making good progress!`);
     } finally {
       setFeedbackLoading(false);
     }
   };
 
-  const handleGenerate = async () => {
-    if (!genTopic.trim()) { setGenError("Please enter a topic."); return; }
-    setGenError("");
-    setGenerating(true);
-    try {
-      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000'}/ai/quiz`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: genTopic.trim(),
-          subject: genSubject.trim() || genTopic.trim(),
-          level: genLevel,
-          schoolLevel: genSchoolLevel,
-          topic: genTopic.trim(),
-        }),
-      });
-      const data = await res.json();
-      if (!data.questions || !Array.isArray(data.questions)) throw new Error('Invalid response');
-      const quiz = {
-        id: `ai-${Date.now()}`,
-        title: `Practice: ${genTopic.trim()}`,
-        subject: genSubject.trim() || genTopic.trim(),
-        level: genLevel === 'level1' ? 'PSLC' : genLevel === 'level2' ? 'JCE' : 'MSCE',
-        difficulty: genLevel,
-        questions: data.questions.slice(0, genCount),
-      };
-      setShowGenerate(false);
-      setGenTopic("");
-      setGenSubject("");
-      startQuiz(quiz, true);
-    } catch (err) {
-      console.error("Quiz generation error:", err);
-      setGenError("Failed to generate quiz: " + (err?.message || "Unknown error"));
-    } finally {
-      setGenerating(false);
-    }
-  };
-
-  if (!isAuthenticated) return <RequireAccount feature="quizzes" />;
-
-  // Active quiz view
   if (activeQuiz) {
     const questions = activeQuiz.questions || [];
-    const score = submitted ? questions.filter((q, i) => {
-      const correct = q.correctAnswer || q.answer;
-      return (answers[i] || "").trim().charAt(0).toUpperCase() === correct?.trim().charAt(0).toUpperCase();
-    }).length : 0;
-    const percentage = questions.length > 0 ? Math.round((score / questions.length) * 100) : 0;
+    const totalCorrect = submitted
+      ? questions.filter((q, i) => getNormalizedAnswer(q, answers[i])).length
+      : 0;
+    const score = submitted && questions.length > 0 ? Math.round((totalCorrect / questions.length) * 100) : 0;
+    const alreadyCompleted = completedQuizIds.has(String(activeQuiz.id));
 
     return (
-      <div className="w-full px-4 py-8 max-w-3xl mx-auto">
-        <button onClick={handleBackFromQuiz} className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+      <div className="w-full px-4 py-8">
+        <button onClick={() => setActiveQuiz(null)} className="text-sm text-primary flex items-center gap-1 mb-6 hover:underline">
           ← Back to Quizzes
         </button>
-        <div className="mb-6">
-          <h2 className="text-2xl font-bold text-foreground">{activeQuiz.title}</h2>
-          <p className="text-muted-foreground text-sm mb-2">{activeQuiz.subject} · {questions.length} questions · {activeQuiz.difficulty}</p>
+
+        <div className="bg-card border border-border rounded-2xl p-6">
+          <div className="flex items-center justify-between mb-2">
+            <span className={`text-xs font-semibold px-2 py-1 rounded-full ${LEVEL_COLORS[activeQuiz.level] || "bg-muted"}`}>{activeQuiz.level}</span>
+            {alreadyCompleted && (
+              <span className="text-xs font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700">Completed</span>
+            )}
+            {submitted && (
+              <div className="flex items-center gap-2">
+                <Trophy className="h-5 w-5 text-secondary" />
+                <span className="font-poppins font-bold text-lg">{score}%</span>
+              </div>
+            )}
+          </div>
+          <h2 className="font-poppins text-xl font-bold text-foreground mb-1">{activeQuiz.title}</h2>
+          <p className="text-muted-foreground text-sm mb-6">{activeQuiz.subject} · {questions.length} questions</p>
+
           {submitted && (
-            <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold ${percentage >= 50 ? 'bg-emerald-100 text-emerald-700' : 'bg-red-100 text-red-700'}`}>
-              <Trophy className="h-4 w-4" /> Score: {score}/{questions.length} ({percentage}%)
+            <div className={`rounded-xl p-4 mb-6 ${score >= 70 ? "bg-emerald-50 border border-emerald-200" : "bg-amber-50 border border-amber-200"}`}>
+              <p className={`font-semibold text-sm mb-1 ${score >= 70 ? "text-emerald-700" : "text-amber-700"}`}>
+                {score >= 70 ? "🎉 Well done!" : "📚 Keep studying!"}
+                {" "}You scored {totalCorrect}/{questions.length} ({score}%)
+              </p>
+              {feedbackLoading ? (
+                <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Getting AI feedback...
+                </div>
+              ) : aiFeedback ? (
+                <p className="text-sm text-foreground mt-2">{aiFeedback}</p>
+              ) : null}
             </div>
           )}
-        </div>
 
-        <div className="space-y-6 mb-8">
-          {questions.map((q, i) => {
-            const correct = q.correctAnswer || q.answer;
-            const userAns = answers[i] || "";
-            const isCorrect = userAns.trim().charAt(0).toUpperCase() === correct?.trim().charAt(0).toUpperCase();
-            return (
-              <div key={i} className="bg-card border border-border rounded-2xl p-5">
+          <div className="space-y-6">
+            {questions.map((q, i) => (
+              <div key={i} className="border border-border rounded-xl p-4">
                 <p className="font-medium text-sm text-foreground mb-3">{i + 1}. {q.question}</p>
                 <div className="space-y-2">
                   {(q.options || []).map((opt, j) => {
-                    const optLabel = String.fromCharCode(65 + j);
-                    const isSelected = (userAns || "").trim().charAt(0).toUpperCase() === optLabel;
-                    const isCorrectOpt = correct?.trim().charAt(0).toUpperCase() === optLabel;
-                    let cls = "w-full text-left px-4 py-2.5 rounded-xl text-sm border transition-all ";
-                    if (!submitted) cls += isSelected ? "border-primary bg-primary/10 text-primary" : "border-border bg-background hover:bg-muted";
-                    else if (isCorrectOpt) cls += "border-emerald-400 bg-emerald-50 text-emerald-800";
-                    else if (isSelected && !isCorrect) cls += "border-red-400 bg-red-50 text-red-800";
-                    else cls += "border-border bg-background text-muted-foreground";
+                    const isSelected = answers[i] === opt;
+                    const isCorrect = submitted && getNormalizedAnswer(q, opt);
+                    const isWrong = submitted && isSelected && !getNormalizedAnswer(q, opt);
                     return (
-                      <button key={j} onClick={() => handleAnswer(i, optLabel)} className={cls} disabled={submitted}>
-                        <span className="font-medium mr-1">{optLabel}.</span> {opt.replace(/^[A-D]\)\s*/, '')}
+                      <button
+                        key={j}
+                        disabled={submitted}
+                        onClick={() => setAnswers({ ...answers, [i]: opt })}
+                        className={`w-full text-left text-sm px-4 py-2.5 rounded-lg border transition-all ${
+                          isCorrect ? "bg-emerald-50 border-emerald-400 text-emerald-700" :
+                          isWrong ? "bg-red-50 border-red-400 text-red-700" :
+                          isSelected ? "bg-primary/10 border-primary text-primary" :
+                          "border-border hover:bg-muted"
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          {submitted && isCorrect && <CheckCircle className="h-4 w-4" />}
+                          {submitted && isWrong && <XCircle className="h-4 w-4" />}
+                          {opt}
+                        </span>
                       </button>
                     );
                   })}
                 </div>
                 {submitted && q.explanation && (
-                  <p className="mt-3 text-xs text-muted-foreground bg-muted rounded-lg px-3 py-2">
+                  <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg p-3 text-xs text-blue-700">
                     💡 {q.explanation}
-                  </p>
+                  </div>
                 )}
               </div>
-            );
-          })}
-        </div>
-
-        {!submitted ? (
-          <button onClick={handleSubmit} disabled={Object.keys(answers).length < questions.length}
-            className="w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:opacity-90 transition-opacity disabled:opacity-50">
-            Submit Quiz
-          </button>
-        ) : (
-          <div className="space-y-4">
-            {feedbackLoading ? (
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Getting AI feedback...
-              </div>
-            ) : aiFeedback ? (
-              <div className="bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm text-foreground">
-                🤖 {aiFeedback}
-              </div>
-            ) : null}
-            <button onClick={() => setActiveQuiz(null)}
-              className="w-full flex items-center justify-center gap-2 bg-muted text-foreground font-semibold py-3 rounded-xl hover:bg-muted/80 transition-colors">
-              <RotateCcw className="h-4 w-4" /> {returnToGenerate ? 'Generate Another Quiz' : 'Back to Quizzes'}
-            </button>
+            ))}
           </div>
-        )}
+
+          {!submitted ? (
+            <button
+              onClick={submitQuiz}
+              disabled={Object.keys(answers).length < questions.length}
+              className="mt-6 w-full bg-primary text-primary-foreground font-semibold py-3 rounded-xl hover:opacity-90 disabled:opacity-50 transition-opacity"
+            >
+              Submit Quiz
+            </button>
+          ) : (
+            <button
+              onClick={() => startQuiz(activeQuiz)}
+              className="mt-6 w-full bg-muted text-foreground font-semibold py-3 rounded-xl hover:bg-muted/80 flex items-center justify-center gap-2"
+            >
+              <RotateCcw className="h-4 w-4" /> Try Again
+            </button>
+          )}
+        </div>
       </div>
     );
   }
 
   return (
     <div className="w-full px-4 py-8">
-      <div className="mb-8 flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="font-poppins text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
-            <Brain className="h-8 w-8 text-primary" /> Quizzes
-          </h1>
-          <p className="text-muted-foreground">Test your knowledge with AI-powered adaptive quizzes</p>
-        </div>
-        <button onClick={() => setShowGenerate(true)}
-          className="flex items-center gap-2 bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
-          <Sparkles className="h-4 w-4" /> Generate Quiz
-        </button>
+      <div className="mb-8">
+        <h1 className="font-poppins text-3xl font-bold text-foreground mb-2 flex items-center gap-2">
+          <Brain className="h-8 w-8 text-primary" /> Quizzes
+        </h1>
+        <p className="text-muted-foreground">Test your knowledge with AI-powered adaptive quizzes</p>
       </div>
-
-      {/* Generate Quiz Modal */}
-      {showGenerate && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-card border border-border rounded-2xl p-6 w-full max-w-md shadow-2xl">
-            <h2 className="text-lg font-bold text-foreground mb-1">Generate a Quiz</h2>
-            <p className="text-sm text-muted-foreground mb-5">AI will create questions based on your topic and level.</p>
-
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Topic <span className="text-red-500">*</span></label>
-                <input value={genTopic} onChange={(e) => setGenTopic(e.target.value)}
-                  placeholder="e.g. Photosynthesis, World War II, Algebra"
-                  className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Subject (optional)</label>
-                <input value={genSubject} onChange={(e) => setGenSubject(e.target.value)}
-                  placeholder="e.g. Biology, History, Mathematics"
-                  className="w-full px-4 py-2.5 bg-background border border-border rounded-xl text-sm outline-none focus:ring-2 focus:ring-primary" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">School Level (for past paper matching)</label>
-                <div className="grid grid-cols-3 gap-2 mb-4">
-                  {["PSLC", "JCE", "MSCE"].map((sl) => (
-                    <button key={sl} onClick={() => setGenSchoolLevel(sl)}
-                      className={`px-3 py-2 rounded-xl text-xs font-medium border transition-all ${genSchoolLevel === sl ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-foreground hover:bg-muted"}`}>
-                      {sl}
-                    </button>
-                  ))}
-                </div>
-              <label className="block text-sm font-medium text-foreground mb-1">Difficulty Level</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {GEN_LEVELS.map((l) => (
-                    <button key={l.value} onClick={() => setGenLevel(l.value)}
-                      className={`px-3 py-2 rounded-xl text-xs font-medium border transition-all ${genLevel === l.value ? 'border-primary bg-primary/10 text-primary' : 'border-border bg-background text-foreground hover:bg-muted'}`}>
-                      {l.label.split(' — ')[0]}<br />
-                      <span className="text-muted-foreground font-normal">{l.label.split(' — ')[1]}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-foreground mb-1">Number of questions: {genCount}</label>
-                <input type="range" min={3} max={15} value={genCount} onChange={(e) => setGenCount(Number(e.target.value))}
-                  className="w-full accent-primary" />
-                <div className="flex justify-between text-xs text-muted-foreground mt-1"><span>3</span><span>15</span></div>
-              </div>
-              {genError && <p className="text-sm text-red-500">{genError}</p>}
-            </div>
-
-            <div className="flex gap-3 mt-6">
-              <button onClick={() => { setShowGenerate(false); setGenError(""); }}
-                className="flex-1 py-2.5 rounded-xl border border-border text-sm font-medium hover:bg-muted transition-colors">
-                Cancel
-              </button>
-              <button onClick={handleGenerate} disabled={generating}
-                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2">
-                {generating ? <><Loader2 className="h-4 w-4 animate-spin" /> Generating...</> : <><Sparkles className="h-4 w-4" /> Generate</>}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       <div className="flex flex-col sm:flex-row gap-3 mb-8">
         <div className="relative flex-1">
@@ -378,10 +364,7 @@ export default function Quizzes() {
         <div className="text-center py-20">
           <Brain className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
           <p className="text-muted-foreground font-medium">No quizzes available yet.</p>
-          <button onClick={() => setShowGenerate(true)}
-            className="mt-4 flex items-center gap-2 mx-auto bg-primary text-primary-foreground px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-90 transition-opacity">
-            <Sparkles className="h-4 w-4" /> Generate one now
-          </button>
+          <p className="text-muted-foreground text-sm mt-1">Interactive quizzes are coming soon!</p>
         </div>
       ) : (
         <div className="space-y-8">
@@ -395,13 +378,10 @@ export default function Quizzes() {
                   })()}
                   {quiz.difficulty && (
                     <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                      quiz.difficulty === "level1" ? "bg-green-100 text-green-700" :
-                      quiz.difficulty === "level2" ? "bg-yellow-100 text-yellow-700" :
-                      quiz.difficulty === "level3" ? "bg-blue-100 text-blue-700" :
                       quiz.difficulty === "easy" ? "bg-green-100 text-green-700" :
                       quiz.difficulty === "medium" ? "bg-yellow-100 text-yellow-700" :
                       "bg-red-100 text-red-700"}`}>
-                      {quiz.difficulty === "level1" ? "Level 1" : quiz.difficulty === "level2" ? "Level 2" : quiz.difficulty === "level3" ? "Level 3" : quiz.difficulty}
+                      {quiz.difficulty}
                     </span>
                   )}
                 </div>
@@ -412,8 +392,10 @@ export default function Quizzes() {
                   <p className="text-xs inline-flex items-center font-semibold px-2 py-1 rounded-full bg-emerald-100 text-emerald-700 mb-3">Completed</p>
                 )}
                 <p className="text-xs text-muted-foreground mb-4">{(quiz.questions || []).length} questions</p>
-                <button onClick={() => startQuiz(quiz)}
-                  className="w-full bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl hover:opacity-90 transition-opacity">
+                <button
+                  onClick={() => startQuiz(quiz)}
+                  className="w-full bg-primary text-primary-foreground text-sm font-semibold py-2.5 rounded-xl hover:opacity-90 transition-opacity"
+                >
                   Start Quiz
                 </button>
               </div>

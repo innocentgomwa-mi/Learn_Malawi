@@ -21,7 +21,8 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { fetchTutorials } from "@/api";
+import { fetchTutorials, logActivity } from "@/api";
+import { useAuth } from "@/lib/AuthContext";
 import { Dialog, DialogClose, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Play, Search, Clock, Film, Volume2, Zap } from "lucide-react";
 
@@ -40,14 +41,14 @@ const TYPE_COLORS = {
 
 /** @type {Tutorial[]} */
 
-import { useAuth } from "@/lib/AuthContext";
 import RequireAccount from "@/components/RequireAccount";
 
 export default function Tutorials() {
-  const { isAuthenticated } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const [search, setSearch] = useState("");
   const [level, setLevel] = useState(/** @type { 'All' | TutorialLevel } */ ("All"));
   const [type, setType] = useState(/** @type { 'All' | TutorialType } */ ("All"));
+  const [lastSearchSignature, setLastSearchSignature] = useState("");
 
   const [selectedTutorial, setSelectedTutorial] = useState(null);
   const [searchParams] = useSearchParams();
@@ -60,6 +61,27 @@ export default function Tutorials() {
     retry: 1,
     enabled: isAuthenticated,
   });
+
+  useEffect(() => {
+    const signature = `${search.trim()}|${level}|${type}`;
+    if (signature === lastSearchSignature) return;
+    if (!search.trim() && level === 'All' && type === 'All') return;
+
+    const timer = setTimeout(() => {
+      logActivity({
+        action: 'resource_searched',
+        user_email: user?.email || 'anonymous',
+        user_name: user?.full_name || '',
+        user_role: user?.role || 'student',
+        resource_title: 'Tutorials',
+        subject: search.trim() || 'all',
+        metadata: JSON.stringify({ query: search.trim(), level, type }),
+      }).catch(() => {});
+      setLastSearchSignature(signature);
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [search, level, type, user?.email, user?.full_name, user?.role, lastSearchSignature]);
 
   const getVideoUrl = (tutorial) => tutorial?.videoUrl || tutorial?.url || '';
   const getThumbnailUrl = (tutorial) => tutorial?.thumbnailUrl || tutorial?.thumbnail_url || '';
@@ -178,7 +200,19 @@ export default function Tutorials() {
                         </span>
                       )}
                       {videoUrl ? (
-                        <button type="button" onClick={() => setSelectedTutorial(tut)}
+                        <button type="button" onClick={() => {
+                          setSelectedTutorial(tut);
+                          logActivity({
+                            action: 'resource_viewed',
+                            user_email: user?.email || 'anonymous',
+                            user_name: user?.full_name || '',
+                            user_role: user?.role || 'student',
+                            resource_title: tut.title,
+                            subject: tut.subject,
+                            level: tut.level,
+                            metadata: JSON.stringify({ resource_id: tut.id, resource_type: 'tutorial' }),
+                          }).catch(() => {});
+                        }}
                           className="bg-primary text-primary-foreground text-xs font-semibold px-3 py-1.5 rounded-lg hover:opacity-90 flex items-center gap-1">
                           <Play className="h-3 w-3" /> Watch
                         </button>

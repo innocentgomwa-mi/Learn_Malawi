@@ -40,6 +40,9 @@ export class StudentProgress {
   @Column({ type: 'int', nullable: true })
   correct_answers?: number;
 
+  @Column({ type: 'int', nullable: true })
+  points?: number;
+
   @Column({ type: 'json', nullable: true })
   topics_failed?: string[];
 

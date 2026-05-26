@@ -23,6 +23,9 @@ export class Announcement {
   @Column({ name: 'teacher_email', length: 255 })
   teacherEmail: string;
 
+  @Column({ length: 255, nullable: true })
+  link?: string;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

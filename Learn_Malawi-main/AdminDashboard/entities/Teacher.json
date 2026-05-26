@@ -1,0 +1,45 @@
+{
+  "name": "Teacher",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "school": {
+      "type": "string"
+    },
+    "district": {
+      "type": "string"
+    },
+    "subjects": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "suspended",
+        "pending_verification"
+      ],
+      "default": "pending_verification"
+    },
+    "posts_submitted": {
+      "type": "number",
+      "default": 0
+    },
+    "posts_approved": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}

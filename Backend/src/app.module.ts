@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuardWithPublic } from './auth/guards/public.guard';
 import { User } from './users/entities/user.entity';
 import { RefreshToken } from './auth/entities/refresh-token.entity';
+import { PendingRegistration } from './auth/entities/pending-registration.entity';
+import { PasswordReset } from './auth/entities/password-reset.entity';
 import { CareerResource } from './career-resources/entities/career-resource.entity';
 import { Quiz } from './quizzes/entities/quiz.entity';
 import { Question } from './quizzes/entities/question.entity';
@@ -31,7 +33,9 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
 import { DataChangeHistoryModule } from './data-change-history/data-change-history.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
 import { InsightsModule } from './insights/insights.module';
+import { AdminNotificationsModule } from './admin-notifications/admin-notifications.module';
 import { ResourceRatingsModule } from './resource-ratings/resource-ratings.module';
+import { SearchLogModule } from './search-log/search-log.module';
 import { Announcement } from './announcements/entities/announcement.entity';
 import { Discussion } from './discussions/entities/discussion.entity';
 import { TeacherPost } from './teacher-posts/entities/teacher-post.entity';
@@ -40,6 +44,7 @@ import { ActivityLog } from './activity-log/entities/activity-log.entity';
 import { DataChangeHistory } from './data-change-history/entities/data-change-history.entity';
 import { StudentProgress } from './student-progress/entities/student-progress.entity';
 import { ResourceRating } from './resource-ratings/entities/resource-rating.entity';
+import { SearchLog } from './search-log/entities/search-log.entity';
 import { StudyGroupsModule } from './study-groups/study-groups.module';
 import { StudyGroup } from './study-groups/entities/study-group.entity';
 import { StudyGroupMessage } from './study-groups/entities/study-group-message.entity';
@@ -49,6 +54,11 @@ import { ScheduleModule } from './schedule/schedule.module';
 import { StudyBlock } from './schedule/entities/study-block.entity';
 import { Resource } from './schedule/entities/resource.entity';
 import { Exam } from './schedule/entities/exam.entity';
+import { ClassSchedule } from './schedule/entities/class-schedule.entity';
+import { ChatMessagesModule } from './chat-messages/chat-messages.module';
+import { ChatMessage } from './chat-messages/chat-message.entity';
+import { SharedResourcesModule } from './shared-resources/shared-resources.module';
+import { SharedResource } from './shared-resources/shared-resource.entity';
 
 @Module({
   imports: [
@@ -63,6 +73,14 @@ import { Exam } from './schedule/entities/exam.entity';
         NODE_ENV: Joi.string().valid('development', 'production', 'test').default('development'),
         HF_API_KEY: Joi.string().required(),
         HF_MODEL: Joi.string().default('google/flan-t5-small'),
+        EMAIL_HOST: Joi.string().optional(),
+        EMAIL_PORT: Joi.number().integer().optional(),
+        EMAIL_USER: Joi.string().optional(),
+        EMAIL_PASS: Joi.string().optional(),
+        EMAIL_FROM: Joi.string().optional(),
+        EMAIL_SECURE: Joi.boolean().optional(),
+        APP_NAME: Joi.string().optional(),
+        APP_DOMAIN: Joi.string().optional(),
       }),
       validationOptions: {
         allowUnknown: true,
@@ -78,6 +96,7 @@ import { Exam } from './schedule/entities/exam.entity';
         entities: [
           User,
           RefreshToken,
+          PendingRegistration,
           CareerResource,
           Quiz,
           Question,
@@ -94,9 +113,14 @@ import { Exam } from './schedule/entities/exam.entity';
           DataChangeHistory,
           StudentProgress,
           ResourceRating,
+          SearchLog,
+          PasswordReset,
           LearningPath,
           StudyGroup,
           StudyGroupMessage,
+          ClassSchedule,
+          ChatMessage,
+          SharedResource,
           StudyBlock,
           Resource,
           Exam,
@@ -123,10 +147,14 @@ import { Exam } from './schedule/entities/exam.entity';
     DataChangeHistoryModule,
     StudentProgressModule,
     InsightsModule,
+    AdminNotificationsModule,
     ResourceRatingsModule,
+    SearchLogModule,
     StudyGroupsModule,
     LearningPathsModule,
     ScheduleModule,
+    ChatMessagesModule,
+    SharedResourcesModule,
   ],
   controllers: [],
   providers: [

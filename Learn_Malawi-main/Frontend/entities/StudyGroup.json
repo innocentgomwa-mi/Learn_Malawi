@@ -1,0 +1,51 @@
+{
+  "name": "StudyGroup",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "title": "Group Name"
+    },
+    "subject": {
+      "type": "string",
+      "title": "Subject"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "PSLC",
+        "JCE",
+        "MSCE"
+      ],
+      "title": "Level"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "mentor_email": {
+      "type": "string",
+      "title": "Mentor Email"
+    },
+    "scheduled_at": {
+      "type": "string",
+      "title": "Scheduled Date/Time"
+    },
+    "is_active": {
+      "type": "boolean",
+      "title": "Is Active"
+    },
+    "members": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "Member Emails"
+    }
+  },
+  "required": [
+    "name",
+    "subject",
+    "level"
+  ]
+}
