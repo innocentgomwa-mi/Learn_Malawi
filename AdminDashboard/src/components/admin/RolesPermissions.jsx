@@ -4,12 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Shield, Crown, User, GraduationCap, AlertTriangle, CheckCircle } from "lucide-react";
+import { apiClient } from "@/api/apiClient";
 import { auditLog } from "@/lib/auditLogger";
 
 const ROLE_INFO = {
-  admin: { icon: Crown, color: "bg-purple-100 text-purple-700 border-purple-200", label: "Administrator", perms: ["Full platform access", "Approve/reject posts", "Manage users", "View audit logs", "System settings", "Maintenance mode"] },
-  teacher: { icon: GraduationCap, color: "bg-emerald-100 text-emerald-700 border-emerald-200", label: "Teacher", perms: ["Submit resources", "View own posts", "View approved content"] },
-  user: { icon: User, color: "bg-slate-100 text-slate-700 border-slate-200", label: "Student", perms: ["Browse resources", "Take quizzes", "View progress", "Rate resources"] },
+  Admin: { icon: Crown, color: "bg-purple-100 text-purple-700 border-purple-200", label: "Administrator", perms: ["Full platform access", "Approve/reject posts", "Manage users", "View audit logs", "System settings", "Maintenance mode"] },
+  Teacher: { icon: GraduationCap, color: "bg-emerald-100 text-emerald-700 border-emerald-200", label: "Teacher", perms: ["Submit resources", "View own posts", "View approved content"] },
+  Student: { icon: User, color: "bg-slate-100 text-slate-700 border-slate-200", label: "Student", perms: ["Browse resources", "Take quizzes", "View progress", "Rate resources"] },
 };
 
 export default function RolesPermissions() {
@@ -71,7 +72,7 @@ export default function RolesPermissions() {
           ) : (
             <div className="space-y-2">
               {users.map(user => {
-                const roleInfo = ROLE_INFO[user.role] || ROLE_INFO.user;
+                const roleInfo = ROLE_INFO[user.role] || ROLE_INFO.Student;
                 const Icon = roleInfo.icon;
                 return (
                   <div key={user.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -85,15 +86,15 @@ export default function RolesPermissions() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className={roleInfo.color}>{user.role || "user"}</Badge>
+                      <Badge variant="outline" className={roleInfo.color}>{user.role || "Student"}</Badge>
                       <select
                         className="text-xs border border-gray-200 rounded-md px-2 py-1 bg-white"
-                        value={user.role || "user"}
+                        value={user.role || "Student"}
                         onChange={e => setPendingChange({ userId: user.id, newRole: e.target.value, oldRole: user.role, userEmail: user.email })}
                       >
-                        <option value="user">Student</option>
-                        <option value="teacher">Teacher</option>
-                        <option value="admin">Admin</option>
+                        <option value="Student">Student</option>
+                        <option value="Teacher">Teacher</option>
+                        <option value="Admin">Admin</option>
                       </select>
                     </div>
                   </div>
@@ -119,7 +120,7 @@ export default function RolesPermissions() {
                 </div>
               </div>
               <p className="text-sm text-gray-700 mb-4">
-                Change role for <strong>{pendingChange.userEmail}</strong> from <Badge variant="outline">{pendingChange.oldRole || "user"}</Badge> to <Badge variant="outline">{pendingChange.newRole}</Badge>?
+                Change role for <strong>{pendingChange.userEmail}</strong> from <Badge variant="outline">{pendingChange.oldRole || "Student"}</Badge> to <Badge variant="outline">{pendingChange.newRole}</Badge>?
               </p>
               <label className="flex items-center gap-2 text-sm text-gray-600 mb-4 cursor-pointer">
                 <input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} className="rounded" />

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import AdminSidebar from "@/components/admin/AdminSidebar";
 import AdminOverview from "@/components/admin/AdminOverview";
+import AdminNotifications from "@/components/admin/AdminNotifications";
 import PostApprovals from "@/components/admin/PostApprovals";
 import ManageTeachers from "@/components/admin/ManageTeachers";
 import ManageStudents from "@/components/admin/ManageStudents";
@@ -8,27 +9,31 @@ import ManageAnnouncements from "@/components/admin/ManageAnnouncements";
 import ActivityLogViewer from "@/components/admin/ActivityLogViewer";
 import SecurityCenter from "@/components/admin/SecurityCenter";
 import SystemHealth from "@/components/admin/SystemHealth";
-import BackupRestore from "@/components/admin/BackupRestore";
+import BackupMonitor from "@/components/admin/BackupMonitor";
+import InsightsDashboard from "@/components/admin/InsightsDashboard";
 import MaintenanceMode from "@/components/admin/MaintenanceMode";
 import RolesPermissions from "@/components/admin/RolesPermissions";
 import SessionsViewer from "@/components/admin/SessionsViewer";
 import ReportsAnalytics from "@/components/admin/ReportsAnalytics";
 import StudyGroupsMonitor from "@/components/admin/StudyGroupsMonitor";
 import SearchAnalytics from "@/components/admin/SearchAnalytics";
-import { Menu } from "lucide-react";
+import { Menu, Bell } from "lucide-react";
 import { usePageLogger } from "@/hooks/usePageLogger";
 import { useRefreshRate } from '@/lib/RefreshRateContext';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAdminNotifications } from '@/hooks/useAdminNotifications';
 
 export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   usePageLogger("login", { resource_title: "Admin Dashboard" });
   const [sidebarExpanded, setSidebarExpanded] = useState(false);
   const { refreshSeconds, setRefreshSeconds, refreshOptions } = useRefreshRate();
+  const { unreadCount } = useAdminNotifications();
 
   const renderSection = () => {
     switch (activeSection) {
       case "overview": return <AdminOverview refreshSeconds={refreshSeconds} />;
+      case "notifications": return <AdminNotifications onOpenSection={(section) => setActiveSection(section)} />;
       case "approvals": return <PostApprovals />;
       case "teachers": return <ManageTeachers />;
       case "students": return <ManageStudents />;
@@ -36,7 +41,8 @@ export default function AdminDashboard() {
       case "logs": return <ActivityLogViewer refreshSeconds={refreshSeconds} />;
       case "security": return <SecurityCenter />;
       case "health": return <SystemHealth />;
-      case "backups": return <BackupRestore />;
+      case "backups": return <BackupMonitor />;
+      case "insights": return <InsightsDashboard />;
       case "maintenance": return <MaintenanceMode />;
       case "study-groups": return <StudyGroupsMonitor refreshSeconds={refreshSeconds} />;
       case "roles": return <RolesPermissions />;
@@ -81,6 +87,19 @@ export default function AdminDashboard() {
             <span className="font-semibold text-gray-800">Learn Malawi Admin</span>
           </div>
           <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setActiveSection("notifications")}
+              className="relative p-2 rounded-full text-slate-600 hover:bg-slate-100"
+              aria-label="Open notifications"
+            >
+              <Bell className="w-5 h-5" />
+              {unreadCount > 0 && (
+                <span className="absolute -right-1 -top-1 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full bg-red-600 px-1.5 text-[0.65rem] font-semibold text-white">
+                  {unreadCount}
+                </span>
+              )}
+            </button>
             <div className="text-sm text-slate-500">Auto refresh</div>
             <Select value={String(refreshSeconds)} onValueChange={(value) => setRefreshSeconds(Number(value))}>
               <SelectTrigger className="h-9 min-w-[12rem] text-sm">

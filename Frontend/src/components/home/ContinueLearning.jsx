@@ -6,6 +6,45 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/AuthContext.jsx";
 import { fetchStudentProgress } from "@/api";
 
+/**
+ * @typedef {Object} ContinueLearningEntry
+ * @property {string|number} [resource_id]
+ * @property {string|number} [quiz_id]
+ * @property {string} [resource_type]
+ * @property {string} [entry_type]
+ * @property {string} [title]
+ * @property {string} [resource_title]
+ * @property {string} [name]
+ * @property {string} [subject]
+ * @property {string} [topic]
+ * @property {string} [type]
+ * @property {number} [progress]
+ * @property {number} [completed_percent]
+ * @property {number} [score]
+ * @property {number} [total_questions]
+ * @property {boolean} [completed]
+ * @property {string} [time_left]
+ * @property {string} [remaining_time]
+ * @property {string} [color]
+ * @property {string} [badgeColor]
+ */
+
+/**
+ * @typedef {Object} ContinueLearningItem
+ * @property {string} key
+ * @property {string} title
+ * @property {string} subject
+ * @property {string} type
+ * @property {number} progress
+ * @property {string} timeLeft
+ * @property {string} route
+ * @property {string} color
+ * @property {string} badgeColor
+ */
+
+/**
+ * @param {ContinueLearningEntry} entry
+ */
 const getEntryRoute = (entry) => {
   const id = entry.resource_id || entry.quiz_id;
   const type = (entry.resource_type || "").toLowerCase();
@@ -34,6 +73,9 @@ const getEntryRoute = (entry) => {
   return "/learning-history";
 };
 
+/**
+ * @param {ContinueLearningEntry} entry
+ */
 const getEntryTitle = (entry) => {
   if (entry.title) return entry.title;
   if (entry.resource_title) return entry.resource_title;
@@ -42,6 +84,9 @@ const getEntryTitle = (entry) => {
   return "Continue learning";
 };
 
+/**
+ * @param {ContinueLearningEntry} entry
+ */
 const getEntryTypeLabel = (entry) => {
   if (entry.entry_type === "learning_path" || entry.resource_type?.toString().includes("learning_path")) return "Learning Path";
   if (entry.entry_type === "study") return "Study Notes";
@@ -51,6 +96,9 @@ const getEntryTypeLabel = (entry) => {
   return entry.type || "Learning";
 };
 
+/**
+ * @param {ContinueLearningEntry} entry
+ */
 const getEntryProgressValue = (entry) => {
   if (typeof entry.progress === "number") return Math.min(Math.max(entry.progress, 0), 100);
   if (typeof entry.completed_percent === "number") return Math.min(Math.max(entry.completed_percent, 0), 100);
@@ -62,6 +110,9 @@ const getEntryProgressValue = (entry) => {
   return 35;
 };
 
+/**
+ * @param {ContinueLearningEntry} entry
+ */
 const getEntryTimeLeft = (entry) => {
   if (entry.time_left) return entry.time_left;
   if (entry.remaining_time) return entry.remaining_time;
@@ -69,6 +120,11 @@ const getEntryTimeLeft = (entry) => {
   return "Resume now";
 };
 
+/**
+ * @param {ContinueLearningEntry} entry
+ * @param {number} index
+ * @returns {ContinueLearningItem}
+ */
 const normalizeEntry = (entry, index) => ({
   key: `${entry.resource_id || entry.quiz_id || entry.title || entry.resource_title || "learning"}-${index}`,
   title: getEntryTitle(entry),
@@ -84,7 +140,7 @@ const normalizeEntry = (entry, index) => ({
 export default function ContinueLearning() {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [recent, setRecent] = useState([]);
+  const [recent, setRecent] = useState(/** @type {ContinueLearningItem[]} */ ([]));
   const [isLoading, setIsLoading] = useState(true);
   const [hasLoaded, setHasLoaded] = useState(false);
 

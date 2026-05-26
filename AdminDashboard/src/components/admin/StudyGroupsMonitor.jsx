@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
+import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { apiClient } from "@/api/apiClient";
 
 const LEVEL_OPTIONS = ["PSLC", "JCE", "MSCE"];
@@ -28,8 +30,43 @@ export default function StudyGroupsMonitor({ refreshSeconds }) {
 
   const deleteMutation = useMutation({
     mutationFn: (id) => apiClient.entities.StudyGroup.delete(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["study-groups"] }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["study-groups"] });
+      toast({
+        title: "Group deleted",
+        description: "The study group has been deleted successfully.",
+        duration: 5000,
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error?.message || "Unable to delete the study group.",
+      });
+    },
   });
+
+  const confirmGroupDeletion = (group) => {
+    if (!group) return;
+
+    let confirmToast;
+    confirmToast = toast({
+      title: "Confirm deletion",
+      description: `Delete "${group.name}" permanently?`,
+      duration: 0,
+      action: (
+        <ToastAction
+          className="bg-white text-slate-900 hover:bg-slate-100"
+          onClick={() => {
+            deleteMutation.mutate(group.id);
+            confirmToast.dismiss();
+          }}
+        >
+          Confirm
+        </ToastAction>
+      ),
+    });
+  };
 
   const filteredGroups = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -188,7 +225,7 @@ export default function StudyGroupsMonitor({ refreshSeconds }) {
                       size="sm"
                       variant="destructive"
                       className="min-w-[5.5rem]"
-                      onClick={() => deleteMutation.mutate(group.id)}
+                      onClick={() => confirmGroupDeletion(group)}
                       disabled={deleteMutation.isLoading}
                     >
                       <Trash2 className="mr-2 h-3.5 w-3.5" />

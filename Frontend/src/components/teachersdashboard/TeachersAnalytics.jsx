@@ -201,7 +201,7 @@ export default function TeacherAnalytics() {
               { label: 'Total Quizzes', value: filteredQuizzes.length, color: 'text-blue-600' },
               { label: 'Total Questions', value: filteredQuizzes.reduce((a, q) => a + (q.questions?.length || 0), 0), color: 'text-sky-600' },
               { label: 'Attendance Rate', value: `${attendanceRate}%`, color: 'text-purple-600' },
-              { label: 'Avg Engagement', value: `${avgEngagement}%`, color: 'text-emerald-600' },
+              { label: 'Avg Engagement', value: `${avgEngagement}%`, color: 'text-blue-600' },
               { label: 'Sessions Logged', value: filteredAttendance.length, color: 'text-orange-600' },
             ].map(({ label, value, color }) => (
               <div key={label} className="bg-card border border-border rounded-xl p-5">

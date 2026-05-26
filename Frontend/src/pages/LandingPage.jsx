@@ -47,7 +47,7 @@ export default function LandingPage() {
     <div className="min-h-screen bg-slate-50">
       <main className="mx-auto max-w-8xl px-6 sm:px-8 py-8 space-y-10">
         {/* Hero */}
-        <HeroSection user={user} />
+        <HeroSection />
 
         <div className="grid gap-8">
           {/* Explore and performance */}

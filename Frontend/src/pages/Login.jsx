@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
 
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Lock, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { Toast, ToastTitle, ToastDescription, ToastClose } from '@/components/ui/toast';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [pageToast, setPageToast] = useState('');
-  const [pendingError, setPendingError] = useState('');
+  const toastTimerRef = /** @type {{ current: number | null }} */ (React.useRef(null));
   const { user, login, loading, error: apiError, clearError } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -45,6 +46,7 @@ const Login = () => {
     e.preventDefault();
     
     if (!email.trim() || !password.trim()) {
+      setPageToast('Please enter both email and password.');
       return;
     }
     
@@ -54,22 +56,37 @@ const Login = () => {
 
     if (result?.success) {
       console.log('Login successful, waiting for user state update...');
-      // The useEffect above will handle the redirect based on user role
-    } else if (result?.message) {
-      setPendingError(result.message);
+      setPageToast('');
+    } else {
+      setPageToast(result?.message || 'Wrong email or password. Please try again.');
     }
   };
+
+  useEffect(() => {
+    if (!pageToast) {
+      return undefined;
+    }
+
+    if (toastTimerRef.current) {
+      clearTimeout(toastTimerRef.current);
+    }
+
+    toastTimerRef.current = window.setTimeout(() => {
+      setPageToast('');
+      toastTimerRef.current = null;
+    }, 5000);
+
+    return () => {
+      if (toastTimerRef.current) {
+        clearTimeout(toastTimerRef.current);
+        toastTimerRef.current = null;
+      }
+    };
+  }, [pageToast]);
 
   /**
    * @param {React.ChangeEvent<HTMLInputElement>} e
    */
-  useEffect(() => {
-    if (!loading && pendingError) {
-      setPageToast(pendingError);
-      setPendingError('');
-    }
-  }, [loading, pendingError]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     if (name === 'email') {
@@ -88,136 +105,155 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950 py-16">
-      <div className="relative overflow-hidden">
-        <div className="absolute -top-20 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-secondary/15 blur-3xl" />
-        <div className="relative max-w-4xl mx-auto px-4">
-          <div className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr] items-stretch">
-            <div className="rounded-[2rem] bg-primary text-primary-foreground p-10 shadow-2xl overflow-hidden">
-              <span className="inline-flex items-center rounded-full bg-secondary/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.24em] text-secondary-foreground mb-6">
-                Learn Malawi Portal
-              </span>
-              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
-                Access your Learn Malawi experience.
-              </h1>
-              <p className="mt-6 max-w-xl text-lg leading-8 text-primary-foreground/85">
-                Sign in with your Learn Malawi account to continue learning, track progress, or manage content depending on your role.
-              </p>
-              <div className="mt-10 rounded-[1.75rem] border border-primary-foreground/10 bg-primary-foreground/5 p-6">
-                <p className="text-sm font-semibold text-primary-foreground">Account access</p>
-                <p className="mt-2 text-sm text-primary-foreground/80">
-                  Students and teachers may sign in here. Students will land on the main library, while teachers and admins will access management tools.
-                </p>
-              </div>
+    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center filter blur-sm"
+        style={{ backgroundImage: "url('/images/forgot%20password.jpg')" }}
+      />
+      <div className="absolute inset-0 bg-slate-950/25" />
+      <div className="relative w-full max-w-2xl">
+        <div className="flex justify-center mb-[-2.5rem] relative z-10">
+          <div
+            className="h-24 w-20 rounded-3xl flex items-center justify-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(180,180,255,0.45) 0%, rgba(130,100,220,0.55) 100%)',
+              boxShadow: '0 0 32px 8px rgba(130,100,255,0.35), inset 0 1px 1px rgba(255,255,255,0.3)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid rgba(255,255,255,0.25)',
+            }}
+          >
+            <Lock className="h-10 w-10 text-white/90" strokeWidth={1.5} />
+          </div>
+        </div>
+
+        <div
+          className="rounded-3xl px-8 pt-14 pb-8"
+          style={{
+            background: 'rgba(100, 80, 180, 0.25)',
+            backdropFilter: 'blur(20px)',
+            WebkitBackdropFilter: 'blur(20px)',
+            border: '1px solid rgba(255,255,255,0.18)',
+            boxShadow: '0 8px 48px rgba(0,0,0,0.3)',
+          }}
+        >
+          <div className="text-center mb-7">
+            <h1 className="text-2xl font-bold text-white mb-3">Welcome back</h1>
+            <p className="text-white/65 text-sm leading-relaxed">
+              Sign in to continue using Learn Malawi. Access your lessons, progress tracker, and admin tools from one place.
+            </p>
+          </div>
+
+          {loading && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-3xl bg-slate-950/10 backdrop-blur-sm">
+              <Loader2 className="h-12 w-12 animate-spin text-white" />
+              <p className="mt-4 text-sm font-semibold text-white">Signing you in…</p>
             </div>
+          )}
 
-            <div className="relative rounded-[2rem] border border-border bg-card p-8 shadow-lg overflow-hidden">
-              {loading && (
-                <div className="absolute inset-0 z-10 flex flex-col items-center justify-center rounded-[2rem] bg-slate-950/10 backdrop-blur-sm">
-                  <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                  <p className="mt-4 text-sm font-semibold text-primary">Signing you in…</p>
+          {pageToast && (
+            <div className="mb-6 rounded-2xl border border-rose-400/30 bg-rose-500/20 px-4 py-3 text-sm text-rose-200">
+              <div className="flex items-start justify-between gap-3">
+                <div className="text-left w-full">
+                  <p className="font-semibold">Wrong input</p>
+                  <p className="mt-1 text-sm text-rose-100/95">{pageToast}</p>
                 </div>
-              )}
-              <div className="mb-8">
-                <p className="text-sm uppercase tracking-[0.24em] text-muted-foreground">Secure sign in</p>
-                <h2 className="mt-4 text-3xl font-bold text-foreground">Sign in</h2>
-                <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                  Use your Learn Malawi credentials to access your student dashboard or content management tools.
-                </p>
-              </div>
-
-              {pageToast && (
-                <div className="mb-6">
-                  <Toast variant="destructive" className="w-full">
-                    <div className="pr-10">
-                      <ToastTitle>Login failed</ToastTitle>
-                      <ToastDescription>{pageToast}</ToastDescription>
-                    </div>
-                    <ToastClose onClick={() => setPageToast('')} />
-                  </Toast>
-                </div>
-              )}
-
-              {apiError && (
-                <div className="mb-6 rounded-3xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="font-semibold">Login failed</p>
-                      <p className="mt-1 text-rose-700/80">{apiError}</p>
-                    </div>
-                    <button onClick={clearError} className="text-rose-700 hover:text-rose-900 font-bold">
-                      ×
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <label className="block text-sm font-medium text-foreground">
-                  Email address
-                  <input
-                    type="email"
-                    id="email"
-                    name="email"
-                    value={email}
-                    onChange={handleChange}
-                    placeholder="admin@learnmalawi.com"
-                    disabled={loading}
-                    required
-                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-                  />
-                </label>
-
-                <label className="block text-sm font-medium text-foreground">
-                  Password
-                  <input
-                    type="password"
-                    id="password"
-                    name="password"
-                    value={password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    disabled={loading}
-                    required
-                    className="mt-3 w-full rounded-3xl border border-border bg-background px-4 py-3 text-sm text-foreground outline-none transition focus:border-primary focus:ring-2 focus:ring-primary/10"
-                  />
-                </label>
-
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <label className="inline-flex items-center gap-2 text-sm text-muted-foreground">
-                    <input type="checkbox" id="remember" disabled={loading} className="h-4 w-4 rounded border-border text-primary focus:ring-primary" />
-                    Remember me
-                  </label>
-                  <Link to="/forgot-password" className="text-sm font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">
-                    Forgot password?
-                  </Link>
-                </div>
-
                 <button
-                  type="submit"
-                  disabled={loading}
-                  className="inline-flex w-full items-center justify-center gap-2 rounded-3xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground shadow-sm transition duration-300 hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-70 disabled:bg-primary/80"
+                  type="button"
+                  onClick={() => setPageToast('')}
+                  className="text-rose-100 hover:text-white transition"
+                  aria-label="Dismiss error message"
                 >
-                  {loading ? (
-                    <>
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span>Signing in…</span>
-                    </>
-                  ) : (
-                    'Sign in to Learn Malawi'
-                  )}
+                  ×
                 </button>
-              </form>
-
-              <div className="mt-8 border-t border-border pt-6 text-sm text-muted-foreground space-y-3">
-                <p>
-                  Need an account? <Link to="/register" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">Register now</Link>
-                </p>
-                <p>
-                  <Link to="/" className="font-medium text-primary hover:text-primary/90 hover:underline hover:underline-offset-2">Return to free resources</Link>
-                </p>
               </div>
             </div>
+          )}
+
+          {apiError && !pageToast && (
+            <div className="mb-6 rounded-2xl bg-rose-500/20 border border-rose-400/30 px-4 py-3 text-sm text-rose-200 text-center">
+              {apiError}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={handleChange}
+              placeholder="Your email address"
+              disabled={loading}
+              required
+              className="w-full rounded-full px-5 py-3.5 text-sm text-white placeholder-white/50 outline-none transition"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1.5px solid rgba(0,220,255,0.5)',
+                backdropFilter: 'blur(8px)',
+              }}
+            />
+
+            <div className="relative">
+              <input
+                type={showPassword ? 'text' : 'password'}
+                id="password"
+                name="password"
+                value={password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                disabled={loading}
+                required
+                className="w-full rounded-full px-5 py-3.5 pr-12 text-sm text-white placeholder-white/50 outline-none transition"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  border: '1.5px solid rgba(0,220,255,0.5)',
+                  backdropFilter: 'blur(8px)',
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((current) => !current)}
+                className="absolute inset-y-0 right-3 flex items-center text-black hover:text-slate-700"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <label className="inline-flex items-center gap-2 text-sm text-white/70">
+                <input type="checkbox" id="remember" disabled={loading} className="h-4 w-4 rounded border-white/20 bg-slate-950/20 text-cyan-400 focus:ring-cyan-300" />
+                Remember me
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-sm font-medium text-white/80 hover:text-white hover:underline hover:underline-offset-2"
+              >
+                Forgot password?
+              </Link>
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-full py-3.5 text-sm font-bold text-slate-900 transition hover:opacity-90 disabled:opacity-60"
+              style={{ background: 'linear-gradient(90deg, #00e5cc, #00cfff)' }}
+            >
+              {loading ? 'Signing in…' : 'Sign in to Learn Malawi'}
+            </button>
+          </form>
+
+          <div className="mt-6 text-center text-sm text-white/70 space-y-3">
+            <p>
+              Need an account?{' '}
+              <Link to="/register" className="font-semibold text-white hover:text-white/90 hover:underline hover:underline-offset-2">
+                Register now
+              </Link>
+            </p>
+            <p>
+              <Link to="/" className="font-semibold text-white hover:text-white/90 hover:underline hover:underline-offset-2">
+                Return to free resources
+              </Link>
+            </p>
           </div>
         </div>
       </div>

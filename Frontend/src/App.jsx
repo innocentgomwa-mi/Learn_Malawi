@@ -29,6 +29,7 @@ import Register from './pages/Register';
 import ForgotPassword from './pages/ForgotPassword';
 import Onboarding from './pages/Onboarding';
 import Unauthorized from './pages/Unauthorized';
+import Welcome from './pages/Welcome';
 import TeachersDashboard from './components/teachersdashboard/TeachersDashboard';
 import TeachersDashboardOverview from './components/teachersdashboard/TeachersDashboardOverview';
 import PastPapersAdmin from './components/teachersdashboard/PastPapersAdmin';
@@ -66,11 +67,13 @@ const AuthenticatedApp = () => {
 
   const maintenanceSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_mode');
   const maintenanceMessageSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_message');
+  const maintenanceDowntimeSetting = appPublicSettings?.find((setting) => setting.key === 'maintenance_downtime');
   const isMaintenanceMode = maintenanceSetting?.value === 'true';
   const maintenanceMessage = maintenanceMessageSetting?.value || "We'll be back shortly.";
+  const maintenanceDowntime = maintenanceDowntimeSetting?.value || "~2 hours";
 
   if (isMaintenanceMode) {
-    return <MaintenancePage message={maintenanceMessage} />;
+    return <MaintenancePage message={maintenanceMessage} downtime={maintenanceDowntime} />;
   }
 
   // Show loading spinner while checking app public settings or auth
@@ -137,10 +140,12 @@ const AuthenticatedApp = () => {
           <Route path="analytics" element={<TeachersAnalytics />} />
           <Route path="discussions" element={<TeachersDiscussions />} />
           <Route path="announcements" element={<TeacherAnnouncements />} />
+          <Route path="notifications" element={<Notifications />} />
           <Route path="settings" element={<TeacherSettings />} />
         </Route>
         <Route path="/teachersdashboard" element={<Navigate to="/teacher" replace />} />
         <Route path="/onboarding" element={<Onboarding />} />
+        <Route path="/welcome" element={<ProtectedRoute requiredRoles={[]}><Welcome /></ProtectedRoute>} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />

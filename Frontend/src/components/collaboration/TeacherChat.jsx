@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { fetchChatMessages, createChatMessage, updateChatMessage, deleteChatMessage, fetchTeachers } from '@/api';
+import { markChatMessagesAsSeen } from '@/lib/notificationStorage';
 import { Send, Smile, Pencil, Trash2, Check, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
@@ -66,6 +67,14 @@ export default function TeacherChat({ user }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  useEffect(() => {
+    if (!user?.email || messages.length === 0) return;
+    const latestMessage = messages[messages.length - 1];
+    if (!latestMessage) return;
+    const lastSeen = latestMessage.created_date || latestMessage.createdAt || latestMessage.created_at || new Date().toISOString();
+    markChatMessagesAsSeen(user.email, 'general', lastSeen, user?.role);
+  }, [messages, user?.email, user?.role]);
 
   const handleTextChange = (e) => {
     const val = e.target.value;

@@ -1,15 +1,22 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { Announcement } from './entities/announcement.entity';
 import { CreateAnnouncementDto } from './dto/create-announcement.dto';
 import { UpdateAnnouncementDto } from './dto/update-announcement.dto';
+import { User, UserRole } from '../users/entities/user.entity';
+import { EmailService } from '../auth/email.service';
 
 @Injectable()
 export class AnnouncementsService {
+  private readonly logger = new Logger(AnnouncementsService.name);
+
   constructor(
     @InjectRepository(Announcement)
     private readonly announcementsRepository: Repository<Announcement>,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private readonly emailService: EmailService,
   ) {}
 
   async create(createAnnouncementDto: CreateAnnouncementDto) {
@@ -19,7 +26,53 @@ export class AnnouncementsService {
       priority: createAnnouncementDto.priority ?? 'normal',
       isPublished: createAnnouncementDto.isPublished ?? false,
     });
-    return this.announcementsRepository.save(announcement);
+
+    const savedAnnouncement = await this.announcementsRepository.save(announcement);
+
+    if (savedAnnouncement.isPublished) {
+      await this.notifyAudienceByEmail(savedAnnouncement);
+    }
+
+    return savedAnnouncement;
+  }
+
+  private async notifyAudienceByEmail(announcement: Announcement) {
+    const audience = announcement.targetAudience || 'all';
+    const where: Record<string, any> = {};
+
+    if (audience === 'teachers') {
+      where.role = UserRole.TEACHER;
+    } else if (audience === 'students') {
+      where.role = UserRole.STUDENT;
+    } else {
+      where.role = In([UserRole.TEACHER, UserRole.STUDENT]);
+    }
+
+    const recipients = await this.userRepository.find({
+      where,
+      select: ['email'],
+    });
+
+    if (!recipients.length) {
+      return;
+    }
+
+    const subject = `New announcement: ${announcement.title}`;
+    const body = `${announcement.body}
+
+${announcement.link ? `Open this link: ${announcement.link}` : 'Open the app to view this announcement.'}`;
+
+    await Promise.all(
+      recipients.map(async (recipient) => {
+        try {
+          await this.emailService.sendEmail(recipient.email, subject, body);
+        } catch (error) {
+          this.logger.warn(
+            `Unable to deliver announcement email to ${recipient.email}: ${error instanceof Error ? error.message : 'unknown error'}`,
+          );
+        }
+      }),
+    );
   }
 
   async findAll(teacherEmail?: string, published?: boolean) {

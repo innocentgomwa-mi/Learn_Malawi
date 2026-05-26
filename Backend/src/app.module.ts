@@ -33,6 +33,7 @@ import { ActivityLogModule } from './activity-log/activity-log.module';
 import { DataChangeHistoryModule } from './data-change-history/data-change-history.module';
 import { StudentProgressModule } from './student-progress/student-progress.module';
 import { InsightsModule } from './insights/insights.module';
+import { AdminNotificationsModule } from './admin-notifications/admin-notifications.module';
 import { ResourceRatingsModule } from './resource-ratings/resource-ratings.module';
 import { SearchLogModule } from './search-log/search-log.module';
 import { Announcement } from './announcements/entities/announcement.entity';
@@ -146,6 +147,7 @@ import { SharedResource } from './shared-resources/shared-resource.entity';
     DataChangeHistoryModule,
     StudentProgressModule,
     InsightsModule,
+    AdminNotificationsModule,
     ResourceRatingsModule,
     SearchLogModule,
     StudyGroupsModule,

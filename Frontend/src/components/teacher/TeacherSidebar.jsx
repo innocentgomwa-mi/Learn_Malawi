@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard, BookOpen, FileText, HelpCircle, Users, BarChart2,
-  MessageSquare, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
+  MessageSquare, MessageCircle, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
   GraduationCap, PlayCircle, CalendarCheck, TrendingUp, Briefcase, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -41,7 +41,7 @@ const groups = [
   {
     label: 'Communication',
     items: [
-      { path: '/teacher/discussions', icon: MessageSquare, label: 'Discussions / Q&A' },
+      { path: '/teacher/discussions', icon: MessageCircle, label: 'Discussions / Q&A' },
       { path: '/teacher/collaboration', icon: MessageSquare, label: 'Teacher Collaboration' },
       { path: '/teacher/announcements', icon: Bell, label: 'Announcements' },
     ]
@@ -62,7 +62,7 @@ export default function TeacherSidebar() {
 
   return (
     <aside className={cn(
-      'min-h-screen bg-blue-950 text-blue-100 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
+      'sticky top-0 h-screen flex-shrink-0 bg-blue-950 text-blue-100 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
       collapsed ? 'w-[68px]' : 'w-64'
     )}>
       {/* Logo */}
@@ -143,18 +143,6 @@ export default function TeacherSidebar() {
           <Clock className="w-4 h-4 shrink-0" />
           {!collapsed && 'History'}
         </Link>
-        <button
-          onClick={logout}
-          title={collapsed ? 'Sign Out' : undefined}
-          className={cn(
-            'flex items-center gap-3 w-full rounded-2xl text-sm font-medium transition-all',
-            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
-            'text-blue-200 hover:bg-blue-800 hover:text-white'
-          )}
-        >
-          <LogOut className="w-4 h-4 shrink-0" />
-          {!collapsed && 'Sign Out'}
-        </button>
 
         {/* Collapse toggle */}
         <button
@@ -166,6 +154,18 @@ export default function TeacherSidebar() {
           )}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}
+        </button>
+        <button
+          onClick={logout}
+          title={collapsed ? 'Sign Out' : undefined}
+          className={cn(
+            'flex items-center gap-3 w-full rounded-2xl text-sm font-medium transition-all',
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+            'text-blue-200 hover:bg-blue-800 hover:text-white'
+          )}
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          {!collapsed && 'Sign Out'}
         </button>
       </div>
     </aside>

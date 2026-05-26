@@ -162,10 +162,25 @@ const buildEntity = (basePath) => ({
   },
 });
 
+const normalizeUserRole = (role) => {
+  if (typeof role !== 'string') return role;
+  const normalized = role.trim().toLowerCase();
+  if (normalized === 'admin') return 'Admin';
+  if (normalized === 'teacher') return 'Teacher';
+  if (normalized === 'student' || normalized === 'user') return 'Student';
+  return role;
+};
+
 const User = {
   list: async () => fetchJson('/users'),
   create: async (data) => fetchJson('/users', { method: 'POST', body: data }),
-  update: async (id, data) => fetchJson(`/users/${id}`, { method: 'PATCH', body: data }),
+  update: async (id, data) => {
+    const payload = data && typeof data === 'object' ? { ...data } : data;
+    if (payload && payload.role) {
+      payload.role = normalizeUserRole(payload.role);
+    }
+    return fetchJson(`/users/${id}`, { method: 'PATCH', body: payload });
+  },
   delete: async (id) => fetchJson(`/users/${id}`, { method: 'DELETE' }),
 };
 
@@ -194,6 +209,10 @@ const Announcement = {
   create: async (data) => fetchJson('/announcements', { method: 'POST', body: data }),
   update: async (id, data) => fetchJson(`/announcements/${id}`, { method: 'PATCH', body: data }),
   delete: async (id) => fetchJson(`/announcements/${id}`, { method: 'DELETE' }),
+};
+
+const AdminNotifications = {
+  list: async () => tryFetchJson('/admin/notifications', []),
 };
 
 const PasswordReminder = {
@@ -250,6 +269,12 @@ const auth = {
     }
     return response;
   },
+  verifyEmail: async (data) => {
+    return fetchJson('/auth/verify-email', { method: 'POST', body: data });
+  },
+  resendVerification: async (data) => {
+    return fetchJson('/auth/resend-verification', { method: 'POST', body: data });
+  },
   refresh: async () => {
     const refreshToken = typeof window !== 'undefined' ? window.localStorage.getItem(REFRESH_TOKEN_KEY) : null;
     if (!refreshToken) {
@@ -291,9 +316,9 @@ export const apiClient = {
     Teacher,
     Student,
     Announcement,
+    AdminNotifications,
     PasswordReminder,
     TeacherPost,
-    ResourceRating,
     StudyNote,
     Tutorial,
     PastPaper,

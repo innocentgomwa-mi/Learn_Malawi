@@ -298,11 +298,11 @@ export default function LearningPaths() {
                   const relatedResources = ids.map(id => allResourceMap.get(id)).filter(Boolean);
 
                   return (
-                    <div key={i} className={`rounded-[1.5rem] border p-5 ${mDone ? 'border-emerald-200 bg-emerald-50/80' : locked ? 'border-border bg-muted/80 opacity-80' : 'border-border bg-white'} shadow-sm`}>
+                    <div key={i} className={`rounded-[1.5rem] border p-5 ${mDone ? 'border-blue-200 bg-blue-50/80' : locked ? 'border-border bg-muted/80 opacity-80' : 'border-border bg-white'} shadow-sm`}>
                       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                           <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-semibold text-muted-foreground">
-                            <span className={mDone ? 'text-emerald-700' : locked ? 'text-muted-foreground' : 'text-primary'}>{locked ? 'Locked' : mDone ? 'Completed' : 'Milestone'}</span>
+                            <span className={mDone ? 'text-blue-700' : locked ? 'text-muted-foreground' : 'text-primary'}>{locked ? 'Locked' : mDone ? 'Completed' : 'Milestone'}</span>
                             <span className="h-1.5 w-1.5 rounded-full bg-current inline-block" />
                             <span>{`Step ${i + 1}`}</span>
                           </div>

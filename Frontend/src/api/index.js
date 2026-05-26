@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 
-/** @typedef {{ level?: string, subject?: string, search?: string }} StudyNotesParams */
-/** @typedef {{ level?: string, subject?: string, difficulty?: string, classFilter?: string }} QuizzesParams */
+/** @typedef {{ level?: string, subject?: string, search?: string, teacherEmail?: string }} StudyNotesParams */
+/** @typedef {{ level?: string, subject?: string, difficulty?: string, classFilter?: string, teacherEmail?: string }} QuizzesParams */
 /** @typedef {{ [key:string]: any }} JsonObject */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Eye, FileText, Filter } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -10,6 +10,8 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue
 } from "@/components/ui/select";
+import { toast } from "@/components/ui/use-toast";
+import { ToastAction } from "@/components/ui/toast";
 import { apiClient } from "@/api/apiClient";
 
 const STATUS_COLORS = {
@@ -26,8 +28,17 @@ const TYPE_LABELS = {
   career_resource: "Career Resource",
 };
 
+const RESOURCE_DELETE_MAP = {
+  study_notes: ({ id }) => apiClient.entities.StudyNote.delete(id),
+  tutorial: ({ id }) => apiClient.entities.Tutorial.delete(id),
+  past_paper: ({ id }) => apiClient.entities.PastPaper.delete(id),
+  quiz: ({ id }) => apiClient.entities.Quiz.delete(id),
+  career_resource: ({ id }) => apiClient.entities.CareerResource.delete(id),
+};
+
 const normalizeResource = (item, type) => ({
   id: `${type}-${item.id}`,
+  originalId: item.id,
   title: item.title || item.name || `${TYPE_LABELS[type] || type} resource`,
   subject: item.subject || 'General',
   level: item.level || item.class || item.grade || 'All levels',
@@ -43,6 +54,53 @@ const normalizeResource = (item, type) => ({
 export default function PostApprovals() {
   const [filterType, setFilterType] = useState("all");
   const [selectedPost, setSelectedPost] = useState(null);
+  const queryClient = useQueryClient();
+
+  const deleteResourceMutation = useMutation({
+    mutationFn: async (resource) => {
+      const deleteFn = RESOURCE_DELETE_MAP[resource.resourceType];
+      if (!deleteFn) {
+        throw new Error(`Delete not supported for resource type: ${resource.resourceType}`);
+      }
+      return deleteFn({ id: resource.originalId });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(["published-resources"]);
+      toast({
+        title: "Resource deleted",
+        description: "The published resource has been removed successfully.",
+        duration: 5000,
+      });
+      setSelectedPost(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Delete failed",
+        description: error?.message || 'Unable to delete this resource.',
+      });
+    },
+  });
+
+  const confirmResourceDeletion = (resource) => {
+    if (!resource) return;
+
+    const confirmToast = toast({
+      title: "Confirm deletion",
+      description: `Delete \"${resource.title}\" permanently?`,
+      duration: 0,
+      action: (
+        <ToastAction
+          className="bg-white text-sky-700 hover:bg-slate-100"
+          onClick={() => {
+            deleteResourceMutation.mutate(resource);
+            confirmToast.dismiss();
+          }}
+        >
+          Confirm
+        </ToastAction>
+      ),
+    });
+  };
 
   const { data: allResources = {}, isLoading } = useQuery({
     queryKey: ["published-resources"],
@@ -142,6 +200,14 @@ export default function PostApprovals() {
                     <Button size="sm" variant="outline" onClick={() => setSelectedPost(resource)}>
                       <Eye className="w-3.5 h-3.5 mr-1" /> View
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={() => confirmResourceDeletion(resource)}
+                      disabled={deleteResourceMutation.isLoading}
+                    >
+                      Delete
+                    </Button>
                   </div>
                 </div>
               </CardContent>
@@ -192,6 +258,7 @@ export default function PostApprovals() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
     </div>
   );
 }
