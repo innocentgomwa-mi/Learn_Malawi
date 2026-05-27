@@ -1,7 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, Min, Max, IsUrl } from 'class-validator';
 import { Transform } from 'class-transformer';
-import { EducationLevel } from '../entities/past-paper.entity';
+import { EducationLevel } from '../../common/enums';
 
 export class CreatePastPaperDto {
   @ApiProperty({ example: 'PSLC Mathematics Paper 1' })

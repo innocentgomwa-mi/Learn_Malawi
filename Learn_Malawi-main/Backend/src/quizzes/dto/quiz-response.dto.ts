@@ -1,7 +1,7 @@
 // src/quizzes/dto/quiz-response.dto.ts
 import { Expose, Type } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { EducationLevel, Difficulty } from '../entities/quiz.entity';
+import { EducationLevel, Difficulty } from '../../common/enums';
 
 class QuestionResponseDto {
   @ApiProperty()

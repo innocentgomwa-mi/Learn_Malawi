@@ -8,21 +8,21 @@ export class Resource {
   @Column()
   name: string;
 
-  @Column({ default: 'other' })
-  type: string;
+  @Column({ nullable: true })
+  type?: string;
 
   @Column({ nullable: true })
-  subject: string;
+  subject?: string;
 
   @Column({ nullable: true })
-  url: string;
+  url?: string;
 
   @Column({ nullable: true })
-  user_email: string;
+  user_email?: string;
 
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_date' })
   createdDate: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_date' })
   updatedDate: Date;
 }

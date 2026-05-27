@@ -1,48 +1,173 @@
-import { NavLink } from 'react-router-dom';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import {
-  LayoutDashboard, FileText, BookOpen, Play, HelpCircle,
-  Briefcase, Users, ClipboardList, BarChart2, MessageSquare,
-  Megaphone, Settings, GraduationCap, Map
+  LayoutDashboard, BookOpen, FileText, HelpCircle, Users, BarChart2,
+  MessageSquare, MessageCircle, Bell, Settings, LogOut, ChevronLeft, ChevronRight,
+  GraduationCap, PlayCircle, CalendarCheck, TrendingUp, Briefcase, Clock
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useAuth } from '@/lib/AuthContext';
 
-const links = [
-  { to: '/teacher', label: 'Overview', icon: LayoutDashboard, end: true },
-  { to: '/teacher/study-notes', label: 'Study Notes', icon: FileText },
-  { to: '/teacher/past-papers', label: 'Past Papers', icon: BookOpen },
-  { to: '/teacher/tutorials', label: 'Tutorials', icon: Play },
-  { to: '/teacher/quizzes', label: 'Quizzes', icon: HelpCircle },
-  { to: '/teacher/career-resources', label: 'Career Resources', icon: Briefcase },
-  { to: '/teacher/study-groups', label: 'Study Groups', icon: Users },
-  { to: '/teacher/learning-paths', label: 'Learning Paths', icon: Map },
-  { to: '/teacher/students', label: 'Students', icon: GraduationCap },
-  { to: '/teacher/attendance', label: 'Attendance', icon: ClipboardList },
-  { to: '/teacher/analytics', label: 'Analytics', icon: BarChart2 },
-  { to: '/teacher/discussions', label: 'Discussions', icon: MessageSquare },
-  { to: '/teacher/announcements', label: 'Announcements', icon: Megaphone },
-  { to: '/teacher/settings', label: 'Settings', icon: Settings },
+/** @type {Array<{ label: string, items: Array<{ path: string, icon: any, label: string, exact?: boolean }> }>} */
+const groups = [
+  {
+    label: 'Overview',
+    items: [
+      { path: '/teacher', icon: LayoutDashboard, label: 'Dashboard', exact: true },
+    ]
+  },
+  {
+    label: 'Teaching',
+    items: [
+      { path: '/teacher/study-notes', icon: BookOpen, label: 'Study Materials' },
+      { path: '/teacher/past-papers', icon: FileText, label: 'Past Papers' },
+      { path: '/teacher/tutorials', icon: PlayCircle, label: 'Tutorials' },
+      { path: '/teacher/career-resources', icon: Briefcase, label: 'Career Resources' },
+      { path: '/teacher/learning-paths', icon: GraduationCap, label: 'Learning Paths' },
+      { path: '/teacher/schedule', icon: CalendarCheck, label: 'Class Schedule' },
+      { path: '/teacher/study-groups', icon: Users, label: 'Study Groups' },
+      { path: '/teacher/quizzes', icon: HelpCircle, label: 'Assignments & Quizzes' },
+    ]
+  },
+  {
+    label: 'Students',
+    items: [
+      { path: '/teacher/students', icon: Users, label: 'Students' },
+      { path: '/teacher/attendance', icon: CalendarCheck, label: 'Attendance' },
+      { path: '/teacher/insights', icon: TrendingUp, label: 'Insights' },
+      { path: '/teacher/analytics', icon: BarChart2, label: 'Analytics & Reports' },
+    ]
+  },
+  {
+    label: 'Communication',
+    items: [
+      { path: '/teacher/discussions', icon: MessageCircle, label: 'Discussions / Q&A' },
+      { path: '/teacher/collaboration', icon: MessageSquare, label: 'Teacher Collaboration' },
+      { path: '/teacher/announcements', icon: Bell, label: 'Announcements' },
+    ]
+  },
 ];
 
 export default function TeacherSidebar() {
+  const location = useLocation();
+  const [collapsed, setCollapsed] = useState(true);
+  const { logout } = useAuth();
+
+  /**
+   * @param {string} path
+   * @param {boolean} [exact]
+   */
+  const isActive = (path, exact) =>
+    exact ? location.pathname === path : location.pathname.startsWith(path);
+
   return (
-    <aside className="w-64 min-h-screen bg-card border-r flex flex-col py-6 px-3 gap-1">
-      <p className="text-xs font-semibold text-muted-foreground uppercase px-3 mb-2">Teacher Portal</p>
-      {links.map(({ to, label, icon: Icon, end }) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          className={({ isActive }) =>
-            `flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors ${
-              isActive
-                ? 'bg-primary text-primary-foreground font-medium'
-                : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
-            }`
-          }
+    <aside className={cn(
+      'sticky top-0 h-screen flex-shrink-0 bg-blue-950 text-blue-100 flex flex-col transition-all duration-300 ease-in-out shadow-[0_0_40px_rgba(15,23,42,0.35)]',
+      collapsed ? 'w-[68px]' : 'w-64'
+    )}>
+      {/* Logo */}
+      <div className={cn('flex items-center border-b border-blue-900/80 h-16', collapsed ? 'justify-center px-3' : 'px-5 gap-3')}>
+        <div className="w-10 h-10 rounded-3xl bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+          <BookOpen className="w-5 h-5 text-white" />
+        </div>
+        {!collapsed && (
+          <div className="overflow-hidden">
+            <p className="text-white font-semibold text-sm leading-tight whitespace-nowrap">Learn Malawi</p>
+            <p className="text-blue-300 text-xs whitespace-nowrap">Teacher Portal</p>
+          </div>
+        )}
+      </div>
+
+      {/* Nav */}
+      <nav className="px-2 py-3 overflow-y-auto space-y-4">
+        {groups.map(group => (
+          <div key={group.label}>
+            {!collapsed && (
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-blue-400 px-2 mb-1.5">
+                {group.label}
+              </p>
+            )}
+            <div className="space-y-0.5">
+              {group.items.map(({ path, icon: Icon, label, exact }) => {
+                const active = isActive(path, exact);
+                return (
+                  <Link
+                    key={path}
+                    to={path}
+                    title={collapsed ? label : undefined}
+                    className={cn(
+                      'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all group',
+                      collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+                      active
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_8px_24px_rgba(59,130,246,0.18)]'
+                        : 'text-blue-300 hover:bg-blue-900 hover:text-white'
+                    )}
+                  >
+                    <Icon className="w-4 h-4 shrink-0" />
+                    {!collapsed && <span className="truncate">{label}</span>}
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
+
+      {/* Bottom */}
+      <div className="px-2 pb-3 space-y-2 border-t border-white/10 pt-3 mt-2">
+        <Link
+          to="/teacher/settings"
+          title={collapsed ? 'Settings' : undefined}
+          className={cn(
+            'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all',
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+            location.pathname === '/teacher/settings'
+              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_8px_24px_rgba(59,130,246,0.18)]'
+              : 'text-blue-300 hover:bg-blue-900 hover:text-white'
+          )}
         >
-          <Icon size={16} />
-          {label}
-        </NavLink>
-      ))}
+          <Settings className="w-4 h-4 shrink-0" />
+          {!collapsed && 'Settings'}
+        </Link>
+        <Link
+          to="/teacher/history"
+          title={collapsed ? 'History' : undefined}
+          className={cn(
+            'flex items-center gap-3 rounded-2xl text-sm font-medium transition-all',
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+            location.pathname === '/teacher/history'
+              ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-[0_8px_24px_rgba(59,130,246,0.18)]'
+              : 'text-blue-300 hover:bg-blue-900 hover:text-white'
+          )}
+        >
+          <Clock className="w-4 h-4 shrink-0" />
+          {!collapsed && 'History'}
+        </Link>
+
+        {/* Collapse toggle */}
+        <button
+          onClick={() => setCollapsed(c => !c)}
+          className={cn(
+            'flex items-center gap-3 w-full rounded-2xl text-sm transition-all mt-2',
+            collapsed ? 'justify-center px-0 py-2' : 'px-3 py-2',
+            'text-blue-300 hover:text-white hover:bg-blue-800'
+          )}
+        >
+          {collapsed ? <ChevronRight className="w-4 h-4" /> : <><ChevronLeft className="w-4 h-4" /><span>Collapse</span></>}
+        </button>
+        <button
+          onClick={logout}
+          title={collapsed ? 'Sign Out' : undefined}
+          className={cn(
+            'flex items-center gap-3 w-full rounded-2xl text-sm font-medium transition-all',
+            collapsed ? 'justify-center px-0 py-2.5' : 'px-3 py-2.5',
+            'text-blue-200 hover:bg-blue-800 hover:text-white'
+          )}
+        >
+          <LogOut className="w-4 h-4 shrink-0" />
+          {!collapsed && 'Sign Out'}
+        </button>
+      </div>
     </aside>
   );
 }

@@ -31,7 +31,7 @@ import { Public } from '../auth/decorators/public.decorator';
 import { User } from '../common/decorators/user.decorator';
 import { UserRole } from '../users/entities/user.entity';
 import { plainToInstance } from 'class-transformer';
-import { EducationLevel } from './entities/past-paper.entity';
+import { EducationLevel } from '../common/enums';
 
 const uploadDir = join(__dirname, '..', '..', 'uploads');
 const pastPaperStorage = diskStorage({
@@ -156,14 +156,15 @@ export class PastPapersController {
 
     const pastPaper = await this.pastPapersService.create(payload as any);
 
-    if (files?.paper?.[0]) {
+    if (files?.paper?.[0]?.path) {
       const filePath = files.paper[0].path;
       console.log('RAG: file path =', filePath);
       setImmediate(async () => {
         try {
           const text = await this.pdfExtractorService.extractTextFromPath(filePath);
           await this.embeddingService.embedAndStore({
-            pastPaperId: pastPaper.id,
+            sourceId: pastPaper.id,
+            sourceType: 'past_paper',
             subject: pastPaper.subject || '',
             level: pastPaper.level,
             year: pastPaper.year,
@@ -171,7 +172,7 @@ export class PastPapersController {
           });
           console.log(`RAG: Processed ${pastPaper.title} — ${text.length} chars`);
         } catch (e) {
-          console.error('RAG processing failed:', e.message, e.stack);
+          console.error('RAG processing failed:', e.message);
         }
       });
     }

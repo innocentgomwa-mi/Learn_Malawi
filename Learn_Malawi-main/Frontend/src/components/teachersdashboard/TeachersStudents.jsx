@@ -100,11 +100,12 @@ export default function TeacherStudents() {
   };
 
   return (
-    <div className="p-8 animate-fade-in">
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold">Students</h1>
-        <p className="text-muted-foreground text-sm mt-1">Students registered in your study groups appear below.</p>
-      </div>
+    <div className="w-full px-6 py-8 animate-fade-in">
+      <div className="w-full space-y-6">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold">Students</h1>
+          <p className="text-muted-foreground text-sm mt-1">Students registered in your study groups appear below.</p>
+        </div>
 
       {loading ? (
         <div className="text-center py-24 text-muted-foreground">
@@ -118,9 +119,9 @@ export default function TeacherStudents() {
           <p className="text-sm mt-1">Students will appear here after they join one of your study groups.</p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="grid gap-6">
           {students.map((student) => (
-            <div key={student.email} className="border border-border rounded-2xl p-5 bg-card">
+            <div key={student.email} className="border border-border rounded-[1.75rem] p-6 bg-white shadow-sm">
               <div className="flex items-center justify-between gap-4">
                 <div>
                   <p className="font-semibold text-foreground">{student.email}</p>
@@ -129,7 +130,7 @@ export default function TeacherStudents() {
                     {student.bannedGroups.length > 0 && ` · ${student.bannedGroups.length} banned`}
                   </p>
                 </div>
-                <div className="text-xs uppercase tracking-wide text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+                <div className="text-xs uppercase tracking-wide text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
                   Active
                 </div>
               </div>
@@ -160,5 +161,6 @@ export default function TeacherStudents() {
         </div>
       )}
     </div>
+  </div>
   );
 }

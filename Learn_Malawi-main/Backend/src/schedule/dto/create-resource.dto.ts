@@ -1,8 +1,15 @@
-import { IsString, IsNotEmpty, IsOptional } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateResourceDto {
-  @IsString() @IsNotEmpty() name: string;
-  @IsString() @IsOptional() type?: string;
-  @IsString() @IsOptional() subject?: string;
-  @IsOptional() url?: string;
+  @ApiProperty({ example: 'Calculus Textbook chapter 5' })
+  name: string;
+
+  @ApiProperty({ example: 'textbook', required: false })
+  type?: string;
+
+  @ApiProperty({ example: 'Mathematics', required: false })
+  subject?: string;
+
+  @ApiProperty({ example: 'https://example.com', required: false })
+  url?: string;
 }

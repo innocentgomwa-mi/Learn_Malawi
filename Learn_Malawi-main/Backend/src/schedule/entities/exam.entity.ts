@@ -8,30 +8,30 @@ export class Exam {
   @Column()
   title: string;
 
-  @Column()
-  subject: string;
+  @Column({ nullable: true })
+  subject?: string;
 
-  @Column({ type: 'timestamp' })
-  exam_date: Date;
+  @Column({ type: 'timestamptz', nullable: true })
+  exam_date?: Date;
 
   @Column({ nullable: true })
-  location: string;
+  location?: string;
 
-  @Column({ type: 'simple-array', nullable: true })
-  notify_days_before: number[];
+  @Column({ type: 'json', nullable: true })
+  notify_days_before?: number[];
 
-  @Column({ nullable: true, type: 'text' })
-  notes: string;
-
-  @Column({ default: 'rose' })
-  color: string;
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
 
   @Column({ nullable: true })
-  user_email: string;
+  color?: string;
 
-  @CreateDateColumn()
+  @Column({ nullable: true })
+  user_email?: string;
+
+  @CreateDateColumn({ name: 'created_date' })
   createdDate: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_date' })
   updatedDate: Date;
 }

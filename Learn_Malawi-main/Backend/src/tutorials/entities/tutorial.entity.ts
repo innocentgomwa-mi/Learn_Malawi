@@ -1,3 +1,4 @@
+import { EducationLevel } from '../../common/enums';
 import {
   Entity,
   Column,
@@ -6,10 +7,6 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-export enum EducationLevel {
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-}
 
 @Entity('tutorials')
 export class Tutorial {
@@ -47,3 +44,4 @@ export class Tutorial {
   @UpdateDateColumn()
   updatedAt!: Date;
 }
+export { EducationLevel } from '../../common/enums';

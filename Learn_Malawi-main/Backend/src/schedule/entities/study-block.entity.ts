@@ -8,33 +8,33 @@ export class StudyBlock {
   @Column()
   title: string;
 
-  @Column()
-  day_of_week: string;
-
-  @Column()
-  start_time: string;
-
-  @Column()
-  end_time: string;
+  @Column({ nullable: true })
+  day_of_week?: string;
 
   @Column({ nullable: true })
-  subject: string;
-
-  @Column({ default: 'indigo' })
-  color: string;
-
-  @Column({ type: 'simple-array', nullable: true })
-  resource_ids: string[];
-
-  @Column({ nullable: true, type: 'text' })
-  notes: string;
+  start_time?: string;
 
   @Column({ nullable: true })
-  user_email: string;
+  end_time?: string;
 
-  @CreateDateColumn()
+  @Column({ nullable: true })
+  subject?: string;
+
+  @Column({ nullable: true })
+  color?: string;
+
+  @Column({ type: 'json', nullable: true })
+  resource_ids?: string[];
+
+  @Column({ type: 'text', nullable: true })
+  notes?: string;
+
+  @Column({ nullable: true })
+  user_email?: string;
+
+  @CreateDateColumn({ name: 'created_date' })
   createdDate: Date;
 
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_date' })
   updatedDate: Date;
 }

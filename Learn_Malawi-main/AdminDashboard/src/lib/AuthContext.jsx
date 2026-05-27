@@ -84,11 +84,14 @@ export const AuthProvider = ({ children }) => {
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
-      await apiClient.auth.register(registrationData);
-      const currentUser = await apiClient.auth.me();
-      setUser(currentUser);
-      setIsAuthenticated(true);
-      return currentUser;
+      const response = await apiClient.auth.register(registrationData);
+      if (response?.accessToken) {
+        const currentUser = await apiClient.auth.me();
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        return currentUser;
+      }
+      return response;
     } catch (error) {
       setIsAuthenticated(false);
       setAuthError({

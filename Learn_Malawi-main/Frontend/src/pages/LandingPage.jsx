@@ -44,39 +44,30 @@ export default function LandingPage() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="w-full px-4 sm:px-6 py-6 space-y-8">
+    <div className="min-h-screen bg-slate-50">
+      <main className="mx-auto max-w-8xl px-6 sm:px-8 py-8 space-y-10">
         {/* Hero */}
-        <HeroSection user={user} />
+        <HeroSection />
 
-        {/* Resource Showcase */}
-        <ResourceShowcase />
-
-        {/* Stats */}
-        <StatsRow resourcesCount={resourceCount} studyGroupsCount={studyGroupsCount} loading={loadingStats} />
-
-        {/* Personal Stats */}
-        <PersonalStats />
-
-        {/* Learning Paths */}
-        <LearningPaths />
-
-        {/* Main content grid */}
-        <div className="grid grid-cols-1 xl:grid-cols-[1fr_280px] gap-8">
-          <div className="space-y-8">
-            {/* Resource categories */}
-            <ResourceCategories />
-
-            {/* Study groups */}
-            <StudyGroupsSection />
-
-            {/* Continue learning */}
-            <ContinueLearning />
+        <div className="grid gap-8">
+          {/* Explore and performance */}
+          <div className="grid gap-8">
+            <ResourceShowcase />
+            <StatsRow resourcesCount={resourceCount} studyGroupsCount={studyGroupsCount} loading={loadingStats} />
           </div>
 
-          {/* Sidebar */}
-          <div>
-            <SubjectSpotlight />
+          <div className="grid grid-cols-1 xl:grid-cols-[1.4fr_0.9fr] gap-8">
+            <div className="space-y-8">
+              <ResourceCategories />
+              <StudyGroupsSection />
+              <LearningPaths />
+            </div>
+
+            <div className="space-y-8">
+              <PersonalStats />
+              <ContinueLearning />
+              <SubjectSpotlight />
+            </div>
           </div>
         </div>
       </main>

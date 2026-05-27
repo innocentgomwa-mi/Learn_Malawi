@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useQuery } from '@tanstack/react-query';
-import { useSearchParams } from "react-router-dom";
-import { fetchStudyNotes, fetchPastPapers, fetchTutorials, fetchQuizzes } from "@/api";
+import { useSearchParams, useNavigate } from "react-router-dom";
+import { fetchStudyNotes, fetchPastPapers, fetchTutorials, fetchQuizzes, logActivity, logSearch } from "@/api";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import RequireAccount from "@/components/RequireAccount";
@@ -9,10 +9,11 @@ import { useAuth } from "@/lib/AuthContext";
 import { Search } from "lucide-react";
 
 export default function SearchResults() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const query = searchParams.get('q')?.trim() || '';
   const [searchValue, setSearchValue] = useState(query);
+  const [loggedSearchQuery, setLoggedSearchQuery] = useState('');
 
   useEffect(() => {
     setSearchValue(query);
@@ -47,6 +48,7 @@ export default function SearchResults() {
     enabled: Boolean(query),
   });
 
+  const navigate = useNavigate();
   const results = searchResultsQuery.data;
   const totalResults = useMemo(() => {
     if (!results) return 0;
@@ -58,6 +60,61 @@ export default function SearchResults() {
     );
   }, [results]);
 
+  const handleResourceClick = (type, item) => {
+    if (!item) return;
+    switch (type) {
+      case 'studyNotes':
+        if (item.id) {
+          navigate(`/study-notes?selected_id=${encodeURIComponent(item.id)}`);
+        } else {
+          navigate('/study-notes');
+        }
+        break;
+      case 'tutorials':
+        if (item.id) {
+          navigate(`/tutorials?selected_id=${encodeURIComponent(item.id)}`);
+        } else {
+          navigate('/tutorials');
+        }
+        break;
+      case 'quizzes':
+        if (item.id) {
+          navigate(`/quizzes?selected_id=${encodeURIComponent(item.id)}`);
+        } else {
+          navigate('/quizzes');
+        }
+        break;
+      case 'pastPapers': {
+        const paperUrl = item.paperUrl || item.paper_url || item.url || item.paper_url || item.pdfUrl || item.pdf_url;
+        if (paperUrl) {
+          window.open(paperUrl, '_blank', 'noreferrer');
+        } else if (item.id) {
+          navigate(`/past-papers?selected_id=${encodeURIComponent(item.id)}`);
+        } else {
+          navigate('/past-papers');
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  };
+
+  useEffect(() => {
+    if (!query || searchResultsQuery.isLoading || !results) return;
+    if (query === loggedSearchQuery) return;
+
+    setLoggedSearchQuery(query);
+    const normalizedRole = user?.role ? String(user.role).toLowerCase() : 'student';
+    logSearch({
+      query,
+      user_email: user?.email || 'anonymous',
+      user_name: user?.full_name || '',
+      user_role: normalizedRole,
+      results_count: totalResults,
+    }).catch(() => {});
+  }, [query, results, totalResults, loggedSearchQuery, searchResultsQuery.isLoading, user?.email, user?.full_name, user?.role]);
+
   if (!isAuthenticated) {
     return <RequireAccount resourceName="Search" />;
   }
@@ -67,6 +124,15 @@ export default function SearchResults() {
     const trimmed = searchValue.trim();
     if (trimmed) {
       setSearchParams({ q: trimmed });
+      logActivity({
+        action: "resource_searched",
+        user_email: user?.email || "anonymous",
+        user_name: user?.full_name || "",
+        user_role: user?.role || "student",
+        resource_title: "Search Results",
+        subject: trimmed,
+        metadata: JSON.stringify({ query: trimmed }),
+      }).catch(() => {});
     } else {
       setSearchParams({});
     }
@@ -130,10 +196,15 @@ export default function SearchResults() {
                   </div>
                   <div className="grid gap-3">
                     {results.studyNotes.slice(0, 4).map((note) => (
-                      <div key={note.id || note.title} className="rounded-2xl border border-border p-4">
+                      <button
+                        key={note.id || note.title}
+                        type="button"
+                        onClick={() => handleResourceClick('studyNotes', note)}
+                        className="text-left rounded-2xl border border-border p-4 hover:bg-muted transition-colors"
+                      >
                         <p className="font-medium">{note.title || note.subject || 'Untitled note'}</p>
                         <p className="mt-1 text-sm text-muted-foreground">{note.subject || 'No subject'}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -147,10 +218,15 @@ export default function SearchResults() {
                   </div>
                   <div className="grid gap-3">
                     {results.pastPapers.slice(0, 4).map((paper) => (
-                      <div key={paper.id || paper.title} className="rounded-2xl border border-border p-4">
+                      <button
+                        key={paper.id || paper.title}
+                        type="button"
+                        onClick={() => handleResourceClick('pastPapers', paper)}
+                        className="text-left rounded-2xl border border-border p-4 hover:bg-muted transition-colors"
+                      >
                         <p className="font-medium">{paper.title || paper.subject || 'Untitled paper'}</p>
                         <p className="mt-1 text-sm text-muted-foreground">{paper.subject || 'No subject'}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -164,10 +240,15 @@ export default function SearchResults() {
                   </div>
                   <div className="grid gap-3">
                     {results.tutorials.slice(0, 4).map((tutorial) => (
-                      <div key={tutorial.id || tutorial.title} className="rounded-2xl border border-border p-4">
+                      <button
+                        key={tutorial.id || tutorial.title}
+                        type="button"
+                        onClick={() => handleResourceClick('tutorials', tutorial)}
+                        className="text-left rounded-2xl border border-border p-4 hover:bg-muted transition-colors"
+                      >
                         <p className="font-medium">{tutorial.title || tutorial.subject || 'Untitled tutorial'}</p>
                         <p className="mt-1 text-sm text-muted-foreground">{tutorial.subject || 'No subject'}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </section>
@@ -181,10 +262,15 @@ export default function SearchResults() {
                   </div>
                   <div className="grid gap-3">
                     {results.quizzes.slice(0, 4).map((quiz) => (
-                      <div key={quiz.id || quiz.title} className="rounded-2xl border border-border p-4">
+                      <button
+                        key={quiz.id || quiz.title}
+                        type="button"
+                        onClick={() => handleResourceClick('quizzes', quiz)}
+                        className="text-left rounded-2xl border border-border p-4 hover:bg-muted transition-colors"
+                      >
                         <p className="font-medium">{quiz.title || quiz.subject || 'Untitled quiz'}</p>
                         <p className="mt-1 text-sm text-muted-foreground">{quiz.subject || 'No subject'}</p>
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </section>

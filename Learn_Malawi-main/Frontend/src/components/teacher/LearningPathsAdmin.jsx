@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Save, Loader2 } from "lucide-react";
-import { fetchLearningPaths, fetchStudyNotes, fetchResources, createLearningPath, updateLearningPath, deleteLearningPath } from '@/api';
+import { fetchLearningPaths, fetchStudyNotes, fetchResources, fetchTutorials, fetchPastPapers, fetchCareerResources, fetchQuizzes, createLearningPath, updateLearningPath, deleteLearningPath } from '@/api';
+import QuizModal from '@/components/teacher/QuizModal';
 
 const LEVELS = ["PSLC", "JCE", "MSCE"];
 
@@ -40,14 +41,15 @@ const normalizeMilestones = (milestones = []) => milestones.map((milestone, inde
   id: milestone.id || generateMilestoneId(),
   title: milestone.title || "",
   description: milestone.description || "",
+  points: typeof milestone.points === 'number' ? milestone.points : 0,
   resource_ids: milestone.resource_ids || [],
   order: milestone.order ?? index,
 }));
 
-function MilestoneEditor({ milestones = [], resourceOptions = [], loadingResources = false, onChange }) {
+function MilestoneEditor({ milestones = [], resourceOptions = [], loadingResources = false, onChange, onCreateQuiz }) {
   const navigate = useNavigate();
   const currentMilestones = Array.isArray(milestones) ? milestones : [];
-  const add = () => onChange([...currentMilestones, { id: generateMilestoneId(), title: "", description: "", resource_ids: [], order: currentMilestones.length }]);
+  const add = () => onChange([...currentMilestones, { id: generateMilestoneId(), title: "", description: "", points: 0, resource_ids: [], order: currentMilestones.length }]);
   const update = (i, key, val) => onChange(currentMilestones.map((m, idx) => idx === i ? { ...m, [key]: val } : m));
   const remove = (i) => onChange(currentMilestones.filter((_, idx) => idx !== i));
   const toggleResource = (i, resourceId) => onChange(currentMilestones.map((m, idx) => {
@@ -66,19 +68,34 @@ function MilestoneEditor({ milestones = [], resourceOptions = [], loadingResourc
   return (
     <div className="space-y-3">
       {milestones.map((m, i) => (
-        <div key={i} className="bg-muted rounded-xl p-4 border border-border">
+        <div key={m.id || i} className="bg-muted rounded-xl p-4 border border-border">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-semibold text-foreground">Milestone {i + 1}</span>
-            <button onClick={() => remove(i)} className="p-1 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-4 w-4" /></button>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={() => onCreateQuiz?.(i)} className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-xs font-medium text-blue-700 hover:bg-blue-100 transition">
+                Create Quiz
+              </button>
+              <button onClick={() => remove(i)} className="p-1 text-destructive hover:bg-destructive/10 rounded"><Trash2 className="h-4 w-4" /></button>
+            </div>
           </div>
           <input value={m.title} onChange={e => update(i, "title", e.target.value)}
             placeholder="Milestone title" className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm mb-2 outline-none" />
           <textarea value={m.description} onChange={e => update(i, "description", e.target.value)}
             placeholder="Description (optional)" rows={2}
             className="w-full bg-background border border-border rounded-lg px-3 py-2 text-sm resize-none outline-none" />
+          <label className="flex items-center gap-3 mt-3 text-sm text-muted-foreground">
+            <span className="w-24">Points reward</span>
+            <input
+              type="number"
+              min="0"
+              value={m.points ?? 0}
+              onChange={e => update(i, "points", Number(e.target.value))}
+              className="w-full max-w-[140px] bg-background border border-border rounded-lg px-3 py-2 text-sm outline-none"
+            />
+          </label>
           <div className="space-y-2 mt-3">
-            <p className="text-sm font-semibold">Assign resources, chapters or books</p>
-            <p className="text-xs text-muted-foreground">Students will complete this milestone after opening and finishing the assigned resources.</p>
+            <p className="text-sm font-semibold">Assign resources, quizzes, or learning activities</p>
+            <p className="text-xs text-muted-foreground">Students will complete this milestone after opening and finishing the resources or passing any quiz assigned here.</p>
             <div className="grid gap-2 max-h-48 overflow-y-auto rounded-xl border border-border bg-background p-3 text-sm">
               {loadingResources ? (
                 <p className="text-muted-foreground">Loading resources…</p>
@@ -87,7 +104,7 @@ function MilestoneEditor({ milestones = [], resourceOptions = [], loadingResourc
               ) : resourceOptions.map(resource => {
                 const resourceUrl = getResourceUrl(resource);
                 return (
-                  <div key={resource.id} className="flex items-center gap-2">
+                  <div key={`${resource.type}-${resource.id}`} className="flex items-center gap-2">
                     <label className="flex items-center gap-2 cursor-pointer flex-1">
                       <input
                         type="checkbox"
@@ -131,16 +148,25 @@ export default function LearningPathsAdmin() {
   const [loadingResources, setLoadingResources] = useState(true);
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [quizModal, setQuizModal] = useState({ open: false, milestoneIndex: null, existing: null });
 
   const loadResources = async () => {
     setLoadingResources(true);
     try {
-      const [studyNotesResponse, resourcesResponse] = await Promise.all([
+      const [studyNotesResponse, resourcesResponse, tutorialsResponse, pastPapersResponse, careerResourcesResponse, quizzesResponse] = await Promise.all([
         fetchStudyNotes({}),
         fetchResources(),
+        fetchTutorials(),
+        fetchPastPapers(),
+        fetchCareerResources(),
+        fetchQuizzes(),
       ]);
       const studyNotes = Array.isArray(studyNotesResponse) ? studyNotesResponse : studyNotesResponse?.data ?? [];
       const resources = Array.isArray(resourcesResponse) ? resourcesResponse : resourcesResponse?.data ?? [];
+      const tutorials = Array.isArray(tutorialsResponse) ? tutorialsResponse : tutorialsResponse?.data ?? [];
+      const pastPapers = Array.isArray(pastPapersResponse) ? pastPapersResponse : pastPapersResponse?.data ?? [];
+      const careerResources = Array.isArray(careerResourcesResponse) ? careerResourcesResponse : careerResourcesResponse?.data ?? [];
+      const quizzes = Array.isArray(quizzesResponse) ? quizzesResponse : quizzesResponse?.data ?? [];
       const options = [
         ...studyNotes.map((note) => ({
           id: note.id,
@@ -157,6 +183,34 @@ export default function LearningPathsAdmin() {
           url: resource.url,
           subject: resource.subject,
         })),
+        ...tutorials.map((tutorial) => ({
+          id: tutorial.id,
+          label: tutorial.title || tutorial.name || 'Tutorial',
+          type: 'Tutorial',
+          url: `/tutorials?selected_id=${encodeURIComponent(tutorial.id)}`,
+          subject: tutorial.subject,
+        })),
+        ...pastPapers.map((paper) => ({
+          id: paper.id,
+          label: paper.title || paper.name || 'Past Paper',
+          type: 'Past Paper',
+          url: `/past-papers?selected_id=${encodeURIComponent(paper.id)}`,
+          subject: paper.subject,
+        })),
+        ...careerResources.map((career) => ({
+          id: career.id,
+          label: career.title || career.name || 'Career Resource',
+          type: 'Career Resource',
+          url: career.url,
+          subject: career.subject,
+        })),
+        ...quizzes.map((quiz) => ({
+          id: quiz.id,
+          label: quiz.title || quiz.name || 'Quiz',
+          type: 'Quiz',
+          url: `/quizzes?selected_id=${encodeURIComponent(quiz.id)}`,
+          subject: quiz.subject,
+        })),
       ];
       setResourceOptions(options);
     } catch (error) {
@@ -164,6 +218,28 @@ export default function LearningPathsAdmin() {
       setResourceOptions([]);
     } finally {
       setLoadingResources(false);
+    }
+  };
+
+  const assignQuizToMilestone = (quiz, milestoneIndex) => {
+    if (typeof milestoneIndex !== 'number' || !quiz?.id) return;
+    const nextMilestones = (form?.data?.milestones || []).map((milestone, index) => {
+      if (index !== milestoneIndex) return milestone;
+      const selectedIds = Array.isArray(milestone.resource_ids) ? milestone.resource_ids : [];
+      return {
+        ...milestone,
+        title: milestone.title || quiz.title || milestone.title,
+        resource_ids: Array.from(new Set([...selectedIds, quiz.id])),
+      };
+    });
+    update('milestones', nextMilestones);
+  };
+
+  const handleQuizSaved = async (createdQuiz) => {
+    setQuizModal({ open: false, milestoneIndex: null, existing: null });
+    await loadResources();
+    if (createdQuiz?.id) {
+      assignQuizToMilestone(createdQuiz, quizModal.milestoneIndex);
     }
   };
 
@@ -188,6 +264,7 @@ export default function LearningPathsAdmin() {
   const cleanMilestonesForSave = (milestones = []) => {
     return milestones.map(({ id, ...rest }) => ({
       ...rest,
+      points: Number(rest.points) || 0,
       resource_ids: Array.isArray(rest.resource_ids) ? rest.resource_ids : [],
       order: rest.order ?? 0,
     }));
@@ -238,7 +315,7 @@ export default function LearningPathsAdmin() {
       <div className="bg-card border border-border rounded-2xl p-6">
         <h2 className="font-poppins font-bold text-foreground mb-5">{form.mode === "add" ? "Create Learning Path" : "Edit Learning Path"}</h2>
         <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">Use the milestone section below to break this path into sequential learning steps for students.</p>
+          <p className="text-sm text-muted-foreground">Use the milestone section below to break this path into sequential learning steps for students. You can assign study resources or choose a quiz milestone that students must complete before advancing.</p>
           <input value={form.data.title || ""} onChange={e => update("title", e.target.value)}
             placeholder="Path Title *" className="w-full bg-muted border border-border rounded-xl px-4 py-2.5 text-sm outline-none" />
           <input value={form.data.subject || ""} onChange={e => update("subject", e.target.value)}
@@ -258,7 +335,14 @@ export default function LearningPathsAdmin() {
               resourceOptions={resourceOptions}
               loadingResources={loadingResources}
               onChange={v => update("milestones", v)}
+              onCreateQuiz={(index) => setQuizModal({ open: true, milestoneIndex: index, existing: null })}
             />
+          <QuizModal
+            open={quizModal.open}
+            onClose={() => setQuizModal({ open: false, milestoneIndex: null, existing: null })}
+            onSaved={handleQuizSaved}
+            existing={quizModal.existing}
+          />
           </div>
           <div className="flex gap-3 pt-2">
             <button onClick={handleSave} disabled={saving || !form.data.title || !form.data.subject || !form.data.level}

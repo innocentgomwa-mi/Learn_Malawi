@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Flame, ArrowRight } from "lucide-react";
 import { fetchResources } from "@/api";
 
@@ -22,6 +23,7 @@ const SUBJECT_COLORS = [
 
 export default function SubjectSpotlight() {
   const [subjects, setSubjects] = useState(FALLBACK_SUBJECTS);
+  const navigate = useNavigate();
 
   useEffect(() => {
     let mounted = true;
@@ -61,12 +63,15 @@ export default function SubjectSpotlight() {
   }, []);
 
   return (
-    <div className="bg-card rounded-xl border p-5">
+    <section className="rounded-[28px] border border-slate-200/80 bg-white shadow-sm p-5">
       <div className="flex items-center justify-between mb-4">
         <h2 className="font-heading font-bold text-base flex items-center gap-2">
           <Flame className="h-4 w-4 text-orange-500" /> Subjects
         </h2>
-        <button className="text-xs text-primary font-medium flex items-center gap-1">
+        <button
+          onClick={() => navigate('/study-notes')}
+          className="text-xs text-primary font-medium flex items-center gap-1"
+        >
           All <ArrowRight className="h-3.5 w-3.5" />
         </button>
       </div>
@@ -74,6 +79,7 @@ export default function SubjectSpotlight() {
         {subjects.map((s) => (
           <button
             key={s.name}
+            onClick={() => navigate(`/study-notes?subject=${encodeURIComponent(s.name)}`)}
             className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/60 transition-colors text-left group"
           >
             <div className={`w-8 h-8 rounded-lg ${s.bg} flex items-center justify-center text-sm shrink-0`}>
@@ -87,6 +93,6 @@ export default function SubjectSpotlight() {
           </button>
         ))}
       </div>
-    </div>
+    </section>
   );
 }

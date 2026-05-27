@@ -2,8 +2,9 @@ import { Search, Bell, Mail } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
-import { fetchAnnouncements, fetchDiscussions } from '@/api';
-import { getSeenNotificationIds, markNotificationsAsRead } from '@/lib/notificationStorage';
+import { useRefreshRate } from '@/lib/RefreshRateContext';
+import { fetchAnnouncements, fetchDiscussions, fetchChatMessages } from '@/api';
+import { getSeenNotificationIds, markNotificationsAsRead, getLastSeenChatMessageDate, getSeenDiscussionIds } from '@/lib/notificationStorage';
 
 const PAGE_TITLES = {
   '/teacher': 'Dashboard',
@@ -26,13 +27,15 @@ export default function TeacherTopBar() {
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
-  const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const [discussionCount, setDiscussionCount] = useState(0);
+  const { refreshSeconds } = useRefreshRate();
+  const [unreadAnnouncements, setUnreadAnnouncements] = useState(0);
+  const [unreadDiscussionCount, setUnreadDiscussionCount] = useState(0);
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
   const title = PAGE_TITLES[/** @type {keyof typeof PAGE_TITLES} */ (location.pathname)] || 'Teacher Portal';
 
   useEffect(() => {
     if (!user?.email) {
-      setUnreadNotifications(0);
+      setUnreadAnnouncements(0);
       return;
     }
 
@@ -43,13 +46,13 @@ export default function TeacherTopBar() {
         const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
         return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user.email;
       });
-      const seenIds = getSeenNotificationIds(user.email);
+      const seenIds = getSeenNotificationIds(user.email, user.role);
       const unread = filtered.filter((announcement) => announcement?.id && !seenIds.includes(String(announcement.id))).length;
-      setUnreadNotifications(unread);
+      setUnreadAnnouncements(unread);
     };
 
     if (location.pathname === '/teacher/announcements') {
-      setUnreadNotifications(0);
+      setUnreadAnnouncements(0);
       fetchAnnouncements({ published: true })
         .then((response) => {
           const data = Array.isArray(response) ? response : [];
@@ -61,7 +64,7 @@ export default function TeacherTopBar() {
             .filter((announcement) => announcement?.id)
             .map((announcement) => announcement.id);
           if (announcementIds.length > 0) {
-            markNotificationsAsRead(user.email, announcementIds);
+            markNotificationsAsRead(user.email, announcementIds, user.role);
           }
         })
         .catch(() => {});
@@ -70,7 +73,7 @@ export default function TeacherTopBar() {
 
     let mounted = true;
     countAndMarkRead().catch(() => {
-      if (mounted) setUnreadNotifications(0);
+      if (mounted) setUnreadAnnouncements(0);
     });
 
     return () => {
@@ -80,24 +83,81 @@ export default function TeacherTopBar() {
 
   useEffect(() => {
     if (!user?.email) {
-      setDiscussionCount(0);
+      setUnreadChatCount(0);
+      return;
+    }
+
+    if (location.pathname === '/teacher/collaboration') {
+      setUnreadChatCount(0);
+      return;
+    }
+
+    let active = true;
+    const loadChatCount = async () => {
+      try {
+        const response = await fetchChatMessages({ room: 'general' });
+        if (!active) return;
+        const messages = Array.isArray(response) ? response : [];
+        const lastSeen = getLastSeenChatMessageDate(user.email, 'general', user.role);
+        const unread = messages.filter((message) => {
+          if (message.sender_email === user.email) return false;
+          const createdAt = new Date(message.created_date || message.createdAt || message.created_at);
+          if (Number.isNaN(createdAt.getTime())) return false;
+          return !lastSeen || createdAt > lastSeen;
+        }).length;
+        setUnreadChatCount(unread);
+      } catch {
+        if (active) {
+          setUnreadChatCount(0);
+        }
+      }
+    };
+
+    loadChatCount();
+    if (refreshSeconds) {
+      const intervalId = setInterval(loadChatCount, refreshSeconds * 1000);
+      return () => clearInterval(intervalId);
+    }
+    return () => {
+      active = false;
+    };
+  }, [refreshSeconds, user?.email, location.pathname]);
+
+  useEffect(() => {
+    if (!user?.email) {
+      setUnreadDiscussionCount(0);
       return;
     }
 
     let mounted = true;
-    fetchDiscussions({ teacherEmail: user.email })
-      .then((data) => {
+    const loadDiscussionCount = async () => {
+      try {
+        const response = await fetchDiscussions({ teacherEmail: user.email });
         if (!mounted) return;
-        setDiscussionCount(Array.isArray(data) ? data.length : 0);
-      })
-      .catch(() => {
-        if (mounted) setDiscussionCount(0);
-      });
+        const threads = Array.isArray(response) ? response : [];
+        if (location.pathname === '/teacher/discussions') {
+          setUnreadDiscussionCount(0);
+          return;
+        }
+
+        const seenIds = getSeenDiscussionIds(user.email, user.role);
+        const unread = threads.filter((thread) => thread?.id && !seenIds.includes(String(thread.id))).length;
+        setUnreadDiscussionCount(unread);
+      } catch {
+        if (mounted) setUnreadDiscussionCount(0);
+      }
+    };
+
+    loadDiscussionCount();
+    if (refreshSeconds) {
+      const intervalId = setInterval(loadDiscussionCount, refreshSeconds * 1000);
+      return () => clearInterval(intervalId);
+    }
 
     return () => {
       mounted = false;
     };
-  }, [user?.email]);
+  }, [refreshSeconds, user?.email, location.pathname]);
 
   return (
     <header className="h-20 bg-white border-b border-blue-100 flex items-center gap-4 px-6 shrink-0">
@@ -118,29 +178,14 @@ export default function TeacherTopBar() {
       <div className="ml-auto flex items-center gap-2">
         <button
           type="button"
-          onClick={() => navigate('/teacher/discussions')}
-          aria-label="Open teacher messages"
-          className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-colors relative"
-        >
-          <Mail className="w-4 h-4" />
-          {discussionCount > 0 ? (
-            <span className="absolute -top-1 -right-1 min-w-[1.15rem] h-5 rounded-full bg-red-500 text-[10px] text-white font-semibold flex items-center justify-center px-1.5">
-              {discussionCount}
-            </span>
-          ) : (
-            <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" />
-          )}
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/teacher/announcements')}
-          aria-label="Open teacher announcements"
+          onClick={() => navigate('/teacher/notifications')}
+          aria-label="Open notifications"
           className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-500 hover:bg-blue-100 transition-colors relative"
         >
           <Bell className="w-4 h-4" />
-          {unreadNotifications > 0 ? (
+          {unreadAnnouncements + unreadChatCount + unreadDiscussionCount > 0 ? (
             <span className="absolute -top-1 -right-1 min-w-[1.15rem] h-5 rounded-full bg-red-500 text-[10px] text-white font-semibold flex items-center justify-center px-1.5">
-              {unreadNotifications}
+              {unreadAnnouncements + unreadChatCount + unreadDiscussionCount}
             </span>
           ) : (
             <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-blue-500" />

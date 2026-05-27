@@ -1,49 +1,166 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiClient } from "@/api/apiClient";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
+import { Wrench, AlertTriangle, CheckCircle, Power } from "lucide-react";
+import { auditLog } from "@/lib/auditLogger";
+import { apiClient } from "@/api/apiClient";
+import { useAuth } from "@/lib/AuthContext";
 
 export default function MaintenanceMode() {
   const qc = useQueryClient();
+  const { isAuthenticated } = useAuth();
+  const [message, setMessage] = useState("We are performing scheduled maintenance. We'll be back shortly.");
+  const [downTime, setDownTime] = useState("");
+
   const { data: settings = [] } = useQuery({
     queryKey: ["system-settings"],
-    queryFn: () => apiClient.get("/system-settings").then(r => r.data),
+    queryFn: () => apiClient.entities.SystemSettings.list(),
+    enabled: isAuthenticated,
   });
 
   const maintenanceSetting = settings.find(s => s.key === "maintenance_mode");
-  const messageSetting = settings.find(s => s.key === "maintenance_message");
-  const isOn = maintenanceSetting?.value === "true";
-  const [message, setMessage] = useState(messageSetting?.value || "We'll be back shortly.");
+  const isMaintenanceOn = maintenanceSetting?.value === "true";
+  const storedMessage = settings.find(s => s.key === "maintenance_message")?.value;
+  const storedDownTime = settings.find(s => s.key === "maintenance_downtime")?.value;
 
-  const mutation = useMutation({
-    mutationFn: ({ key, value }) =>
-      apiClient.patch(`/system-settings/${key}`, { value }),
+  useEffect(() => {
+    if (storedMessage) {
+      setMessage(storedMessage);
+    }
+    if (storedDownTime) {
+      setDownTime(storedDownTime);
+    }
+  }, [storedMessage, storedDownTime]);
+
+  const toggle = useMutation({
+    mutationFn: async () => {
+      const newVal = (!isMaintenanceOn).toString();
+      if (maintenanceSetting) {
+        await apiClient.entities.SystemSettings.update(maintenanceSetting.id, { value: newVal });
+      } else {
+        await apiClient.entities.SystemSettings.create({ key: "maintenance_mode", value: newVal, description: "Site-wide maintenance toggle" });
+      }
+      auditLog({ action: "update", entity_type: "SystemSettings", notes: `Maintenance mode set to ${newVal}` });
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["system-settings"] }),
   });
 
-  const toggle = () => mutation.mutate({ key: "maintenance_mode", value: String(!isOn) });
-  const saveMessage = () => mutation.mutate({ key: "maintenance_message", value: message });
+  const saveMessage = useMutation({
+    mutationFn: async () => {
+      const existing = settings.find(s => s.key === "maintenance_message");
+      if (existing) {
+        await apiClient.entities.SystemSettings.update(existing.id, { value: message });
+      } else {
+        await apiClient.entities.SystemSettings.create({ key: "maintenance_message", value: message, description: "Maintenance page message" });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["system-settings"] }),
+  });
+
+  const saveDowntime = useMutation({
+    mutationFn: async () => {
+      const existing = settings.find(s => s.key === "maintenance_downtime");
+      if (existing) {
+        await apiClient.entities.SystemSettings.update(existing.id, { value: downTime });
+      } else {
+        await apiClient.entities.SystemSettings.create({ key: "maintenance_downtime", value: downTime, description: "Maintenance estimated downtime" });
+      }
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["system-settings"] }),
+  });
 
   return (
-    <div className="p-6 max-w-2xl">
-      <h2 className="text-xl font-semibold mb-6">Maintenance Mode</h2>
-      <div className="border rounded-lg p-6 bg-card flex flex-col gap-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <Label className="text-base font-medium">Enable maintenance mode</Label>
-            <p className="text-sm text-muted-foreground mt-0.5">When on, all users see the maintenance page instead of the app.</p>
-          </div>
-          <Switch checked={isOn} onCheckedChange={toggle} disabled={mutation.isPending} />
-        </div>
-        <div className="grid gap-2">
-          <Label>Maintenance message</Label>
-          <Textarea value={message} onChange={e => setMessage(e.target.value)} rows={3} />
-          <Button className="self-start" onClick={saveMessage} disabled={mutation.isPending}>Save message</Button>
-        </div>
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-xl font-bold text-gray-900">Maintenance Mode</h2>
+        <p className="text-sm text-gray-500 mt-0.5">Control site availability and display maintenance messages to users</p>
       </div>
+
+      {/* Status card */}
+      <Card className={`border-0 shadow-sm border-l-4 ${isMaintenanceOn ? "border-red-500" : "border-green-500"}`}>
+        <CardContent className="p-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${isMaintenanceOn ? "bg-red-100" : "bg-green-100"}`}>
+                {isMaintenanceOn ? <Wrench className="w-7 h-7 text-red-600" /> : <CheckCircle className="w-7 h-7 text-green-600" />}
+              </div>
+              <div>
+                <p className="font-bold text-lg text-gray-900">{isMaintenanceOn ? "Maintenance Mode: ON" : "Site Status: Live"}</p>
+                <p className="text-sm text-gray-500">{isMaintenanceOn ? "Users see the maintenance page" : "All users can access the platform normally"}</p>
+              </div>
+            </div>
+            <Button
+              onClick={() => toggle.mutate()}
+              disabled={toggle.isPending}
+              variant={isMaintenanceOn ? "destructive" : "default"}
+              className="flex items-center gap-2 min-w-36"
+            >
+              <Power className="w-4 h-4" />
+              {toggle.isPending ? "Updating..." : isMaintenanceOn ? "Disable Maintenance" : "Enable Maintenance"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {isMaintenanceOn && (
+        <Card className="border border-red-200 bg-red-50 shadow-none">
+          <CardContent className="p-4 flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-red-800 font-medium">⚠️ Maintenance mode is currently ACTIVE. Regular users cannot access the site. Only admins can log in.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Maintenance message */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Maintenance Message</CardTitle></CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-gray-500">This message is shown to users when maintenance mode is enabled.</p>
+          <Input
+            value={message}
+            onChange={e => setMessage(e.target.value)}
+            placeholder="Enter maintenance message..."
+          />
+          <Button size="sm" onClick={() => saveMessage.mutate()} disabled={saveMessage.isPending}>
+            {saveMessage.isPending ? "Saving..." : "Save Message"}
+          </Button>
+          {saveMessage.isSuccess && <p className="text-xs text-green-600">Message saved!</p>}
+        </CardContent>
+      </Card>
+
+      {isMaintenanceOn && (
+        <Card className="border-0 shadow-sm">
+          <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">Estimated Downtime</CardTitle></CardHeader>
+          <CardContent className="space-y-3">
+            <p className="text-sm text-gray-500">Tell users how long maintenance is expected to last.</p>
+            <Input
+              value={downTime}
+              onChange={e => setDownTime(e.target.value)}
+              placeholder="e.g. 30 minutes, until 6:00 PM"
+            />
+            <Button size="sm" onClick={() => saveDowntime.mutate()} disabled={saveDowntime.isPending}>
+              {saveDowntime.isPending ? "Saving..." : "Save Estimated Downtime"}
+            </Button>
+            {saveDowntime.isSuccess && <p className="text-xs text-green-600">Downtime saved!</p>}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Preview */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2"><CardTitle className="text-base font-semibold">User-Facing Preview</CardTitle></CardHeader>
+        <CardContent>
+          <div className="bg-blue-900 rounded-xl p-8 text-center text-white">
+            <Wrench className="w-12 h-12 mx-auto mb-4 text-yellow-400" />
+            <h3 className="text-xl font-bold mb-2">Learn Malawi</h3>
+            <p className="text-blue-200 text-sm">{message}</p>
+            {downTime && <p className="text-blue-100 text-xs mt-3">Estimated downtime: {downTime}</p>}
+            <p className="text-blue-300 text-xs mt-4">Thank you for your patience.</p>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

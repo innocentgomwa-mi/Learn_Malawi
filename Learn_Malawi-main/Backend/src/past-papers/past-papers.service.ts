@@ -1,7 +1,8 @@
+import { EducationLevel } from '../common/enums';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { PastPaper, EducationLevel } from './entities/past-paper.entity';
+import { PastPaper } from './entities/past-paper.entity';
 import { CreatePastPaperDto } from './dto/create-past-paper.dto';
 import { UpdatePastPaperDto } from './dto/update-past-paper.dto';
 

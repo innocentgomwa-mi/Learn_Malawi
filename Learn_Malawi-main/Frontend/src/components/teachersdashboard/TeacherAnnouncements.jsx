@@ -47,7 +47,7 @@ export default function TeacherAnnouncements() {
       await loadAnnouncements();
       const announcementIds = filtered.filter((item) => item?.id).map((item) => item.id);
       if (announcementIds.length > 0) {
-        markNotificationsAsRead(user.email, announcementIds);
+        markNotificationsAsRead(user.email, announcementIds, user?.role);
       }
     };
 

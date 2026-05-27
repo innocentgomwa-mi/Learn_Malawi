@@ -1,4 +1,5 @@
-import { IsString, IsArray, IsNumber, Min, Max, IsNotEmpty } from 'class-validator';
+import { IsString, IsArray, IsNumber, Min, Max, IsNotEmpty, IsOptional } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateQuestionDto {
@@ -19,12 +20,16 @@ export class CreateQuestionDto {
 
   @ApiProperty({ example: 30 })
   @IsNumber()
-  @Min(1)
+  @IsOptional()
+  @Min(0)
   @Max(300)
-  timeLimit: number;
+  @Transform(({ value }) => Number(value) || 30)
+  timeLimit?: number = 30;
 
   @ApiProperty({ example: 0, required: false })
   @IsNumber()
+  @IsOptional()
   @Min(0)
-  completionTimePerQuestion: number = 0;
+  @Transform(({ value }) => Number(value) || 0)
+  completionTimePerQuestion?: number = 0;
 }

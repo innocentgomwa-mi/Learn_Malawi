@@ -19,6 +19,8 @@ import { FileFieldsInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname, join } from 'path';
 import { StudyNotesService } from './study-notes.service';
+import { EmbeddingService } from '../ai/embedding.service';
+import { PdfExtractorService } from '../ai/pdf-extractor.service';
 import { CreateStudyNoteDto } from './dto/create-study-note.dto';
 import { UpdateStudyNoteDto } from './dto/update-study-note.dto';
 import { StudyNoteResponseDto } from './dto/study-note-response.dto';
@@ -59,7 +61,11 @@ const studyNoteFileFilter = (_req, file, callback) => {
 @Controller('study-notes')
 @UseInterceptors(ClassSerializerInterceptor)
 export class StudyNotesController {
-  constructor(private readonly studyNotesService: StudyNotesService) {}
+  constructor(
+    private readonly studyNotesService: StudyNotesService,
+    private readonly embeddingService: EmbeddingService,
+    private readonly pdfExtractorService: PdfExtractorService,
+  ) {}
 
   private toResponseDto(note: any): StudyNoteResponseDto {
     return plainToInstance(StudyNoteResponseDto, note, {

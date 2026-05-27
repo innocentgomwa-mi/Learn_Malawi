@@ -19,21 +19,27 @@ export class EmbeddingService {
   }
 
   async embedAndStore(params: {
-    pastPaperId: string;
+    sourceId: string;
+    sourceType: 'past_paper' | 'study_note';
     subject: string;
     level: string;
-    year: number;
+    year?: number;
     text: string;
   }): Promise<void> {
     const chunks = this.chunkText(params.text);
-    await this.dataSource.query(`DELETE FROM paper_embeddings WHERE past_paper_id = $1`, [params.pastPaperId]);
+    await this.dataSource.query(
+      `DELETE FROM paper_embeddings WHERE past_paper_id = $1`,
+      [params.sourceId],
+    );
     for (let i = 0; i < chunks.length; i++) {
       await this.dataSource.query(
-        `INSERT INTO paper_embeddings (past_paper_id, subject, level, year, chunk_index, chunk_text) VALUES ($1, $2, $3, $4, $5, $6)`,
-        [params.pastPaperId, params.subject, params.level, params.year, i, chunks[i]],
+        `INSERT INTO paper_embeddings
+         (past_paper_id, subject, level, year, chunk_index, chunk_text)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [params.sourceId, params.subject, params.level, params.year || 0, i, chunks[i]],
       );
     }
-    console.log(`RAG: Stored ${chunks.length} chunks for paper ${params.pastPaperId}`);
+    console.log(`RAG: Stored ${chunks.length} chunks from ${params.sourceType} "${params.sourceId}"`);
   }
 
   async searchRelevantChunks(params: {
@@ -55,7 +61,9 @@ export class EmbeddingService {
     if (level) { query += ` AND LOWER(level) = LOWER($${paramCount})`; queryParams.push(level); paramCount++; }
     query += ` ORDER BY rank DESC LIMIT $${paramCount}`;
     queryParams.push(limit);
-    const results = await this.dataSource.query(query, queryParams);
-    return results.map((r: any) => r.chunk_text);
+    try {
+      const results = await this.dataSource.query(query, queryParams);
+      return results.map((r: any) => r.chunk_text);
+    } catch { return []; }
   }
 }

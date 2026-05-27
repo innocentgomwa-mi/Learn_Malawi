@@ -33,6 +33,11 @@ export class CreateStudentProgressDto {
 
   @ApiProperty({ required: false })
   @IsOptional()
+  @IsNumber()
+  points?: number;
+
+  @ApiProperty({ required: false })
+  @IsOptional()
   @IsString()
   quiz_id?: string;
 

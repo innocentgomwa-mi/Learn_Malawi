@@ -1,18 +1,26 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { StudyBlock } from './entities/study-block.entity';
 import { Resource } from './entities/resource.entity';
 import { Exam } from './entities/exam.entity';
+import { ClassSchedule } from './entities/class-schedule.entity';
 import { CreateStudyBlockDto } from './dto/create-study-block.dto';
 import { UpdateStudyBlockDto } from './dto/update-study-block.dto';
 import { CreateResourceDto } from './dto/create-resource.dto';
 import { UpdateResourceDto } from './dto/update-resource.dto';
 import { CreateExamDto } from './dto/create-exam.dto';
 import { UpdateExamDto } from './dto/update-exam.dto';
+import { CreateClassScheduleDto } from './dto/create-class-schedule.dto';
+import { UpdateClassScheduleDto } from './dto/update-class-schedule.dto';
+import { EmailService } from '../auth/email.service';
 
 @Injectable()
-export class ScheduleService {
+export class ScheduleService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(ScheduleService.name);
+  private reminderCheckInterval?: NodeJS.Timeout;
+  private readonly sentReminderKeys = new Set<string>();
+
   constructor(
     @InjectRepository(StudyBlock)
     private readonly studyBlockRepository: Repository<StudyBlock>,
@@ -20,7 +28,22 @@ export class ScheduleService {
     private readonly resourceRepository: Repository<Resource>,
     @InjectRepository(Exam)
     private readonly examRepository: Repository<Exam>,
+    @InjectRepository(ClassSchedule)
+    private readonly classScheduleRepository: Repository<ClassSchedule>,
+    private readonly emailService: EmailService,
   ) {}
+
+  onModuleInit() {
+    this.logger.log('ScheduleService initialized');
+  }
+
+  onModuleDestroy() {
+    if (this.reminderCheckInterval) {
+      clearInterval(this.reminderCheckInterval);
+      this.reminderCheckInterval = undefined;
+    }
+    this.logger.log('ScheduleService destroyed');
+  }
 
   async createStudyBlock(createStudyBlockDto: CreateStudyBlockDto, userEmail?: string): Promise<StudyBlock> {
     const block = this.studyBlockRepository.create({
@@ -123,5 +146,49 @@ export class ScheduleService {
   async removeExam(id: string, userEmail?: string): Promise<void> {
     const exam = await this.findExam(id, userEmail);
     await this.examRepository.remove(exam);
+  }
+
+  async createClassSchedule(createClassScheduleDto: CreateClassScheduleDto, userEmail?: string): Promise<ClassSchedule> {
+    const schedule = this.classScheduleRepository.create({
+      ...createClassScheduleDto,
+      is_recurring: createClassScheduleDto.is_recurring ?? true,
+      color: createClassScheduleDto.color || 'emerald',
+      reminder_minutes: createClassScheduleDto.reminder_minutes ?? 0,
+      teacher_email: userEmail,
+    });
+    const savedSchedule = await this.classScheduleRepository.save(schedule);
+    if (savedSchedule.teacher_email) {
+      await this.emailService.sendEmail(
+        savedSchedule.teacher_email,
+        `Class schedule created: ${savedSchedule.title}`,
+        `Your class schedule "${savedSchedule.title}" on ${savedSchedule.day_of_week} at ${savedSchedule.start_time} has been created. You will receive an email reminder ${savedSchedule.reminder_minutes} minutes before the class starts.`,
+      );
+    }
+    return savedSchedule;
+  }
+
+  async findAllClassSchedules(userEmail?: string): Promise<ClassSchedule[]> {
+    const where = userEmail ? { teacher_email: userEmail } : {};
+    return this.classScheduleRepository.find({ where, order: { day_of_week: 'ASC', start_time: 'ASC' } });
+  }
+
+  async findClassSchedule(id: string, userEmail?: string): Promise<ClassSchedule> {
+    const where = userEmail ? { id, teacher_email: userEmail } : { id };
+    const schedule = await this.classScheduleRepository.findOne({ where });
+    if (!schedule) {
+      throw new NotFoundException(`Class schedule with ID ${id} not found`);
+    }
+    return schedule;
+  }
+
+  async updateClassSchedule(id: string, updateClassScheduleDto: UpdateClassScheduleDto, userEmail?: string): Promise<ClassSchedule> {
+    const schedule = await this.findClassSchedule(id, userEmail);
+    Object.assign(schedule, updateClassScheduleDto);
+    return this.classScheduleRepository.save(schedule);
+  }
+
+  async removeClassSchedule(id: string, userEmail?: string): Promise<void> {
+    const schedule = await this.findClassSchedule(id, userEmail);
+    await this.classScheduleRepository.remove(schedule);
   }
 }

@@ -1,67 +1,132 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { Search } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+﻿import { Link } from "react-router-dom";
+import { ArrowRight, TrendingUp, Award } from "lucide-react";
+import { motion } from "framer-motion";
 
-/**
- * @param {{ user?: { firstName?: string; lastName?: string; full_name?: string; email?: string } | null }} props
- */
-export default function HeroSection({ user }) {
-  const navigate = useNavigate();
-  const [searchQuery, setSearchQuery] = useState("");
-  const displayName =
-    [user?.firstName, user?.lastName].filter(Boolean).join(" ") ||
-    user?.full_name ||
-    user?.email?.split("@")[0] ||
-    "Student";
-  const firstName = displayName.split(" ")[0] || "Student";
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+const HERO_IMG = "https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80";
 
-  /**
-   * @param {React.FormEvent<HTMLFormElement>} event
-   */
-  const handleSearch = (event) => {
-    event.preventDefault();
-    const query = searchQuery.trim();
-    if (query) {
-      navigate(`/search?q=${encodeURIComponent(query)}`);
-    } else {
-      navigate("/study-notes");
-    }
-  };
-
+export default function HeroSection() {
   return (
-    <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary via-blue-600 to-accent px-6 sm:px-10 py-10 text-white">
-      {/* Subtle background circles */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-white/10" />
-        <div className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full bg-white/5" />
-      </div>
+    <section className="relative overflow-hidden">
+      {/* Subtle gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-background to-accent/[0.03]" />
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-primary/[0.03] rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
 
-      <div className="relative max-w-2xl">
-        <p className="text-white/60 text-sm font-medium mb-1">{greeting}</p>
-        <h1 className="text-3xl sm:text-4xl font-heading font-bold mb-2">{firstName} !</h1>
-        <p className="text-white/70 text-sm sm:text-base mb-7">
-          Ready to learn? Search for notes, past papers, tutorials and more.
-        </p>
+      <div className="relative max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-24 lg:py-28">
+        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          {/* Text */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="inline-flex items-center gap-2 bg-primary/10 text-primary text-xs font-semibold px-4 py-2 rounded-full mb-6 tracking-wide">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              Trusted by 50,000+ Malawian students
+            </span>
 
-        <form className="flex gap-2 max-w-lg" onSubmit={handleSearch}>
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-white/50" />
-            <Input
-              value={searchQuery}
-              onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder="Search any subject, topic or resource..."
-              className="pl-9 bg-white/15 border-white/25 placeholder:text-white/50 text-white focus:bg-white/20 focus:border-white/50 h-10"
-            />
-          </div>
-          <Button type="submit" className="shrink-0 bg-white text-primary hover:bg-white/90 font-semibold h-10 px-5">
-            Search
-          </Button>
-        </form>
+            <h1 className="font-heading text-4xl sm:text-5xl lg:text-6xl font-bold text-foreground leading-[1.1] mb-6">
+              Success is{" "}
+              <span className="relative inline-block">
+                <span className="text-primary">Your Heritage.</span>
+                <svg className="absolute -bottom-1 left-0 w-full" viewBox="0 0 300 12" fill="none">
+                  <path d="M2 8C50 2 150 2 298 8" stroke="hsl(var(--primary))" strokeWidth="3" strokeLinecap="round" opacity="0.3" />
+                </svg>
+              </span>
+              <br />
+              Learn Without Limits.
+            </h1>
+
+            <p className="text-muted-foreground text-lg leading-relaxed mb-10 max-w-lg">
+              Free, curriculum-aligned resources for PSLC, JCE & MSCE students
+              across Malawi. Study notes, past papers, AI quizzes and more — all
+              at zero cost.
+            </p>
+
+            <div className="flex flex-wrap gap-4">
+              <Link
+                to="/study-notes"
+                className="group bg-primary text-primary-foreground font-semibold px-7 py-3.5 rounded-xl hover:opacity-90 transition-all duration-200 flex items-center gap-2.5 shadow-lg shadow-primary/20"
+              >
+                Start Learning Free
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+              </Link>
+              <Link
+                to="/past-papers"
+                className="border-2 border-foreground/15 text-foreground font-semibold px-7 py-3.5 rounded-xl hover:bg-secondary transition-all duration-200"
+              >
+                Browse Past Papers
+              </Link>
+            </div>
+
+            {/* Trust signals */}
+            <div className="mt-10 flex flex-wrap gap-8">
+              {[
+                ["100% Free", "No fees ever"],
+                ["All Levels", "PSLC to MSCE"],
+                ["MIE Aligned", "Official curriculum"],
+              ].map(([title, sub]) => (
+                <div key={title} className="flex items-center gap-2.5">
+                  <div className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center">
+                    <div className="w-2 h-2 rounded-full bg-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{title}</p>
+                    <p className="text-xs text-muted-foreground">{sub}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+
+          {/* Hero Image */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.96 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.7, delay: 0.2 }}
+            className="hidden lg:block relative"
+          >
+            <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-foreground/10">
+              <img
+                src={HERO_IMG}
+                alt="Malawian student studying during golden hour"
+                className="w-full h-[480px] object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-foreground/20 via-transparent to-transparent" />
+            </div>
+
+            {/* Floating cards */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="absolute -bottom-6 -left-6 bg-card shadow-xl shadow-foreground/5 rounded-2xl p-4 flex items-center gap-3 border border-border/50"
+            >
+              <div className="w-11 h-11 bg-green-100 rounded-xl flex items-center justify-center">
+                <TrendingUp className="h-5 w-5 text-green-600" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Students this month</p>
+                <p className="text-base font-bold text-foreground">+2,400 joined</p>
+              </div>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.8, duration: 0.5 }}
+              className="absolute -top-5 -right-5 bg-card shadow-xl shadow-foreground/5 rounded-2xl p-4 flex items-center gap-3 border border-border/50"
+            >
+              <div className="w-11 h-11 bg-accent/10 rounded-xl flex items-center justify-center">
+                <Award className="h-5 w-5 text-accent" />
+              </div>
+              <div>
+                <p className="text-xs text-muted-foreground">Avg. improvement</p>
+                <p className="text-base font-bold text-foreground">+34% grades</p>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
       </div>
-    </div>
+    </section>
   );
 }

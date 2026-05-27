@@ -1,6 +1,6 @@
 import { Expose } from 'class-transformer';
 import { ApiProperty } from '@nestjs/swagger';
-import { EducationLevel } from '../entities/tutorial.entity';
+import { EducationLevel } from '../../common/enums';
 
 export class TutorialResponseDto {
   @ApiProperty()

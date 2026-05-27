@@ -8,6 +8,7 @@ import { RefreshRateProvider } from '@/lib/RefreshRateContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import LoginPage from '@/pages/Login';
 import RegisterPage from '@/pages/Register';
+import VerifyEmailPage from '@/pages/VerifyEmail';
 // Add page imports here
 import AdminDashboard from "./pages/AdminDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
@@ -30,8 +31,12 @@ const AuthenticatedApp = () => {
     if (authError.type === 'user_not_registered') {
       return <UserNotRegisteredError />;
     } else if (authError.type === 'auth_required') {
-      // Allow unauthenticated access to the login and register routes.
-      if (location.pathname !== '/login' && location.pathname !== '/register') {
+      // Allow unauthenticated access to the login, register, and verify-email routes.
+      if (
+        location.pathname !== '/login' &&
+        location.pathname !== '/register' &&
+        location.pathname !== '/verify-email'
+      ) {
         navigateToLogin();
         return null;
       }
@@ -44,6 +49,7 @@ const AuthenticatedApp = () => {
       {/* Add your page Route elements here */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
+      <Route path="/verify-email" element={<VerifyEmailPage />} />
       <Route path="/" element={<AdminDashboard />} />
       <Route path="/admin" element={<AdminDashboard />} />
       <Route path="/student" element={<StudentDashboard />} />

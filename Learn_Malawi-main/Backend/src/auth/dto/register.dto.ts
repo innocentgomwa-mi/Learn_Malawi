@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsString, IsEmail, IsIn, IsNotEmpty, MinLength, MaxLength, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsIn, IsNotEmpty, MinLength, MaxLength, IsOptional, IsBoolean } from 'class-validator';
 import { UserRole } from '../../users/entities/user.entity';
 
 export class RegisterDto {
@@ -47,4 +47,8 @@ export class RegisterDto {
   @IsString()
   @MaxLength(50)
   secretKey?: string;
+
+  @Transform(({ value }) => value === true || value === 'true')
+  @IsBoolean()
+  agreeTerms: boolean;
 }

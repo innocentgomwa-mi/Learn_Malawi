@@ -1,7 +1,7 @@
 import { Transform } from 'class-transformer';
 import { IsString, IsEnum, IsNotEmpty, IsUrl, MaxLength, IsOptional } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
-import { EducationLevel } from '../entities/tutorial.entity';
+import { EducationLevel } from '../../common/enums';
 
 export class CreateTutorialDto {
   @ApiProperty({ example: 'Chemical Bonding' })

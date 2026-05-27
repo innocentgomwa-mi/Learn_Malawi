@@ -1,21 +1,8 @@
-import { Entity, PrimaryGeneratedColumn, Column, CreateDateColumn, UpdateDateColumn, OneToMany } from 'typeorm';
+import { EducationLevel, Difficulty } from '../../common/enums';
+import { Entity, Column, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { Question } from './question.entity';
 
-export enum EducationLevel {
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-  PSLC = 'PSLC',
-  JCE = 'JCE',
-  MSCE = 'MSCE',
-}
 
-export enum Difficulty {
-  EASY = 'easy',
-  MEDIUM = 'medium',
-  HARD = 'hard',
-  LEVEL1 = 'level1',
-  LEVEL2 = 'level2',
-  LEVEL3 = 'level3',
-}
 
 @Entity('quizzes')
 export class Quiz {
@@ -25,36 +12,32 @@ export class Quiz {
   @Column({ type: 'varchar', length: 255 })
   title: string;
 
-  @Column({ type: 'text', nullable: true })
-  description?: string;
-
-  @Column({ type: 'enum', enum: EducationLevel, default: EducationLevel.PRIMARY })
+  @Column({
+    type: 'enum',
+    enum: EducationLevel,
+    default: EducationLevel.PRIMARY
+  })
   level: EducationLevel;
 
   @Column({ type: 'varchar', length: 100 })
   subject: string;
 
-  @Column({ type: 'enum', enum: Difficulty, default: Difficulty.EASY })
+  @Column({ name: 'teacher_email', type: 'varchar', length: 255, nullable: true })
+  teacherEmail?: string;
+
+  @Column({
+    type: 'enum',
+    enum: Difficulty,
+    default: Difficulty.EASY
+  })
   difficulty: Difficulty;
 
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  class?: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  tag: string;
+
+  @OneToMany(() => Question, (question) => question.quiz, { cascade: true, eager: true })
+  questions: Question[];
 
   @Column({ type: 'int', default: 0 })
   totalTime: number;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  teacherEmail?: string;
-
-  @Column({ type: 'varchar', length: 255, nullable: true })
-  topic?: string;
-
-  @Column({ type: 'jsonb', default: [] })
-  questions: any[];
-
-  @CreateDateColumn()
-  createdAt: Date;
-
-  @UpdateDateColumn()
-  updatedAt: Date;
-}
+}export { EducationLevel, Difficulty } from '../../common/enums';
