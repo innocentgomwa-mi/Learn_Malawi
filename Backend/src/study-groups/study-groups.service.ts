@@ -50,7 +50,12 @@ export class StudyGroupsService {
       .where('user.email IN (:...emails)', { emails: allMemberEmails })
       .getMany();
 
-    const nameMap = new Map(users.map(u => [u.email, u.full_name || u.email.split('@')[0]]));
+    const nameMap = new Map(
+      users.map(u => [
+        u.email,
+        ((u.firstName || '') + (u.lastName ? ` ${u.lastName}` : '')).trim() || u.email.split('@')[0],
+      ]),
+    );
 
     return groups.map(g => ({
       ...g,
@@ -70,7 +75,12 @@ export class StudyGroupsService {
         .createQueryBuilder('user')
         .where('user.email IN (:...emails)', { emails: memberEmails })
         .getMany();
-      const nameMap = new Map(users.map(u => [u.email, u.full_name || u.email.split('@')[0]]));
+      const nameMap = new Map(
+        users.map(u => [
+          u.email,
+          ((u.firstName || '') + (u.lastName ? ` ${u.lastName}` : '')).trim() || u.email.split('@')[0],
+        ]),
+      );
       return {
         ...studyGroup,
         members_names: memberEmails.map(m => nameMap.get(m) || m),
