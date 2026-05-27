@@ -248,17 +248,25 @@ export default function StudyGroups() {
     }
   };
 
-  const FIELDS = [
-    { key: "name", label: "Group Name", required: true },
-    { key: "subject", label: "Subject", required: true },
-    { key: "level", label: "Level", type: "select", required: true, options: [
-      { value: "PSLC", label: "PSLC" }, { value: "JCE", label: "JCE" }, { value: "MSCE", label: "MSCE" }
-    ]},
-    { key: "description", label: "Description", type: "textarea" },
-    { key: "mentor_email", label: "Mentor Email" },
-    { key: "scheduled_date", label: "Scheduled Date", type: "date" },
-    { key: "scheduled_time", label: "Scheduled Time", type: "time" },
-  ];
+  const FIELDS = (() => {
+    const base = [
+      { key: "name", label: "Group Name", required: true },
+      { key: "subject", label: "Subject", required: true },
+      { key: "level", label: "Level", type: "select", required: true, options: [
+        { value: "PSLC", label: "PSLC" }, { value: "JCE", label: "JCE" }, { value: "MSCE", label: "MSCE" }
+      ]},
+      { key: "description", label: "Description", type: "textarea" },
+      { key: "mentor_email", label: "Mentor Email" },
+    ];
+
+    // Hide scheduling fields from Students (only Teachers or other roles can set schedule)
+    if (user?.role !== 'Student') {
+      base.push({ key: "scheduled_date", label: "Scheduled Date", type: "date" });
+      base.push({ key: "scheduled_time", label: "Scheduled Time", type: "time" });
+    }
+
+    return base;
+  })();
 
   const handleCreate = async (data) => {
     const prepared = {
