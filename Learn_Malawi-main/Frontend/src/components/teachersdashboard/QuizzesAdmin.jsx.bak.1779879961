@@ -6,7 +6,6 @@ import { Plus, Pencil, Trash2, HelpCircle, ChevronDown, ChevronUp } from 'lucide
 import StatusBadge from '@/components/teacher/StatusBadge';
 import QuizModal from '@/components/teacher/QuizModal';
 import { filterByTeacher, sortByLatest } from './teacherUtils';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 
 function getOptionLabels(question) {
   if (!question) return [];
@@ -25,8 +24,7 @@ export default function QuizzesAdmin() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState(null);
-  const [modal,  setModal]  = useState({ open: false, existing: null });
-  const [dialog, setDialog] = useState(null);
+  const [modal, setModal] = useState({ open: false, existing: null });
 
   const load = async () => {
     setLoading(true);
@@ -48,8 +46,10 @@ export default function QuizzesAdmin() {
     load();
   }, [user]);
 
-  const handleDelete = (id) => {
-    setDialog({ title: "Delete quiz", message: "Are you sure you want to delete this quiz? This cannot be undone.", confirmLabel: "Delete", danger: true, onConfirm: async () => { await deleteQuiz(id); load(); } });
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this quiz?')) return;
+    await deleteQuiz(id);
+    load();
   };
 
   return (
@@ -117,7 +117,6 @@ export default function QuizzesAdmin() {
         </div>
       )}
 
-      <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
       <QuizModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}

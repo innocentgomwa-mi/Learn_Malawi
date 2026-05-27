@@ -83,32 +83,22 @@ export class StudyGroupsService {
     if (!user) throw new ForbiddenException('Unauthorized');
 
     if (user.role === UserRole.STUDENT) {
-      if (!studyGroup.mentor_email || studyGroup.mentor_email !== user.email)
+      if (!studyGroup.creator_email || studyGroup.creator_email !== user.email)
         throw new ForbiddenException('You can only delete groups you created.');
       await this.studyGroupRepository.remove(studyGroup);
       return;
     }
 
     if (user.role === UserRole.TEACHER) {
-      const isCreator = studyGroup.mentor_email && studyGroup.mentor_email === user.email;
-      const isMember  = (studyGroup.members || []).includes(user.email);
-      const isMentor  = studyGroup.mentor_email === user.email;
-
-      if (isCreator) {
-        await this.studyGroupRepository.remove(studyGroup);
-        return;
-      }
-      if (isMember || isMentor) {
-        const creator = studyGroup.mentor_email
-          ? await this.userRepository.findOne({ where: { email: studyGroup.mentor_email } })
-          : null;
-        if (!creator || creator.role === UserRole.STUDENT) {
-          await this.studyGroupRepository.remove(studyGroup);
-          return;
-        }
+      const isMember = (studyGroup.members || []).includes(user.email);
+      if (!isMember) throw new ForbiddenException('You must join the group before deleting it.');
+      const creator = studyGroup.creator_email
+        ? await this.userRepository.findOne({ where: { email: studyGroup.creator_email } })
+        : null;
+      if (!creator || creator.role !== UserRole.STUDENT)
         throw new ForbiddenException('Teachers can only delete groups created by students.');
-      }
-      throw new ForbiddenException('You must join the group before deleting it.');
+      await this.studyGroupRepository.remove(studyGroup);
+      return;
     }
 
     throw new ForbiddenException('You are not allowed to delete this group.');
@@ -120,10 +110,9 @@ export class StudyGroupsService {
 
     if (user.role === UserRole.TEACHER) {
       const isMember = (studyGroup.members || []).includes(user.email);
-      const isMentor = studyGroup.mentor_email === user.email;
-      if (!isMember && !isMentor) throw new ForbiddenException('You must join the group before removing members.');
-      const creator = studyGroup.mentor_email
-        ? await this.userRepository.findOne({ where: { email: studyGroup.mentor_email } })
+      if (!isMember) throw new ForbiddenException('You must join the group before removing members.');
+      const creator = studyGroup.creator_email
+        ? await this.userRepository.findOne({ where: { email: studyGroup.creator_email } })
         : null;
       if (!creator || creator.role !== UserRole.STUDENT)
         throw new ForbiddenException('Teachers can only manage members of groups created by students.');

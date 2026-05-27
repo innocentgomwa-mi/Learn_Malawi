@@ -9,6 +9,7 @@ const TYPE_CONFIG = {
   exam:      { icon: CalendarCheck,   color: "bg-rose-500",   badge: "bg-rose-50 text-rose-700 border-rose-200",   label: "Exam" },
   resource:  { icon: BookOpen,        color: "bg-blue-500",   badge: "bg-blue-50 text-blue-700 border-blue-200",   label: "Resource" },
   study:     { icon: Clock,           color: "bg-slate-500",  badge: "bg-slate-50 text-slate-700 border-slate-100", label: "Study Block" },
+  announcement: { icon: Megaphone,      color: "bg-amber-500",  badge: "bg-amber-50 text-amber-700 border-amber-200",   label: "Announcement" },
   message:   { icon: MessageCircle,   color: "bg-emerald-500", badge: "bg-emerald-50 text-emerald-700 border-emerald-100", label: "Message" },
 };
 
@@ -119,6 +120,23 @@ export default function Notifications() {
             date: m.created_date || m.createdAt || m.created_at || "",
             urgent: false,
           })),
+        ...supportedAnnouncements
+          .filter((announcement) => {
+            const audience = (announcement.targetAudience || announcement.target_audience || 'all').toLowerCase();
+            if (user?.role?.toLowerCase() === 'teacher') {
+              return audience === 'all' || audience === 'teachers' || announcement.teacherEmail === user.email;
+            }
+            return audience === 'all' || audience === 'students';
+          })
+          .map((announcement) => ({
+            id: `announcement-${announcement.id}`,
+            type: "announcement",
+            title: announcement.title,
+            subtitle: announcement.targetAudience === 'students' ? 'From your teacher' : 'Announcement',
+            body: announcement.body || "",
+            date: announcement.createdAt || announcement.created_at || "",
+            urgent: (announcement.priority || 'normal') === 'high',
+          })),
       ];
 
       const sortedNotifs = notifs.sort((a, b) => Number(new Date(b.date || "")) - Number(new Date(a.date || "")));
@@ -164,7 +182,7 @@ export default function Notifications() {
     load();
     return () => { active = false; };
   }, [user?.email, user?.role]);
-  const FILTERS = ["All", "Exam", "Resource", "Study Block", "Messages"];
+  const FILTERS = ["All", "Exam", "Resource", "Study Block", "Messages", "Announcement"];
 
   const filtered = useMemo(() => items.filter((i) => {
     if (filter === "All") return true;

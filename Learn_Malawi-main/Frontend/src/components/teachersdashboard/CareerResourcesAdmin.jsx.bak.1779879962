@@ -8,7 +8,6 @@ import {
   deleteCareerResource,
 } from '@/api';
 import { Button } from '@/components/ui/button';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import { Plus, Pencil, Trash2, ExternalLink, Briefcase, GraduationCap, Award, Compass, Clock, Users, Rocket, FileText } from 'lucide-react';
 
 const ICON_OPTIONS = [
@@ -47,8 +46,7 @@ export default function CareerResourcesAdmin() {
   const [saving, setSaving] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingResource, setEditingResource] = useState(null);
-  const [form,   setForm]   = useState(initialForm);
-  const [dialog, setDialog] = useState(null);
+  const [form, setForm] = useState(initialForm);
 
   const loadResources = async () => {
     setLoading(true);
@@ -94,8 +92,14 @@ export default function CareerResourcesAdmin() {
     setFormOpen(true);
   };
 
-  const handleDelete = (resource) => {
-    setDialog({ title: "Delete career resource", message: `Delete "${resource.title}"? This cannot be undone.`, confirmLabel: "Delete", danger: true, onConfirm: async () => { try { await deleteCareerResource(resource.id); await loadResources(); } catch (error) { console.error(error); } } });
+  const handleDelete = async (resource) => {
+    if (!confirm('Delete this career resource?')) return;
+    try {
+      await deleteCareerResource(resource.id);
+      await loadResources();
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleSubmit = async (event) => {
@@ -257,7 +261,6 @@ export default function CareerResourcesAdmin() {
           })}
         </div>
       )}
-      <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
     </div>
   );
 }

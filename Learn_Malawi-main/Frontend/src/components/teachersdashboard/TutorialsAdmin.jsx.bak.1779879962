@@ -6,14 +6,12 @@ import { Plus, Pencil, Trash2, PlayCircle } from 'lucide-react';
 import StatusBadge from '@/components/teacher/StatusBadge';
 import ResourceModal from '@/components/teacher/ResourceModal';
 import { filterByTeacher, sortByLatest } from './teacherUtils';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function TutorialsAdmin() {
   const { user } = useAuth();
   const [tutorials, setTutorials] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modal,  setModal]  = useState({ open: false, existing: null });
-  const [dialog, setDialog] = useState(null);
+  const [modal, setModal] = useState({ open: false, existing: null });
 
   const load = async () => {
     setLoading(true);
@@ -35,8 +33,10 @@ export default function TutorialsAdmin() {
     load();
   }, [user]);
 
-  const handleDelete = (id) => {
-    setDialog({ title: "Delete tutorial", message: "Are you sure you want to delete this tutorial? This cannot be undone.", confirmLabel: "Delete", danger: true, onConfirm: async () => { await deleteTutorial(id); load(); } });
+  const handleDelete = async (id) => {
+    if (!confirm('Delete this tutorial?')) return;
+    await deleteTutorial(id);
+    load();
   };
 
   return (
@@ -95,7 +95,6 @@ export default function TutorialsAdmin() {
         </div>
       )}
 
-      <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
       <ResourceModal
         open={modal.open}
         onClose={() => setModal({ open: false, existing: null })}

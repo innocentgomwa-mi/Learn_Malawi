@@ -13,11 +13,11 @@ export class StudyGroupsController {
   constructor(private readonly studyGroupsService: StudyGroupsService) {}
 
   @Post()
-  @Roles(UserRole.STUDENT, UserRole.TEACHER)
+  @Roles(UserRole.STUDENT)
   create(@Req() req: any, @Body() createStudyGroupDto: CreateStudyGroupDto) {
     if (req?.user?.email) {
-      createStudyGroupDto.mentor_email = createStudyGroupDto.mentor_email || req.user.email;
-      createStudyGroupDto.mentor_name  = createStudyGroupDto.mentor_name  || req.user.full_name || req.user.email.split('@')[0];
+      createStudyGroupDto.creator_email = createStudyGroupDto.creator_email || req.user.email;
+      createStudyGroupDto.creator_name = createStudyGroupDto.creator_name || req.user.full_name || req.user.email.split('@')[0];
     }
     return this.studyGroupsService.create(createStudyGroupDto);
   }

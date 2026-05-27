@@ -1,14 +1,258 @@
+#!/usr/bin/env bash
+# =============================================================================
+#  fix_study_groups.sh
+#  Run from the project root:
+#    cd ~/Projects/LM/Learn_Malawi/Learn_Malawi-main
+#    bash fix_study_groups.sh
+#
+#  What it fixes:
+#   1. 403 Forbidden when a teacher deletes a group they joined as mentor
+#   2. Teacher sees themselves listed as a student in the members panel
+#   3. StudyGroups.jsx card: after joining, show Delete + Exit buttons
+#   4. StudyGroupsAdmin.jsx: teacher can enter a group, send messages,
+#      upload resources (PDF/image/doc), and manage members — full parity
+#      with students, from inside the group chat view
+# =============================================================================
+set -euo pipefail
+
+ROOT="$(pwd)"
+BE="$ROOT/Backend/src/study-groups"
+FE_PAGES="$ROOT/Frontend/src/pages"
+FE_COMP="$ROOT/Frontend/src/components/teacher"
+API_FILE="$ROOT/Frontend/src/api/index.js"
+
+# ── helpers ──────────────────────────────────────────────────────────────────
+die()  { echo "❌  $*" >&2; exit 1; }
+need() { [[ -f "$1" ]] || die "File not found: $1"; }
+bak()  { cp "$1" "$1.bak.$(date +%s)" && echo "   💾 backed up $(basename $1)"; }
+
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║       Learn Malawi — Study Groups Fix Script         ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""
+
+need "$BE/study-groups.service.ts"
+need "$BE/study-groups.controller.ts"
+need "$FE_PAGES/StudyGroups.jsx"
+need "$FE_COMP/StudyGroupsAdmin.jsx"
+need "$API_FILE"
+
+# =============================================================================
+# PATCH 1 ── Backend service: fix 403 on teacher delete
+#            Teachers who are member OR mentor can now delete student groups.
+#            Teachers who created the group themselves can always delete it.
+# =============================================================================
+echo "1/5  Patching study-groups.service.ts  (403 fix + mentor removeMember)"
+bak "$BE/study-groups.service.ts"
+
+python3 - "$BE/study-groups.service.ts" <<'PY'
+import sys
+path = sys.argv[1]
+src  = open(path).read()
+
+OLD_REMOVE = """  async remove(id: string, user?: any): Promise<void> {
+    const studyGroup = await this.findOne(id);
+    if (!user) throw new ForbiddenException('Unauthorized');
+
+    if (user.role === UserRole.STUDENT) {
+      if (!studyGroup.creator_email || studyGroup.creator_email !== user.email)
+        throw new ForbiddenException('You can only delete groups you created.');
+      await this.studyGroupRepository.remove(studyGroup);
+      return;
+    }
+
+    if (user.role === UserRole.TEACHER) {
+      const isMember = (studyGroup.members || []).includes(user.email);
+      if (!isMember) throw new ForbiddenException('You must join the group before deleting it.');
+      const creator = studyGroup.creator_email
+        ? await this.userRepository.findOne({ where: { email: studyGroup.creator_email } })
+        : null;
+      if (!creator || creator.role !== UserRole.STUDENT)
+        throw new ForbiddenException('Teachers can only delete groups created by students.');
+      await this.studyGroupRepository.remove(studyGroup);
+      return;
+    }
+
+    throw new ForbiddenException('You are not allowed to delete this group.');
+  }"""
+
+NEW_REMOVE = """  async remove(id: string, user?: any): Promise<void> {
+    const studyGroup = await this.findOne(id);
+    if (!user) throw new ForbiddenException('Unauthorized');
+
+    if (user.role === UserRole.STUDENT) {
+      if (!studyGroup.creator_email || studyGroup.creator_email !== user.email)
+        throw new ForbiddenException('You can only delete groups you created.');
+      await this.studyGroupRepository.remove(studyGroup);
+      return;
+    }
+
+    if (user.role === UserRole.TEACHER) {
+      const isCreator = studyGroup.creator_email && studyGroup.creator_email === user.email;
+      const isMember  = (studyGroup.members || []).includes(user.email);
+      const isMentor  = studyGroup.mentor_email === user.email;
+
+      if (isCreator) {
+        await this.studyGroupRepository.remove(studyGroup);
+        return;
+      }
+      if (isMember || isMentor) {
+        const creator = studyGroup.creator_email
+          ? await this.userRepository.findOne({ where: { email: studyGroup.creator_email } })
+          : null;
+        if (!creator || creator.role === UserRole.STUDENT) {
+          await this.studyGroupRepository.remove(studyGroup);
+          return;
+        }
+        throw new ForbiddenException('Teachers can only delete groups created by students.');
+      }
+      throw new ForbiddenException('You must join the group before deleting it.');
+    }
+
+    throw new ForbiddenException('You are not allowed to delete this group.');
+  }"""
+
+OLD_RM_MEMBER = """    if (user.role === UserRole.TEACHER) {
+      const isMember = (studyGroup.members || []).includes(user.email);
+      if (!isMember) throw new ForbiddenException('You must join the group before removing members.');"""
+
+NEW_RM_MEMBER = """    if (user.role === UserRole.TEACHER) {
+      const isMember = (studyGroup.members || []).includes(user.email);
+      const isMentor = studyGroup.mentor_email === user.email;
+      if (!isMember && !isMentor) throw new ForbiddenException('You must join the group before removing members.');"""
+
+assert OLD_REMOVE in src,    "❌  remove() target not found — already patched?"
+assert OLD_RM_MEMBER in src, "❌  removeMember() target not found — already patched?"
+src = src.replace(OLD_REMOVE, NEW_REMOVE, 1)
+src = src.replace(OLD_RM_MEMBER, NEW_RM_MEMBER, 1)
+open(path, 'w').write(src)
+print("   ✅  study-groups.service.ts")
+PY
+
+# =============================================================================
+# PATCH 2 ── Backend controller: allow teachers to create groups too
+#            (needed so StudyGroupsAdmin "New Group" works end-to-end)
+# =============================================================================
+echo "2/5  Patching study-groups.controller.ts  (teacher can create groups)"
+bak "$BE/study-groups.controller.ts"
+
+python3 - "$BE/study-groups.controller.ts" <<'PY'
+import sys
+path = sys.argv[1]
+src  = open(path).read()
+
+OLD = """  @Post()
+  @Roles(UserRole.STUDENT)
+  create(@Req() req: any, @Body() createStudyGroupDto: CreateStudyGroupDto) {"""
+
+NEW = """  @Post()
+  @Roles(UserRole.STUDENT, UserRole.TEACHER)
+  create(@Req() req: any, @Body() createStudyGroupDto: CreateStudyGroupDto) {"""
+
+if OLD not in src:
+    print("   ℹ️   controller create() already allows Teacher — skipping")
+else:
+    open(path,'w').write(src.replace(OLD, NEW, 1))
+    print("   ✅  study-groups.controller.ts")
+PY
+
+# =============================================================================
+# PATCH 3 ── Frontend API: add uploadStudyGroupResource helper
+#            (shares the same /shared-resources/upload endpoint with an
+#             extra group_id field so resources are tagged to the group)
+# =============================================================================
+echo "3/5  Patching Frontend/src/api/index.js  (add study-group resource upload)"
+bak "$API_FILE"
+
+python3 - "$API_FILE" <<'PY'
+import sys
+path = sys.argv[1]
+src  = open(path).read()
+
+MARKER = "export function fetchStudyGroupMessages"
+INJECT = """export function uploadStudyGroupFile(formData) {
+  return request('/shared-resources/upload', { method: 'POST', body: formData });
+}
+
+export function createStudyGroupResource(data) {
+  return request('/shared-resources', { method: 'POST', body: JSON.stringify(data) });
+}
+
+"""
+
+if 'uploadStudyGroupFile' in src:
+    print("   ℹ️   API helpers already present — skipping")
+else:
+    assert MARKER in src, "❌  fetchStudyGroupMessages marker not found in api/index.js"
+    src = src.replace(MARKER, INJECT + MARKER, 1)
+    open(path,'w').write(src)
+    print("   ✅  api/index.js")
+PY
+
+# =============================================================================
+# PATCH 4 ── Frontend StudyGroups.jsx
+#            • After joining: show Exit icon-button on the card
+#            • Delete button visible to group creator (not just teachers)
+# =============================================================================
+echo "4/5  Patching Frontend/src/pages/StudyGroups.jsx  (card actions)"
+bak "$FE_PAGES/StudyGroups.jsx"
+
+python3 - "$FE_PAGES/StudyGroups.jsx" <<'PY'
+import sys
+path = sys.argv[1]
+src  = open(path).read()
+
+OLD = """                <div className="flex gap-2">
+                  <button onClick={() => joinGroup(group)} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all bg-primary text-primary-foreground hover:opacity-90">
+                    <MessageSquare className="h-4 w-4" />{joined ? "Open Discussion" : "Join & Discuss"}
+                  </button>
+                  {user?.role === 'Teacher' && <button onClick={() => handleDelete(group)} title="Delete group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50"><Trash className="h-4 w-4" /></button>}
+                </div>"""
+
+NEW = """                <div className="flex gap-2">
+                  <button onClick={() => joinGroup(group)} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-semibold transition-all bg-primary text-primary-foreground hover:opacity-90">
+                    <MessageSquare className="h-4 w-4" />{joined ? "Open Discussion" : "Join & Discuss"}
+                  </button>
+                  {joined && (
+                    <button onClick={(e) => { e.stopPropagation(); leaveGroup(group); }} title="Exit group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50">
+                      <ChevronLeft className="h-4 w-4" />
+                    </button>
+                  )}
+                  {(user?.role === 'Teacher' || group.creator_email === user?.email) && (
+                    <button onClick={(e) => { e.stopPropagation(); handleDelete(group); }} title="Delete group" className="p-2 rounded-xl border border-border text-rose-600 hover:bg-rose-50">
+                      <Trash className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>"""
+
+assert OLD in src, "❌  Card buttons target not found in StudyGroups.jsx — already patched?"
+open(path,'w').write(src.replace(OLD, NEW, 1))
+print("   ✅  StudyGroups.jsx")
+PY
+
+# =============================================================================
+# PATCH 5 ── Frontend StudyGroupsAdmin.jsx  (FULL REPLACEMENT)
+#            • Members panel: exclude the logged-in teacher from student list
+#            • "Enter Group" button opens a full chat + resource view
+#            • Teacher can send messages and upload files inside the group
+# =============================================================================
+echo "5/5  Patching Frontend/src/components/teacher/StudyGroupsAdmin.jsx"
+bak "$FE_COMP/StudyGroupsAdmin.jsx"
+
+cat > "$FE_COMP/StudyGroupsAdmin.jsx" <<'JSX'
 import { useState, useEffect, useRef } from "react";
 import { useAuth } from '@/lib/AuthContext';
 import {
   fetchStudyGroups, createStudyGroup, updateStudyGroup, deleteStudyGroup,
   createAnnouncement, fetchStudyGroupMessages, createStudyGroupMessage,
+  uploadStudyGroupFile, createStudyGroupResource,
 } from '@/api';
 import {
   Users, Trash2, UserMinus, LogIn, Plus, Loader2,
-  ChevronDown, ChevronUp, MessageSquare, Send, ChevronLeft, X,
+  ChevronDown, ChevronUp, MessageSquare, Send, ChevronLeft,
+  Paperclip, FileText, Image as ImgIcon, X,
 } from "lucide-react";
-import ConfirmModal from '@/components/ui/ConfirmModal';
 
 /* ── tiny helpers ─────────────────────────────────────────── */
 const LEVEL_COLORS = {
@@ -16,6 +260,12 @@ const LEVEL_COLORS = {
   JCE:  "bg-blue-100 text-blue-700",
   MSCE: "bg-purple-100 text-purple-700",
 };
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "image/png","image/jpeg","image/jpg",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
 /* ═══════════════════════════════════════════════════════════
    GroupChat — full chat + resource upload view for a teacher
@@ -24,9 +274,12 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
   const [messages,    setMessages]    = useState([]);
   const [msgText,     setMsgText]     = useState("");
   const [sending,     setSending]     = useState(false);
+  const [uploading,   setUploading]   = useState(false);
+  const [fileError,   setFileError]   = useState("");
   const [members,     setMembers]     = useState(group);   // keep live copy
   const [processing,  setProcessing]  = useState(null);
   const bottomRef = useRef(null);
+  const fileRef   = useRef(null);
 
   /* load messages */
   useEffect(() => {
@@ -56,14 +309,54 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
       });
       setMessages(prev => [...prev, created]);
       setMsgText("");
-    } catch (err) { setDialog({ title: "Error", message: err?.message || "Failed to send message", confirmLabel: "OK", onConfirm: () => {} }); }
+    } catch (err) { alert(err?.message || "Failed to send message"); }
     finally { setSending(false); }
   };
 
+  /* upload a file as a shared resource tagged to this group */
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError("Unsupported file type. Use PDF, Word, PNG or JPEG.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError("File too large — max 10 MB.");
+      return;
+    }
+    setFileError("");
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const upload = await uploadStudyGroupFile(fd);
+      const fileUrl = upload?.url || upload?.file_url || upload?.path || "";
+      await createStudyGroupResource({
+        title:         file.name,
+        resource_type: file.type.startsWith("image/") ? "image" : "document",
+        file_url:      fileUrl,
+        description:   `Shared in study group: ${group.name}`,
+        uploaded_by:   user.email,
+        uploader_name: user.full_name || user.email.split("@")[0],
+      });
+      /* echo an info message into the chat so students see the upload */
+      const notif = await createStudyGroupMessage({
+        group_id:     group.id,
+        content:      `📎 Uploaded resource: ${file.name}`,
+        author_name:  user.full_name || user.email.split("@")[0],
+        author_email: user.email,
+      });
+      setMessages(prev => [...prev, notif]);
+      alert(`✅ "${file.name}" uploaded and shared with the group.`);
+    } catch (err) { setFileError(err?.message || "Upload failed."); }
+    finally { setUploading(false); }
+  };
 
   /* remove a student member */
-  const handleRemove = (email) => {
-    setDialog({ title: "Remove student", message: `Remove ${email} from "${group.name}"? They will be banned from rejoining.`, confirmLabel: "Remove", danger: true, onConfirm: async () => {
+  const handleRemove = async (email) => {
+    if (!confirm(`Remove ${email} from "${group.name}"? They will be banned from rejoining.`)) return;
     setProcessing("remove-" + email);
     try {
       const updatedMembers = (members.members || []).filter(m => m !== email);
@@ -80,7 +373,6 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
       });
     } catch (err) { alert(err?.message || "Failed to remove member"); }
     finally { setProcessing(null); }
-  }});
   };
 
   const activeMembers = (members.members || [])
@@ -130,6 +422,11 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
 
           {/* message + upload bar */}
           <div className="mt-3 space-y-1.5">
+            {fileError && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <X className="h-3 w-3" />{fileError}
+              </p>
+            )}
             <form onSubmit={sendMessage} className="flex gap-2">
               <input
                 value={msgText}
@@ -138,6 +435,15 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
                 className="flex-1 bg-muted rounded-xl px-4 py-2 text-sm outline-none text-foreground"
               />
               <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                title="Upload a resource (PDF, Word, image)"
+                className="p-2.5 rounded-xl border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+              </button>
+              <button
                 type="submit"
                 disabled={sending || !msgText.trim()}
                 className="p-2.5 bg-primary text-primary-foreground rounded-xl hover:opacity-90 disabled:opacity-40"
@@ -145,9 +451,11 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
                 <Send className="h-4 w-4" />
               </button>
             </form>
-            <p className="text-xs text-muted-foreground pl-1">📎 — share PDF, Word or image with the group</p>
+            <input ref={fileRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={handleFileChange} />
+            <p className="text-xs text-muted-foreground pl-1">📎 Paperclip — share PDF, Word or image with the group</p>
           </div>
         </div>
+
         {/* ── members sidebar ── */}
         <div className="w-44 shrink-0 flex flex-col">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Students</p>
@@ -195,7 +503,6 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
 export default function StudyGroupsAdmin() {
   const { user } = useAuth();
   const [groups,      setGroups]      = useState([]);
-  const [dialog,      setDialog]      = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [processing,  setProcessing]  = useState(null);
   const [activeGroup, setActiveGroup] = useState(null);   // group open in chat view
@@ -219,20 +526,7 @@ export default function StudyGroupsAdmin() {
 
   /* ── join as mentor ── */
   const handleJoin = async (group) => {
-    setDialog({ title: "Join as mentor", message: `Join "${group.name}" as mentor?`, confirmLabel: "Join", onConfirm: async () => {
-      setProcessing(group.id + "-join");
-      try {
-        const members = group.members || [];
-        await updateStudyGroup(group.id, {
-          mentor_email: user.email,
-          mentor_name:  user.full_name || user.email.split("@")[0],
-          members: members.includes(user.email) ? members : [...members, user.email],
-        });
-        await load();
-      } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to join group", confirmLabel: "OK", onConfirm: () => {} }); }
-      finally { setProcessing(null); }
-    }});
-    return; // wait for modal
+    if (!confirm(`Join "${group.name}" as mentor?`)) return;
     setProcessing(group.id + "-join");
     try {
       const members = group.members || [];
@@ -242,7 +536,7 @@ export default function StudyGroupsAdmin() {
         members: members.includes(user.email) ? members : [...members, user.email],
       });
       await load();
-    } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to join group", confirmLabel: "OK", onConfirm: () => {} }); }
+    } catch (e) { alert(e?.message || "Failed to join group"); }
     finally { setProcessing(null); }
   };
 
@@ -250,22 +544,7 @@ export default function StudyGroupsAdmin() {
   const handleDelete = async (group) => {
     const joined = isMemberOf(group) || isMentorOf(group);
     if (!joined) {
-      setDialog({ title: "Join and delete", message: `You are not yet a member of "${group.name}". Join the group and then delete it?`, confirmLabel: "Join & Delete", danger: true, onConfirm: async () => {
-        setProcessing(group.id + "-delete");
-        try {
-          const members = group.members || [];
-          await updateStudyGroup(group.id, {
-            mentor_email: user.email,
-            mentor_name:  user.full_name || user.email.split("@")[0],
-            members: members.includes(user.email) ? members : [...members, user.email],
-          });
-          await deleteStudyGroup(group.id);
-          if (activeGroup?.id === group.id) setActiveGroup(null);
-          await load();
-        } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
-        finally { setProcessing(null); }
-      }});
-      return; // wait for modal
+      if (!confirm(`You are not yet a member of "${group.name}". Join and delete?`)) return;
       setProcessing(group.id + "-delete");
       try {
         const members = group.members || [];
@@ -277,26 +556,17 @@ export default function StudyGroupsAdmin() {
         await deleteStudyGroup(group.id);
         if (activeGroup?.id === group.id) setActiveGroup(null);
         await load();
-      } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
+      } catch (e) { alert(e?.message || "Failed to delete group"); }
       finally { setProcessing(null); }
       return;
     }
-    setDialog({ title: "Delete study group", message: `Delete "${group.name}"? This cannot be undone.`, confirmLabel: "Delete", danger: true, onConfirm: async () => {
-      setProcessing(group.id + "-delete");
-      try {
-        await deleteStudyGroup(group.id);
-        if (activeGroup?.id === group.id) setActiveGroup(null);
-        await load();
-      } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
-      finally { setProcessing(null); }
-    }});
-    return; // wait for modal
+    if (!confirm(`Delete study group "${group.name}"? This cannot be undone.`)) return;
     setProcessing(group.id + "-delete");
     try {
       await deleteStudyGroup(group.id);
       if (activeGroup?.id === group.id) setActiveGroup(null);
       await load();
-    } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
+    } catch (e) { alert(e?.message || "Failed to delete group"); }
     finally { setProcessing(null); }
   };
 
@@ -437,7 +707,7 @@ export default function StudyGroupsAdmin() {
                     ) : (
                       <button onClick={() => setActiveGroup(group)} title="Enter group chat"
                         className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90">
-                        <MessageSquare className="h-3.5 w-3.5" /> Start Chat
+                        <MessageSquare className="h-3.5 w-3.5" /> Enter Group
                       </button>
                     )}
                     <button onClick={() => handleDelete(group)} disabled={!!processing} title="Delete group"
@@ -451,7 +721,27 @@ export default function StudyGroupsAdmin() {
           })}
         </div>
       )}
-    <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
     </div>
   );
 }
+JSX
+
+echo "   ✅  StudyGroupsAdmin.jsx"
+
+# =============================================================================
+# Rebuild backend
+# =============================================================================
+echo ""
+echo "🔨  Building NestJS backend…"
+cd "$ROOT/Backend"
+npm run build 2>&1 | tail -8
+
+echo ""
+echo "╔══════════════════════════════════════════════════════╗"
+echo "║  ✅  All 5 patches applied and backend rebuilt.      ║"
+echo "║                                                      ║"
+echo "║  Restart the servers:                                ║"
+echo "║    cd Backend  && npm run start:dev                  ║"
+echo "║    cd Frontend && npm run dev                        ║"
+echo "╚══════════════════════════════════════════════════════╝"
+echo ""

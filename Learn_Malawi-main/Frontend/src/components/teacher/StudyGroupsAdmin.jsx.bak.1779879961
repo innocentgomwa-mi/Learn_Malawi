@@ -3,12 +3,13 @@ import { useAuth } from '@/lib/AuthContext';
 import {
   fetchStudyGroups, createStudyGroup, updateStudyGroup, deleteStudyGroup,
   createAnnouncement, fetchStudyGroupMessages, createStudyGroupMessage,
+  uploadStudyGroupFile, createStudyGroupResource,
 } from '@/api';
 import {
   Users, Trash2, UserMinus, LogIn, Plus, Loader2,
-  ChevronDown, ChevronUp, MessageSquare, Send, ChevronLeft, X,
+  ChevronDown, ChevronUp, MessageSquare, Send, ChevronLeft,
+  Paperclip, FileText, Image as ImgIcon, X,
 } from "lucide-react";
-import ConfirmModal from '@/components/ui/ConfirmModal';
 
 /* ── tiny helpers ─────────────────────────────────────────── */
 const LEVEL_COLORS = {
@@ -16,6 +17,12 @@ const LEVEL_COLORS = {
   JCE:  "bg-blue-100 text-blue-700",
   MSCE: "bg-purple-100 text-purple-700",
 };
+const ALLOWED_TYPES = [
+  "application/pdf",
+  "image/png","image/jpeg","image/jpg",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
 
 /* ═══════════════════════════════════════════════════════════
    GroupChat — full chat + resource upload view for a teacher
@@ -24,9 +31,12 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
   const [messages,    setMessages]    = useState([]);
   const [msgText,     setMsgText]     = useState("");
   const [sending,     setSending]     = useState(false);
+  const [uploading,   setUploading]   = useState(false);
+  const [fileError,   setFileError]   = useState("");
   const [members,     setMembers]     = useState(group);   // keep live copy
   const [processing,  setProcessing]  = useState(null);
   const bottomRef = useRef(null);
+  const fileRef   = useRef(null);
 
   /* load messages */
   useEffect(() => {
@@ -56,14 +66,54 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
       });
       setMessages(prev => [...prev, created]);
       setMsgText("");
-    } catch (err) { setDialog({ title: "Error", message: err?.message || "Failed to send message", confirmLabel: "OK", onConfirm: () => {} }); }
+    } catch (err) { alert(err?.message || "Failed to send message"); }
     finally { setSending(false); }
   };
 
+  /* upload a file as a shared resource tagged to this group */
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      setFileError("Unsupported file type. Use PDF, Word, PNG or JPEG.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setFileError("File too large — max 10 MB.");
+      return;
+    }
+    setFileError("");
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const upload = await uploadStudyGroupFile(fd);
+      const fileUrl = upload?.url || upload?.file_url || upload?.path || "";
+      await createStudyGroupResource({
+        title:         file.name,
+        resource_type: file.type.startsWith("image/") ? "image" : "document",
+        file_url:      fileUrl,
+        description:   `Shared in study group: ${group.name}`,
+        uploaded_by:   user.email,
+        uploader_name: user.full_name || user.email.split("@")[0],
+      });
+      /* echo an info message into the chat so students see the upload */
+      const notif = await createStudyGroupMessage({
+        group_id:     group.id,
+        content:      `📎 Uploaded resource: ${file.name}`,
+        author_name:  user.full_name || user.email.split("@")[0],
+        author_email: user.email,
+      });
+      setMessages(prev => [...prev, notif]);
+      alert(`✅ "${file.name}" uploaded and shared with the group.`);
+    } catch (err) { setFileError(err?.message || "Upload failed."); }
+    finally { setUploading(false); }
+  };
 
   /* remove a student member */
-  const handleRemove = (email) => {
-    setDialog({ title: "Remove student", message: `Remove ${email} from "${group.name}"? They will be banned from rejoining.`, confirmLabel: "Remove", danger: true, onConfirm: async () => {
+  const handleRemove = async (email) => {
+    if (!confirm(`Remove ${email} from "${group.name}"? They will be banned from rejoining.`)) return;
     setProcessing("remove-" + email);
     try {
       const updatedMembers = (members.members || []).filter(m => m !== email);
@@ -80,7 +130,6 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
       });
     } catch (err) { alert(err?.message || "Failed to remove member"); }
     finally { setProcessing(null); }
-  }});
   };
 
   const activeMembers = (members.members || [])
@@ -130,6 +179,11 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
 
           {/* message + upload bar */}
           <div className="mt-3 space-y-1.5">
+            {fileError && (
+              <p className="text-xs text-red-600 flex items-center gap-1">
+                <X className="h-3 w-3" />{fileError}
+              </p>
+            )}
             <form onSubmit={sendMessage} className="flex gap-2">
               <input
                 value={msgText}
@@ -138,6 +192,15 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
                 className="flex-1 bg-muted rounded-xl px-4 py-2 text-sm outline-none text-foreground"
               />
               <button
+                type="button"
+                onClick={() => fileRef.current?.click()}
+                disabled={uploading}
+                title="Upload a resource (PDF, Word, image)"
+                className="p-2.5 rounded-xl border border-border text-muted-foreground hover:text-primary hover:bg-primary/10 disabled:opacity-40"
+              >
+                {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+              </button>
+              <button
                 type="submit"
                 disabled={sending || !msgText.trim()}
                 className="p-2.5 bg-primary text-primary-foreground rounded-xl hover:opacity-90 disabled:opacity-40"
@@ -145,9 +208,11 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
                 <Send className="h-4 w-4" />
               </button>
             </form>
-            <p className="text-xs text-muted-foreground pl-1">📎 — share PDF, Word or image with the group</p>
+            <input ref={fileRef} type="file" className="hidden" accept=".pdf,.png,.jpg,.jpeg,.doc,.docx" onChange={handleFileChange} />
+            <p className="text-xs text-muted-foreground pl-1">📎 Paperclip — share PDF, Word or image with the group</p>
           </div>
         </div>
+
         {/* ── members sidebar ── */}
         <div className="w-44 shrink-0 flex flex-col">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Students</p>
@@ -195,7 +260,6 @@ function GroupChat({ group, user, onBack, onGroupUpdated }) {
 export default function StudyGroupsAdmin() {
   const { user } = useAuth();
   const [groups,      setGroups]      = useState([]);
-  const [dialog,      setDialog]      = useState(null);
   const [loading,     setLoading]     = useState(true);
   const [processing,  setProcessing]  = useState(null);
   const [activeGroup, setActiveGroup] = useState(null);   // group open in chat view
@@ -219,20 +283,7 @@ export default function StudyGroupsAdmin() {
 
   /* ── join as mentor ── */
   const handleJoin = async (group) => {
-    setDialog({ title: "Join as mentor", message: `Join "${group.name}" as mentor?`, confirmLabel: "Join", onConfirm: async () => {
-      setProcessing(group.id + "-join");
-      try {
-        const members = group.members || [];
-        await updateStudyGroup(group.id, {
-          mentor_email: user.email,
-          mentor_name:  user.full_name || user.email.split("@")[0],
-          members: members.includes(user.email) ? members : [...members, user.email],
-        });
-        await load();
-      } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to join group", confirmLabel: "OK", onConfirm: () => {} }); }
-      finally { setProcessing(null); }
-    }});
-    return; // wait for modal
+    if (!confirm(`Join "${group.name}" as mentor?`)) return;
     setProcessing(group.id + "-join");
     try {
       const members = group.members || [];
@@ -242,7 +293,7 @@ export default function StudyGroupsAdmin() {
         members: members.includes(user.email) ? members : [...members, user.email],
       });
       await load();
-    } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to join group", confirmLabel: "OK", onConfirm: () => {} }); }
+    } catch (e) { alert(e?.message || "Failed to join group"); }
     finally { setProcessing(null); }
   };
 
@@ -250,22 +301,7 @@ export default function StudyGroupsAdmin() {
   const handleDelete = async (group) => {
     const joined = isMemberOf(group) || isMentorOf(group);
     if (!joined) {
-      setDialog({ title: "Join and delete", message: `You are not yet a member of "${group.name}". Join the group and then delete it?`, confirmLabel: "Join & Delete", danger: true, onConfirm: async () => {
-        setProcessing(group.id + "-delete");
-        try {
-          const members = group.members || [];
-          await updateStudyGroup(group.id, {
-            mentor_email: user.email,
-            mentor_name:  user.full_name || user.email.split("@")[0],
-            members: members.includes(user.email) ? members : [...members, user.email],
-          });
-          await deleteStudyGroup(group.id);
-          if (activeGroup?.id === group.id) setActiveGroup(null);
-          await load();
-        } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
-        finally { setProcessing(null); }
-      }});
-      return; // wait for modal
+      if (!confirm(`You are not yet a member of "${group.name}". Join and delete?`)) return;
       setProcessing(group.id + "-delete");
       try {
         const members = group.members || [];
@@ -277,26 +313,17 @@ export default function StudyGroupsAdmin() {
         await deleteStudyGroup(group.id);
         if (activeGroup?.id === group.id) setActiveGroup(null);
         await load();
-      } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
+      } catch (e) { alert(e?.message || "Failed to delete group"); }
       finally { setProcessing(null); }
       return;
     }
-    setDialog({ title: "Delete study group", message: `Delete "${group.name}"? This cannot be undone.`, confirmLabel: "Delete", danger: true, onConfirm: async () => {
-      setProcessing(group.id + "-delete");
-      try {
-        await deleteStudyGroup(group.id);
-        if (activeGroup?.id === group.id) setActiveGroup(null);
-        await load();
-      } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
-      finally { setProcessing(null); }
-    }});
-    return; // wait for modal
+    if (!confirm(`Delete study group "${group.name}"? This cannot be undone.`)) return;
     setProcessing(group.id + "-delete");
     try {
       await deleteStudyGroup(group.id);
       if (activeGroup?.id === group.id) setActiveGroup(null);
       await load();
-    } catch (e) { setDialog({ title: "Error", message: e?.message || "Failed to delete group", confirmLabel: "OK", onConfirm: () => {} }); }
+    } catch (e) { alert(e?.message || "Failed to delete group"); }
     finally { setProcessing(null); }
   };
 
@@ -437,7 +464,7 @@ export default function StudyGroupsAdmin() {
                     ) : (
                       <button onClick={() => setActiveGroup(group)} title="Enter group chat"
                         className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-xl bg-primary text-primary-foreground hover:opacity-90">
-                        <MessageSquare className="h-3.5 w-3.5" /> Start Chat
+                        <MessageSquare className="h-3.5 w-3.5" /> Enter Group
                       </button>
                     )}
                     <button onClick={() => handleDelete(group)} disabled={!!processing} title="Delete group"
@@ -451,7 +478,6 @@ export default function StudyGroupsAdmin() {
           })}
         </div>
       )}
-    <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
     </div>
   );
 }

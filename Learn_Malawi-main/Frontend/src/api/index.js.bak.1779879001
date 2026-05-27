@@ -523,21 +523,6 @@ export function uploadSharedResourceFile(formData) {
   return request('/shared-resources/upload', { method: 'POST', body: formData });
 }
 
-export function uploadStudyGroupFile(formData) {
-  return request('/shared-resources/upload', { method: 'POST', body: formData });
-}
-
-export function fetchStudyGroupResources({ search } = {}) {
-  const params = new URLSearchParams();
-  if (search) params.set('search', search);
-  const query = params.toString() ? `?${params.toString()}` : '';
-  return request(`/shared-resources${query}`);
-}
-
-export function createStudyGroupResource(data) {
-  return request('/shared-resources', { method: 'POST', body: JSON.stringify(data) });
-}
-
 export function fetchStudyGroupMessages({ groupId } = {}) {
   const params = new URLSearchParams();
   if (groupId) params.set('group_id', groupId);

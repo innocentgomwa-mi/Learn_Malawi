@@ -2,7 +2,6 @@
 import { Users, Trash2 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { fetchStudyGroups, updateStudyGroup, createAnnouncement } from '@/api';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function TeacherStudents() {
   const { user } = useAuth();
@@ -10,7 +9,6 @@ export default function TeacherStudents() {
   const [students, setStudents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-  const [dialog, setDialog] = useState(null);
 
   const loadStudents = async () => {
     if (!user?.email) {
@@ -71,40 +69,38 @@ export default function TeacherStudents() {
     };
   }, [user?.email]);
 
-  const handleRemoveStudent = (groupId, studentEmail, groupName) => {
-    setDialog({
-      title: 'Remove student',
-      message: `Remove ${studentEmail} from ${groupName}? They will be banned from rejoining.`,
-      confirmLabel: 'Remove',
-      danger: true,
-      onConfirm: async () => {
-        setProcessing(true);
-        try {
-          const group = groups.find((item) => item.id === groupId);
-          if (!group) return;
-          const updatedMembers = (group.members || []).filter((email) => email !== studentEmail);
-          const updatedBanned = Array.from(new Set([...(group.banned_members || []), studentEmail]));
-          await updateStudyGroup(groupId, { members: updatedMembers, banned_members: updatedBanned });
-          await createAnnouncement({
-            title: `Removed from ${group.name}`,
-            body: `${studentEmail} has been removed from the study group "${group.name}".`,
-            targetAudience: 'students',
-            isPublished: true,
-          });
-        } catch (error) {
-          console.error(error);
-          alert('Unable to remove student. Please try again.');
-        } finally {
-          setProcessing(false);
-          await loadStudents();
-        }
-      },
-    });
+  const handleRemoveStudent = async (groupId, studentEmail, groupName) => {
+    if (!confirm(`Remove ${studentEmail} from ${groupName}?`)) return;
+    setProcessing(true);
+    try {
+      const group = groups.find((item) => item.id === groupId);
+      if (!group) return;
+
+      const updatedMembers = (group.members || []).filter((email) => email !== studentEmail);
+      const updatedBanned = Array.from(new Set([...(group.banned_members || []), studentEmail]));
+
+      await updateStudyGroup(groupId, {
+        members: updatedMembers,
+        banned_members: updatedBanned,
+      });
+
+      await createAnnouncement({
+        title: `Removed from ${group.name}`,
+        body: `${studentEmail} has been removed from the study group "${group.name}" and will no longer be able to post in that group.`,
+        targetAudience: 'students',
+        isPublished: true,
+      });
+    } catch (error) {
+      console.error(error);
+      alert('Unable to remove student from group. Please try again.');
+    } finally {
+      setProcessing(false);
+      await loadStudents();
+    }
   };
 
   return (
-    <>
-      <div className="w-full px-6 py-8 animate-fade-in">
+    <div className="w-full px-6 py-8 animate-fade-in">
       <div className="w-full space-y-6">
         <div className="mb-6">
           <h1 className="text-2xl font-bold">Students</h1>
@@ -164,9 +160,7 @@ export default function TeacherStudents() {
           ))}
         </div>
       )}
-      </div>
     </div>
-    <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
-    </>
+  </div>
   );
 }

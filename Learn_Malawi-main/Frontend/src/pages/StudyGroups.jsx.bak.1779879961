@@ -24,7 +24,6 @@ import { useState, useEffect, useRef } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import { fetchStudyGroups, fetchStudyGroupMessages, updateStudyGroup, createStudyGroupMessage, createStudyGroup, deleteStudyGroup } from "@/api";
 import RequireAccount from '@/components/RequireAccount';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import ResourceForm from '@/components/teachersdashboard/ResourceForm';
 import { Users, MessageSquare, Send, Loader2, Calendar, ChevronLeft, Trash } from "lucide-react";
 
@@ -46,7 +45,6 @@ export default function StudyGroups() {
   const bottomRef = useRef(null);
   const [pendingDeletes, setPendingDeletes] = useState([]);
   const pendingTimers = useRef({});
-  const [dialog, setDialog] = useState(null);
 
   useEffect(() => {
     let active = true;
@@ -84,9 +82,9 @@ export default function StudyGroups() {
     if (!user?.email) return;
     const members = group.members || [];
     const banned = group.banned_members || [];
-    if (banned.includes(user.email)) { setDialog({ title: "Access Denied", message: "You have been removed from this group and cannot rejoin.", confirmLabel: "OK", onConfirm: () => {} }); setActiveGroup(group); return; }
+    if (banned.includes(user.email)) { alert('You have been removed from this group and cannot rejoin.'); setActiveGroup(group); return; }
     const isMember = members.includes(user.email);
-    if (isMember) { setDialog({ title: "Already Joined", message: "You have already joined this group.", confirmLabel: "OK", onConfirm: () => {} }); setActiveGroup(group); return; }
+    if (isMember) { alert('You have already joined this group.'); setActiveGroup(group); return; }
     if (user.role === 'Teacher') {
       const payload = { mentor_email: user.email, mentor_name: user.full_name || user.email.split('@')[0] };
       if (!members.includes(user.email)) {
@@ -94,7 +92,7 @@ export default function StudyGroups() {
         const updated = await updateStudyGroup(group.id, payload);
         setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
         setActiveGroup(updated);
-      } else { setDialog({ title: "Already Joined", message: "You have already joined this group.", confirmLabel: "OK", onConfirm: () => {} }); setActiveGroup(group); }
+      } else { alert('You have already joined this group.'); setActiveGroup(group); }
       return;
     }
     if (!members.includes(user.email)) {
@@ -108,32 +106,28 @@ export default function StudyGroups() {
     if (!user?.email) return;
     const members = group.members || [];
     if (!members.includes(user.email)) return;
-    setDialog({ title: "Leave group", message: `Leave study group "${group.name}"?`, confirmLabel: "Leave", danger: true, onConfirm: async () => {
-      const updatedMembers = (group.members || []).filter((m) => m !== user.email);
-      const payload = { members: updatedMembers };
-      if (group.mentor_email === user.email) { payload.mentor_email = null; payload.mentor_name = null; }
-      try {
-        const updated = await updateStudyGroup(group.id, payload);
-        setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
-        setActiveGroup(null);
-      } catch (err) { setDialog({ title: "Error", message: err?.message || 'Failed to leave group', confirmLabel: "OK", onConfirm: () => {} }); }
-    }});
-    return;
+    if (!confirm(`Leave study group "${group.name}"?`)) return;
+    const updatedMembers = members.filter((m) => m !== user.email);
+    const payload = { members: updatedMembers };
+    if (group.mentor_email === user.email) { payload.mentor_email = null; payload.mentor_name = null; }
+    try {
+      const updated = await updateStudyGroup(group.id, payload);
+      setGroups((prev) => prev.map((g) => (g.id === group.id ? updated : g)));
+      setActiveGroup(null);
+    } catch (err) { alert(err?.message || 'Failed to leave group'); }
   };
 
   const handleDelete = async (group) => {
-    setDialog({ title: "Delete study group", message: `Delete "${group.name}"? You can undo within 5 seconds.`, confirmLabel: "Delete", danger: true, onConfirm: () => {
-      setGroups((prev) => prev.filter((g) => g.id !== group.id));
-      if (activeGroup?.id === group.id) setActiveGroup(null);
-      setPendingDeletes((prev) => [...prev, { id: group.id, name: group.name, data: group }]);
-      const timer = setTimeout(async () => {
-        try { await deleteStudyGroup(group.id); }
-        catch (err) { setGroups((prev) => [group, ...prev]); }
-        finally { setPendingDeletes((prev) => prev.filter((p) => p.id !== group.id)); delete pendingTimers.current[group.id]; }
-      }, 5000);
-      pendingTimers.current[group.id] = timer;
-    }});
-    return;
+    if (!confirm(`Delete study group "${group.name}"? You can undo within 5 seconds.`)) return;
+    setGroups((prev) => prev.filter((g) => g.id !== group.id));
+    if (activeGroup?.id === group.id) setActiveGroup(null);
+    setPendingDeletes((prev) => [...prev, { id: group.id, name: group.name, data: group }]);
+    const timer = setTimeout(async () => {
+      try { await deleteStudyGroup(group.id); }
+      catch (err) { setGroups((prev) => [group, ...prev]); }
+      finally { setPendingDeletes((prev) => prev.filter((p) => p.id !== group.id)); delete pendingTimers.current[group.id]; }
+    }, 5000);
+    pendingTimers.current[group.id] = timer;
   };
 
   const undoDelete = (pending) => {
@@ -150,7 +144,7 @@ export default function StudyGroups() {
     const isMentor = activeGroup.mentor_email === user?.email;
     const isMember = (activeGroup.members || []).includes(user.email);
     const isBanned = (activeGroup.banned_members || []).includes(user.email);
-    if (!isMentor && (!isMember || isBanned)) { setDialog({ title: "Permission Denied", message: "You no longer have permission to post in this study group.", confirmLabel: "OK", onConfirm: () => {} }); return; }
+    if (!isMentor && (!isMember || isBanned)) { alert('You no longer have permission to post in this study group.'); return; }
     setSending(true);
     try {
       const created = await createStudyGroupMessage({ group_id: activeGroup.id, content: msgText.trim(), author_name: user.full_name || user.email.split("@")[0], author_email: user.email });
@@ -296,8 +290,7 @@ export default function StudyGroups() {
           </div>
         ))}
       </div>
-      <ConfirmModal dialog={dialog} onClose={() => setDialog(null)} />
-            {form && <ResourceForm fields={FIELDS} initial={form} onSave={handleCreate} onCancel={() => setForm(null)} title="Create Study Group" />}
+      {form && <ResourceForm fields={FIELDS} initial={form} onSave={handleCreate} onCancel={() => setForm(null)} title="Create Study Group" />}
     </div>
   );
 }
