@@ -108,7 +108,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden">
       <div
         className="absolute inset-0 bg-cover bg-center filter blur-sm"
-        style={{ backgroundImage: "url('/images/forgot%20password.jpg')" }}
+        style={{ backgroundImage: "url('/images/login-bg.avif')" }}
       />
       <div className="absolute inset-0 bg-slate-950/25" />
       <div className="relative w-full max-w-2xl">
