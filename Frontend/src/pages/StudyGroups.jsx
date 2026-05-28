@@ -11,19 +11,6 @@
  *   mentor_email?: string;
  * }} StudyGroup
  *
-/**
- * @typedef {{
- *   id: string;
- *   name: string;
- *   subject: string;
- *   level: string;
- *   description?: string;
- *   scheduled_at?: string;
- *   members?: string[];
- *   banned_members?: string[];
- *   mentor_email?: string;
- * }} StudyGroup
- *
  * @typedef {{
  *   id: string;
  *   content: string;
