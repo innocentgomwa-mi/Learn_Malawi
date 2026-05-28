@@ -24,25 +24,8 @@ import { AttendanceModule } from './attendance/attendance.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { DiscussionsModule } from './discussions/discussions.module';
 import { AiModule } from './ai/ai.module';
-import { TeacherPostsModule } from './teacher-posts/teacher-posts.module';
-import { SystemSettingsModule } from './system-settings/system-settings.module';
-import { ActivityLogModule } from './activity-log/activity-log.module';
-import { DataChangeHistoryModule } from './data-change-history/data-change-history.module';
-import { StudentProgressModule } from './student-progress/student-progress.module';
-import { InsightsModule } from './insights/insights.module';
-import { ResourceRatingsModule } from './resource-ratings/resource-ratings.module';
 import { Announcement } from './announcements/entities/announcement.entity';
 import { Discussion } from './discussions/entities/discussion.entity';
-import { TeacherPost } from './teacher-posts/entities/teacher-post.entity';
-import { SystemSetting } from './system-settings/entities/system-setting.entity';
-import { ActivityLog } from './activity-log/entities/activity-log.entity';
-import { DataChangeHistory } from './data-change-history/entities/data-change-history.entity';
-import { StudentProgress } from './student-progress/entities/student-progress.entity';
-import { ResourceRating } from './resource-ratings/entities/resource-rating.entity';
-import { StudyGroupsModule } from './study-groups/study-groups.module';
-import { StudyGroup } from './study-groups/entities/study-group.entity';
-import { StudyGroupMessage } from './study-groups/entities/study-group-message.entity';
-
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -80,14 +63,6 @@ import { StudyGroupMessage } from './study-groups/entities/study-group-message.e
           Attendance,
           Announcement,
           Discussion,
-          TeacherPost,
-          SystemSetting,
-          ActivityLog,
-          DataChangeHistory,
-          StudentProgress,
-          ResourceRating,
-          StudyGroup,
-          StudyGroupMessage,
         ],
         synchronize: configService.get<string>('NODE_ENV') !== 'production',
         logging: configService.get<string>('NODE_ENV') === 'development',
@@ -105,15 +80,7 @@ import { StudyGroupMessage } from './study-groups/entities/study-group-message.e
     AnnouncementsModule,
     DiscussionsModule,
     AiModule,
-    TeacherPostsModule,
-    SystemSettingsModule,
-    ActivityLogModule,
-    DataChangeHistoryModule,
-    StudentProgressModule,
-    InsightsModule,
-    ResourceRatingsModule,
-    StudyGroupsModule,
-  ],
+    ],
   controllers: [],
   providers: [
     {
