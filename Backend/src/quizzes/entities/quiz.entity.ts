@@ -12,6 +12,12 @@ export enum Difficulty {
   HARD = 'hard'
 }
 
+export enum QuizStatus {
+  DRAFT = 'draft',
+  UPLOADED = 'uploaded',
+  PUBLISHED = 'published',
+}
+
 @Entity('quizzes')
 export class Quiz {
   @PrimaryGeneratedColumn()
@@ -45,6 +51,9 @@ export class Quiz {
 
   @OneToMany(() => Question, (question) => question.quiz, { cascade: true, eager: true })
   questions: Question[];
+
+  @Column({ type: 'enum', enum: QuizStatus, default: QuizStatus.DRAFT })
+  status: QuizStatus;
 
   @Column({ type: 'int', default: 0 })
   totalTime: number;

@@ -20,6 +20,7 @@ export class TutorialsService {
     level?: string,
     subject?: string,
     classFilter?: string,
+    teacherEmail?: string,
   ): Promise<Tutorial[]> {
     const query = this.tutorialsRepository.createQueryBuilder('tutorial');
 
@@ -33,6 +34,10 @@ export class TutorialsService {
 
     if (classFilter) {
       query.andWhere('tutorial.class = :classFilter', { classFilter });
+    }
+
+    if (teacherEmail && teacherEmail !== 'all') {
+      query.andWhere('tutorial.teacherEmail = :teacherEmail', { teacherEmail });
     }
 
   query.orderBy('tutorial.id', 'ASC');

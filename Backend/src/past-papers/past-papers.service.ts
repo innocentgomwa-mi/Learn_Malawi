@@ -23,6 +23,7 @@ export class PastPapersService {
     subject?: string,
     year?: number,
     search?: string,
+    teacherEmail?: string,
   ): Promise<{ data: PastPaper[]; total: number; page: number; totalPages: number }> {
     const query = this.pastPapersRepository.createQueryBuilder('pastPaper');
 
@@ -43,6 +44,10 @@ export class PastPapersService {
         '(pastPaper.title ILIKE :search OR pastPaper.subject ILIKE :search OR pastPaper.description ILIKE :search)',
         { search: `%${search}%` },
       );
+    }
+
+    if (teacherEmail && teacherEmail !== 'all') {
+      query.andWhere('pastPaper.teacherEmail = :teacherEmail', { teacherEmail });
     }
 
     const [data, total] = await query
