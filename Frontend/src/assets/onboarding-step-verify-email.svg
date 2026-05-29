@@ -1,0 +1,22 @@
+<svg width="800" height="500" viewBox="0 0 800 500" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="800" height="500" rx="24" fill="#FEF3C7"/>
+  <rect x="34" y="28" width="732" height="444" rx="20" fill="#FFFFFF"/>
+  <rect x="34" y="28" width="732" height="64" rx="20" fill="#1E3A8A"/>
+  <text x="66" y="66" fill="#DBEAFE" font-family="Arial, sans-serif" font-size="14" font-weight="700">Verify your email</text>
+  <rect x="70" y="124" width="320" height="312" rx="16" fill="#FFFBEB" stroke="#FDE68A" stroke-width="2"/>
+  <text x="96" y="162" fill="#92400E" font-family="Arial, sans-serif" font-size="18" font-weight="700">Check your inbox</text>
+  <rect x="96" y="184" width="244" height="10" rx="5" fill="#FDE68A"/>
+  <rect x="96" y="218" width="266" height="82" rx="12" fill="#FFFFFF" stroke="#FCD34D"/>
+  <text x="114" y="250" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="13" font-weight="700">learnmalawi.org</text>
+  <text x="114" y="270" fill="#475569" font-family="Arial, sans-serif" font-size="12">Your verification code is:</text>
+  <text x="114" y="292" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="18" font-weight="700">638241</text>
+  <rect x="96" y="320" width="156" height="38" rx="10" fill="#FACC15"/>
+  <text x="126" y="343" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="13" font-weight="700">Verify now</text>
+  <rect x="418" y="124" width="312" height="312" rx="16" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="2"/>
+  <rect x="452" y="176" width="244" height="170" rx="16" fill="#F8FAFC" stroke="#CBD5E1"/>
+  <path d="M472 212H676C684.837 212 692 219.163 692 228V298C692 306.837 684.837 314 676 314H472C463.163 314 456 306.837 456 298V228C456 219.163 463.163 212 472 212Z" fill="#FFFFFF" stroke="#CBD5E1"/>
+  <path d="M456 232L565.056 278.901C570.756 281.352 577.205 281.338 582.894 278.862L692 232" stroke="#93C5FD" stroke-width="5" stroke-linecap="round"/>
+  <circle cx="682" cy="166" r="28" fill="#22C55E"/>
+  <path d="M670 166L679 175L695 159" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="452" y="372" fill="#1E3A8A" font-family="Arial, sans-serif" font-size="14" font-weight="700">Verified accounts unlock resources</text>
+</svg>

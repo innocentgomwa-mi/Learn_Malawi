@@ -1,0 +1,63 @@
+{
+  "name": "ActivityLog",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "user_name": {
+      "type": "string"
+    },
+    "user_role": {
+      "type": "string",
+      "enum": [
+        "student",
+        "teacher",
+        "admin"
+      ]
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "resource_viewed",
+        "resource_downloaded",
+        "resource_rated",
+        "quiz_started",
+        "quiz_completed",
+        "post_submitted",
+        "post_approved",
+        "post_rejected",
+        "student_registered",
+        "teacher_registered",
+        "announcement_published",
+        "search_performed",
+        "login",
+        "logout"
+      ]
+    },
+    "resource_id": {
+      "type": "string"
+    },
+    "resource_title": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "level": {
+      "type": "string"
+    },
+    "metadata": {
+      "type": "string",
+      "description": "JSON string with extra context"
+    },
+    "score": {
+      "type": "number",
+      "description": "Quiz score if action is quiz_completed"
+    }
+  },
+  "required": [
+    "user_email",
+    "action"
+  ]
+}

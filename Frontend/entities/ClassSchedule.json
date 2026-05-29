@@ -1,0 +1,72 @@
+{
+  "name": "ClassSchedule",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "title": "Class Title"
+    },
+    "subject": {
+      "type": "string",
+      "title": "Subject"
+    },
+    "class_level": {
+      "type": "string",
+      "title": "Class Level"
+    },
+    "day_of_week": {
+      "type": "string",
+      "title": "Day of Week",
+      "enum": [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday"
+      ]
+    },
+    "start_time": {
+      "type": "string",
+      "title": "Start Time (HH:MM)"
+    },
+    "end_time": {
+      "type": "string",
+      "title": "End Time (HH:MM)"
+    },
+    "room": {
+      "type": "string",
+      "title": "Room / Location"
+    },
+    "is_recurring": {
+      "type": "boolean",
+      "title": "Recurring Weekly",
+      "default": true
+    },
+    "color": {
+      "type": "string",
+      "title": "Color Tag",
+      "default": "emerald"
+    },
+    "reminder_minutes": {
+      "type": "number",
+      "title": "Reminder (minutes before)",
+      "default": 15
+    },
+    "teacher_email": {
+      "type": "string",
+      "title": "Teacher Email"
+    },
+    "notes": {
+      "type": "string",
+      "title": "Notes"
+    }
+  },
+  "required": [
+    "title",
+    "day_of_week",
+    "start_time",
+    "end_time",
+    "teacher_email"
+  ]
+}

@@ -1,0 +1,210 @@
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { apiClient } from '@/api/apiClient';
+import { isAdminUser } from '@/lib/adminAuth';
+
+const AuthContext = createContext();
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isLoadingPublicSettings, setIsLoadingPublicSettings] = useState(false);
+  const [authError, setAuthError] = useState(null);
+
+  useEffect(() => {
+    checkUserAuth();
+  }, []);
+
+  const checkUserAuth = async () => {
+    try {
+      setIsLoadingAuth(true);
+      setAuthError(null);
+
+      if (!apiClient.hasAuthToken()) {
+        setIsAuthenticated(false);
+        setAuthError({
+          type: 'auth_required',
+          message: 'Authentication required',
+        });
+        return;
+      }
+
+      const currentUser = await apiClient.auth.me();
+      if (!isAdminUser(currentUser)) {
+        await apiClient.auth.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+        setAuthError({
+          type: 'forbidden',
+          message: 'This application is for administrators only.',
+        });
+        return;
+      }
+      setUser(currentUser);
+      setIsAuthenticated(true);
+    } catch (error) {
+      console.error('User auth check failed:', error);
+      setIsAuthenticated(false);
+      if (error?.status === 401 || error?.status === 403) {
+        setAuthError({
+          type: 'auth_required',
+          message: 'Authentication required',
+        });
+      } else {
+        setAuthError({
+          type: 'unknown',
+          message: error?.message || 'Failed to validate authentication',
+        });
+      }
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
+  const logout = async (shouldRedirect = true) => {
+    setUser(null);
+    setIsAuthenticated(false);
+    await apiClient.auth.logout();
+    if (shouldRedirect) {
+      window.location.href = '/login';
+    }
+  };
+
+  const login = async (email, password) => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
+    try {
+      const loginResponse = await apiClient.auth.login(email, password);
+      if (loginResponse?.requiresTwoFactor && loginResponse?.twoFactorChallengeId) {
+        setIsLoadingAuth(false);
+        return {
+          twoFactorRequired: true,
+          challengeId: loginResponse.twoFactorChallengeId,
+          message: loginResponse.message || 'Two-factor code required.',
+        };
+      }
+      const currentUser = await apiClient.auth.me();
+      if (!isAdminUser(currentUser)) {
+        await apiClient.auth.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+        const forbiddenError = new Error(
+          'This account is not an administrator. Use the main Learn Malawi site for students and teachers.',
+        );
+        forbiddenError.status = 403;
+        setAuthError({
+          type: 'forbidden',
+          message: forbiddenError.message,
+        });
+        throw forbiddenError;
+      }
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      return currentUser;
+    } catch (error) {
+      setIsAuthenticated(false);
+      setAuthError({
+        type: 'auth_required',
+        message: error?.message || 'Login failed',
+      });
+      throw error;
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
+  const verifyTwoFactor = async (challengeId, code) => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
+    try {
+      await apiClient.auth.verifyTwoFactor(challengeId, code);
+      const currentUser = await apiClient.auth.me();
+      if (!isAdminUser(currentUser)) {
+        await apiClient.auth.logout();
+        setUser(null);
+        setIsAuthenticated(false);
+        const forbiddenError = new Error(
+          'This account is not an administrator. Use the main Learn Malawi site for students and teachers.',
+        );
+        forbiddenError.status = 403;
+        setAuthError({
+          type: 'forbidden',
+          message: forbiddenError.message,
+        });
+        throw forbiddenError;
+      }
+      setUser(currentUser);
+      setIsAuthenticated(true);
+      return currentUser;
+    } catch (error) {
+      setIsAuthenticated(false);
+      setAuthError({
+        type: 'auth_required',
+        message: error?.message || '2FA verification failed',
+      });
+      throw error;
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
+  const register = async (registrationData) => {
+    setIsLoadingAuth(true);
+    setAuthError(null);
+    try {
+      const response = await apiClient.auth.register(registrationData);
+      if (response?.accessToken) {
+        const currentUser = await apiClient.auth.me();
+        setUser(currentUser);
+        setIsAuthenticated(true);
+        return currentUser;
+      }
+      return response;
+    } catch (error) {
+      setIsAuthenticated(false);
+      setAuthError({
+        type: 'auth_required',
+        message: error?.message || 'Registration failed',
+      });
+      throw error;
+    } finally {
+      setIsLoadingAuth(false);
+    }
+  };
+
+  const navigateToLogin = () => {
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
+  };
+
+  return (
+    <AuthContext.Provider
+      value={{
+        user,
+        isAuthenticated,
+        isLoadingAuth,
+        isLoadingPublicSettings,
+        authError,
+        logout,
+        login,
+        verifyTwoFactor,
+        register,
+        navigateToLogin,
+        checkUserAuth,
+        checkAppState: checkUserAuth,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
+};
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+};
+

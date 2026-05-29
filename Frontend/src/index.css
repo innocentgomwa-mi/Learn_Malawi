@@ -1,0 +1,127 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 220 25% 12%;
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 12%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 12%;
+    --primary: 174 72% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 43 96% 52%;
+    --secondary-foreground: 220 25% 12%;
+    --muted: 210 30% 94%;
+    --muted-foreground: 220 15% 46%;
+    --accent: 174 72% 94%;
+    --accent-foreground: 174 72% 20%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 210 25% 88%;
+    --input: 210 25% 88%;
+    --ring: 174 72% 28%;
+    --radius: 0.75rem;
+    --font-inter: 'Inter', sans-serif;
+    --font-poppins: 'Poppins', sans-serif;
+
+    /* Custom brand colors */
+    --brand-teal: 174 72% 28%;
+    --brand-gold: 43 96% 52%;
+    --brand-red: 4 80% 50%;
+    --brand-dark: 220 25% 12%;
+
+    --sidebar-background: 174 72% 18%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 96% 52%;
+    --sidebar-primary-foreground: 220 25% 12%;
+    --sidebar-accent: 174 60% 25%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 174 50% 22%;
+    --sidebar-ring: 43 96% 52%;
+  }
+
+  .dark {
+    --background: 220 25% 8%;
+    --foreground: 210 40% 96%;
+    --card: 220 25% 11%;
+    --card-foreground: 210 40% 96%;
+    --popover: 220 25% 11%;
+    --popover-foreground: 210 40% 96%;
+    --primary: 174 72% 40%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 43 96% 52%;
+    --secondary-foreground: 220 25% 12%;
+    --muted: 220 20% 16%;
+    --muted-foreground: 210 20% 60%;
+    --accent: 174 50% 20%;
+    --accent-foreground: 174 72% 70%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 20% 20%;
+    --input: 220 20% 20%;
+    --ring: 174 72% 40%;
+    --sidebar-background: 220 25% 6%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 43 96% 52%;
+    --sidebar-primary-foreground: 220 25% 12%;
+    --sidebar-accent: 220 20% 12%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 220 20% 14%;
+    --sidebar-ring: 43 96% 52%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground font-inter;
+  }
+
+  html.accessibility-high-contrast {
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 100%;
+    --border: 0 0% 70%;
+    --primary: 50 100% 60%;
+    --secondary: 45 100% 60%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 0 0% 90%;
+    --accent: 55 100% 50%;
+    --accent-foreground: 0 0% 100%;
+    --input: 0 0% 12%;
+    --ring: 55 100% 60%;
+  }
+
+  html.accessibility-large-text {
+    font-size: 115%;
+  }
+
+  html.accessibility-dyslexia-font {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+
+  html.accessibility-line-spacing body,
+  html.accessibility-line-spacing p,
+  html.accessibility-line-spacing label,
+  html.accessibility-line-spacing input,
+  html.accessibility-line-spacing select,
+  html.accessibility-line-spacing button {
+    line-height: 1.8 !important;
+  }
+
+  html.accessibility-reduced-motion * {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+    transition-duration: 0s !important;
+    scroll-behavior: auto !important;
+  }
+}

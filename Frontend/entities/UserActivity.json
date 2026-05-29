@@ -1,0 +1,86 @@
+{
+  "name": "UserActivity",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user being tracked"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Full name of the user"
+    },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "page_visit",
+        "login",
+        "logout",
+        "download",
+        "click",
+        "quiz_start",
+        "quiz_complete",
+        "video_play",
+        "note_view",
+        "past_paper_view"
+      ],
+      "description": "Type of event tracked"
+    },
+    "page_section": {
+      "type": "string",
+      "enum": [
+        "home",
+        "study_notes",
+        "past_papers",
+        "tutorials",
+        "quizzes",
+        "career_resources",
+        "ask_teacher"
+      ],
+      "description": "Which section of the platform"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Subject involved e.g. Mathematics, English"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "PSLC",
+        "JCE",
+        "MSCE",
+        "Standard 1-8"
+      ],
+      "description": "Academic level"
+    },
+    "resource_name": {
+      "type": "string",
+      "description": "Name of the resource accessed"
+    },
+    "duration_seconds": {
+      "type": "number",
+      "description": "Time spent in seconds"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Unique session identifier"
+    },
+    "device_type": {
+      "type": "string",
+      "enum": [
+        "mobile",
+        "tablet",
+        "desktop"
+      ],
+      "description": "Device used"
+    },
+    "location": {
+      "type": "string",
+      "description": "District/region of the user"
+    }
+  },
+  "required": [
+    "user_email",
+    "event_type"
+  ]
+}

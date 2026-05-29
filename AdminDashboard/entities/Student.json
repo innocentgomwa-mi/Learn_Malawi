@@ -1,0 +1,42 @@
+{
+  "name": "Student",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "level": {
+      "type": "string",
+      "enum": [
+        "PSLC",
+        "JCE",
+        "MSCE"
+      ]
+    },
+    "school": {
+      "type": "string"
+    },
+    "district": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "quizzes_completed": {
+      "type": "number",
+      "default": 0
+    },
+    "resources_accessed": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "full_name",
+    "email"
+  ]
+}
